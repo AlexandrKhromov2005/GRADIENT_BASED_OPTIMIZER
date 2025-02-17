@@ -8,11 +8,12 @@ std::array<double, VEC_SIZE> gsr_func(double rho2, std::array<double, VEC_SIZE> 
 	double b = static_cast<double>(gen_random_index());
 	double c = randn();
 	std::array<double, VEC_SIZE> delx = { 0.0 };
+	double eps = rand_num() * 0.01;
 	for (size_t i = 0; i < VEC_SIZE; ++i) {
 		double delta = 2.0 * a * std::fabs(xm[i] - cur_x[i]);
 		double step = 0.5 * (best_x[i] - xr1[i] + delta);
 		delx[i] = b * std::fabs(step);
-		gsr[i] = (c * rho2 * 2.0 * delx[i] * cur_x[i]) / (best_x[i] - worst_x[i] + 0.05);
+		gsr[i] = (c * rho2 * 2.0 * delx[i] * cur_x[i]) / (best_x[i] - worst_x[i] + eps );
 	}
 
 	std::array<double, VEC_SIZE> xs = (flag == 1) ? cur_x : best_x;
@@ -26,11 +27,10 @@ std::array<double, VEC_SIZE> gsr_func(double rho2, std::array<double, VEC_SIZE> 
 	double q2 = rand_num();
 	double d = randn();
 
-
 	for (size_t i = 0; i < VEC_SIZE; ++i) {
 		double yp = p1 * (0.5 * (xs[i] + cur_x[i]) + p2 * delx[i]);
 		double yq = q1 * (0.5 * (xs[i] + cur_x[i]) - q2 * delx[i]);
-		gsr[i] = (d * rho2 * 2.0 * delx[i] * cur_x[i]) / (yp - yq + 0.005);
+		gsr[i] = (d * rho2 * 2.0 * delx[i] * cur_x[i]) / (yp - yq + eps);
 	}
 
 	return gsr;

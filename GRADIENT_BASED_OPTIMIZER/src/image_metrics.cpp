@@ -2,7 +2,6 @@
 #include <cmath>
 #include <iostream>
 
-// Вычисление MSE (Mean Squared Error)
 double computeMSE(const cv::Mat& image1, const cv::Mat& image2) {
     if (image1.size() != image2.size() || image1.type() != image2.type()) {
         std::cerr << "Error: Images must have the same size and type." << std::endl;
@@ -14,14 +13,12 @@ double computeMSE(const cv::Mat& image1, const cv::Mat& image2) {
     diff.convertTo(diff, CV_32F);
     diff = diff.mul(diff);
 
-    // Учитываем все каналы изображения
     cv::Scalar mse_scalar = cv::mean(diff);
     double mse = (mse_scalar[0] + mse_scalar[1] + mse_scalar[2]) / 3.0;
 
     return mse;
 }
 
-// Вычисление PSNR (Peak Signal-to-Noise Ratio)
 double computePSNR(const cv::Mat& image1, const cv::Mat& image2) {
     double mse = computeMSE(image1, image2);
     if (mse <= 0) {
@@ -33,14 +30,12 @@ double computePSNR(const cv::Mat& image1, const cv::Mat& image2) {
     return psnr;
 }
 
-// Вычисление BER (Bit Error Rate)
 double computeBER(const cv::Mat& image1, const cv::Mat& image2) {
     if (image1.size() != image2.size() || image1.type() != image2.type()) {
         std::cerr << "Error: Images must have the same size and type." << std::endl;
         return -1;
     }
 
-    // Преобразуем в бинарный формат (0 или 255)
     cv::Mat bin1, bin2;
     cv::threshold(image1, bin1, 127, 255, cv::THRESH_BINARY);
     cv::threshold(image2, bin2, 127, 255, cv::THRESH_BINARY);
@@ -54,7 +49,6 @@ double computeBER(const cv::Mat& image1, const cv::Mat& image2) {
     return static_cast<double>(error_count) / total_bits;
 }
 
-// Вычисление NCC (Normalized Cross-Correlation)
 double computeNCC(const cv::Mat& img1, const cv::Mat& img2) {
     cv::Mat img1f, img2f;
     img1.convertTo(img1f, CV_32F);
