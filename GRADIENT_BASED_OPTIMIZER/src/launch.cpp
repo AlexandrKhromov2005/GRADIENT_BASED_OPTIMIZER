@@ -10,12 +10,10 @@ void embend_wm(const std::string& image, const std::string& new_image, const std
 
 	size_t image_size = image_vec.size();
 	for (size_t i = 0; i < image_size; ++i) {
-		std::cout << "\rProcess: " << i << " / " << image_size << std::flush;
 		GBO gbo(wm_vec[i % WM_SIZE], image_vec[i]);
 		gbo.main_loop();
 
 	}
-	std::cout << "\rProcess: " << image_size << " / " << image_size << std::endl;
 
 	const cv::Mat cv_new_image = merge8x8Blocks(image_vec, cv_image.rows, cv_image.cols);
 	writeImage(new_image, cv_new_image);
@@ -135,6 +133,10 @@ void processAttack(
 	const std::string& output_file = "")
 {
 	double mse_total = 0, psnr_total = 0, ncc_total = 0, ber_total = 0, ssim_total = 0;
+	double max_mse = 0, max_psnr = 0, max_ncc = 0, max_ber = 0, max_ssim = 0;
+	double min_mse = DBL_MAX, min_psnr = DBL_MAX, min_ncc = DBL_MAX, min_ber = DBL_MAX, min_ssim = DBL_MAX;
+
+
 
 	std::ofstream output(output_file, std::ios::app);
 	if (!output.is_open()) {
@@ -151,19 +153,37 @@ void processAttack(
 
 		cv::Mat wm = get_wm(img);
 
-		mse_total += metric(original, img);
-		psnr_total += computePSNR(original, img);
-		ncc_total += computeNCC(original, img);
-		ber_total += computeBER(cv_wm, wm);
-		ssim_total += computeSSIM(original, img);
+		double mse = metric(original, img);
+		double psnr= computePSNR(original, img);
+		double ncc = computeNCC(original, img);
+		double ber = computeBER(cv_wm, wm);
+		double ssim = computeSSIM(original, img);
+
+		max_mse = std::max(max_mse, mse);
+		min_mse = std::min(min_mse, mse);
+		max_psnr = std::max(max_psnr, mse);
+		min_psnr = std::min(min_psnr, mse);
+		max_ncc = std::max(max_ncc, mse);
+		min_ncc = std::min(min_ncc, mse);
+		max_ber = std::max(max_ber, mse);
+		min_ber = std::min(min_ber, mse);
+		max_ssim = std::max(max_ssim, mse);
+		min_ssim = std::min(min_ssim, mse);
+
+		mse_total += mse;
+		psnr_total += psnr;
+		ncc_total += ncc;
+		ber_total += ber;
+		ssim_total += ssim;
 	}
 
-	output << "Average MSE: " << mse_total / iterations << std::endl
-		<< "Average PSNR: " << psnr_total / iterations << std::endl
-		<< "Average NCC: " << ncc_total / iterations << std::endl
-		<< "Average BER: " << ber_total / iterations << std::endl
-		<< "Average SSIM: " << ssim_total / iterations << std::endl
+	output << "Average MSE: " << min_mse << " " << mse_total / iterations << " " << max_mse << std::endl
+		<< "Average PSNR: " << min_psnr << " " << psnr_total / iterations << " " << max_psnr << std::endl
+		<< "Average NCC: " << min_ncc << " " << ncc_total / iterations << " " << max_ncc << std::endl
+		<< "Average BER: " << min_ber << " " << ber_total / iterations << " " << max_ber << std::endl
+		<< "Average SSIM: " << min_ssim << " " << ssim_total / iterations << " " << max_ssim << std::endl
 		<< std::endl;
+
 
 	output.close();
 }
@@ -177,7 +197,12 @@ void launch(const std::string& image, const std::string& new_image,const std::st
 		embend_wm(image, new_image, wm);
 		get_wm(new_image, new_wm);
 		embeded_images.push_back(readImage(new_image));
+		std::cout<< "\r" << i << "/10" << std::flush;
 	}
+	std::cout << "\r" << std::flush;
+
+
+
 
 	std::vector<AttackConfig> attacks = {
 		{"No attack", [](const cv::Mat& img) { return img; }},
@@ -203,7 +228,7 @@ void launch(const std::string& image, const std::string& new_image,const std::st
 	std::string result_filename = "results_" + getFileNameWithoutExtension(image) + ".txt";
 
 	for (const auto& attack : attacks) {
-		MetricCalculator metric = attack.use_cropped_comparison ? computeMSE : computeMSE; // ѕример, метрика должна быть передана сюда
+		MetricCalculator metric = attack.use_cropped_comparison ? computeMSE : computeMSE; 
 		processAttack(embeded_images, cv_image, cv_wm, attack, metric, 10, result_filename);
 	}
 }

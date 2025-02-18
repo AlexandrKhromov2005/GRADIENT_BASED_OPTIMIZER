@@ -15,6 +15,7 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <algorithm>
 
 void launch(const std::string& image, const std::string& new_image, const std::string& wm, const std::string& new_wm);
 

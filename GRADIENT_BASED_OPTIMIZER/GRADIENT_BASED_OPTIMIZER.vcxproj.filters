@@ -39,6 +39,9 @@
     <ClCompile Include="src\image_processing_custom.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="src\attacks.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\population.h">
@@ -65,12 +68,36 @@
     <ClInclude Include="src\launch.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="src\attacks.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\x64\Release\images\lenna.png">
       <Filter>Файлы ресурсов</Filter>
     </Image>
     <Image Include="..\x64\Release\images\watermark.png">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="..\x64\Release\images\baboon.png">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="..\x64\Release\images\bark.png">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="..\x64\Release\images\brick_wall.png">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="..\x64\Release\images\earth_from_space.png">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="..\x64\Release\images\pepper.png">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="..\x64\Release\images\san_diego.png">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="..\x64\Release\images\toy_vehicle.png">
       <Filter>Файлы ресурсов</Filter>
     </Image>
   </ItemGroup>
