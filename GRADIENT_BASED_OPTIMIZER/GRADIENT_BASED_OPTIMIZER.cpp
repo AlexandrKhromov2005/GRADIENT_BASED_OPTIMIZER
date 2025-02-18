@@ -4,11 +4,17 @@
 
 int main()
 {
-    const std::string image = "images/lenna.png";
-    const std::string cvz = "images/watermark.png";
-    const std::string new_image = "images/new_lenna.png";
-    const std::string extracted_cvz = "images/lenna_wm.png";
+    std::vector<std::string> names = { "lenna", "baboon", "bark", "brick_wall", "earth_from_space", "pepper", "san_diego", "toy_vehicle"};
 
-    launch(image, new_image, cvz, extracted_cvz);
+    for (std::string name : names) {
+        const std::string image = "images/" + name + ".png";
+        const std::string cvz = "images/watermark.png";
+        const std::string new_image = "images/new_" + name + ".png";
+        const std::string extracted_cvz = "images/" + name + "_wm.png";
+
+        launch(image, new_image, cvz, extracted_cvz);
+
+        std::cout << name << " is finished" << std::endl;
+    }
 
 }
