@@ -158,14 +158,14 @@
     <ClInclude Include="src\random_utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\x64\Release\images\airplane.png" />
     <Image Include="..\x64\Release\images\baboon.png" />
-    <Image Include="..\x64\Release\images\bark.png" />
-    <Image Include="..\x64\Release\images\brick_wall.png" />
+    <Image Include="..\x64\Release\images\boat.png" />
+    <Image Include="..\x64\Release\images\bridge.png" />
     <Image Include="..\x64\Release\images\earth_from_space.png" />
+    <Image Include="..\x64\Release\images\lake.png" />
     <Image Include="..\x64\Release\images\lenna.png" />
     <Image Include="..\x64\Release\images\pepper.png" />
-    <Image Include="..\x64\Release\images\san_diego.png" />
-    <Image Include="..\x64\Release\images\toy_vehicle.png" />
     <Image Include="..\x64\Release\images\watermark.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

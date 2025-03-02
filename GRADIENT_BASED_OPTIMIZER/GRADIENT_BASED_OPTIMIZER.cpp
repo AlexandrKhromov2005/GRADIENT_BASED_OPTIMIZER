@@ -4,7 +4,7 @@
 
 int main()
 {
-    std::vector<std::string> names = { "lenna", "baboon", "bark", "brick_wall", "earth_from_space", "pepper", "san_diego", "toy_vehicle"};
+    std::vector<std::string> names = { "airplane", "baboon", "boat", "bridge", "earth_from_space", "lake", "lenna", "pepper" };
 
     for (std::string name : names) {
         std::cout << name << " is started" << std::endl;

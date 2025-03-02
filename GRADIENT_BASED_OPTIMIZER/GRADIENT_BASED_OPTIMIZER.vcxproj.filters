@@ -9,10 +9,6 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Файлы ресурсов">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GRADIENT_BASED_OPTIMIZER.cpp">
@@ -73,32 +69,32 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\x64\Release\images\lenna.png">
-      <Filter>Файлы ресурсов</Filter>
-    </Image>
-    <Image Include="..\x64\Release\images\watermark.png">
-      <Filter>Файлы ресурсов</Filter>
+    <Image Include="..\x64\Release\images\airplane.png">
+      <Filter>Файлы заголовков</Filter>
     </Image>
     <Image Include="..\x64\Release\images\baboon.png">
-      <Filter>Файлы ресурсов</Filter>
+      <Filter>Файлы заголовков</Filter>
     </Image>
-    <Image Include="..\x64\Release\images\bark.png">
-      <Filter>Файлы ресурсов</Filter>
+    <Image Include="..\x64\Release\images\boat.png">
+      <Filter>Файлы заголовков</Filter>
     </Image>
-    <Image Include="..\x64\Release\images\brick_wall.png">
-      <Filter>Файлы ресурсов</Filter>
+    <Image Include="..\x64\Release\images\bridge.png">
+      <Filter>Файлы заголовков</Filter>
     </Image>
     <Image Include="..\x64\Release\images\earth_from_space.png">
-      <Filter>Файлы ресурсов</Filter>
+      <Filter>Файлы заголовков</Filter>
+    </Image>
+    <Image Include="..\x64\Release\images\lake.png">
+      <Filter>Файлы заголовков</Filter>
+    </Image>
+    <Image Include="..\x64\Release\images\lenna.png">
+      <Filter>Файлы заголовков</Filter>
     </Image>
     <Image Include="..\x64\Release\images\pepper.png">
-      <Filter>Файлы ресурсов</Filter>
+      <Filter>Файлы заголовков</Filter>
     </Image>
-    <Image Include="..\x64\Release\images\san_diego.png">
-      <Filter>Файлы ресурсов</Filter>
-    </Image>
-    <Image Include="..\x64\Release\images\toy_vehicle.png">
-      <Filter>Файлы ресурсов</Filter>
+    <Image Include="..\x64\Release\images\watermark.png">
+      <Filter>Файлы заголовков</Filter>
     </Image>
   </ItemGroup>
 </Project>

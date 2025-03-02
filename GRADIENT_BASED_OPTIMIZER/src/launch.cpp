@@ -161,14 +161,14 @@ void processAttack(
 
 		max_mse = std::max(max_mse, mse);
 		min_mse = std::min(min_mse, mse);
-		max_psnr = std::max(max_psnr, mse);
-		min_psnr = std::min(min_psnr, mse);
-		max_ncc = std::max(max_ncc, mse);
-		min_ncc = std::min(min_ncc, mse);
-		max_ber = std::max(max_ber, mse);
-		min_ber = std::min(min_ber, mse);
-		max_ssim = std::max(max_ssim, mse);
-		min_ssim = std::min(min_ssim, mse);
+		max_psnr = std::max(max_psnr, psnr);
+		min_psnr = std::min(min_psnr, psnr);
+		max_ncc = std::max(max_ncc, ncc);
+		min_ncc = std::min(min_ncc, ncc);
+		max_ber = std::max(max_ber, ber);
+		min_ber = std::min(min_ber, ber);
+		max_ssim = std::max(max_ssim, ssim);
+		min_ssim = std::min(min_ssim, ssim);
 
 		mse_total += mse;
 		psnr_total += psnr;
