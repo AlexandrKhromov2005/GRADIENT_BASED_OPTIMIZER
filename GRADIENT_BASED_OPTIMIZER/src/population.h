@@ -8,6 +8,7 @@
 #include <opencv2/opencv.hpp>
 #include <cmath>
 #include "block_metrics.h"
+#include "jpeg/compression.h"
 
 using VecOf = std::pair<std::array<double, VEC_SIZE>, double>;
 
@@ -22,8 +23,6 @@ public:
 	cv::Mat apply_vec(const cv::Mat &block, std::array<double, VEC_SIZE> vec);
 	double calculateOf(const cv::Mat &block, const std::array<double, VEC_SIZE>& vec, uchar bit);
 	void update(VecOf trial , size_t vec_ind);
-	cv::Mat emulateJPEG70(const cv::Mat& block);
-
 };
 
 
