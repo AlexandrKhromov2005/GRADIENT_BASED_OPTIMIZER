@@ -1,23 +1,32 @@
 #include "compression.h"
 
+#include "compression.h"
+
 cv::Mat compress_block(cv::Mat& original_block, int quality) {
     const auto& quant_array = quantization_tables[quality - 1];
     cv::Mat quant_table = qtable_to_mat(quant_array);
 
-    cv::Mat block_double, quant_double;
-    original_block.convertTo(block_double, CV_64F);
-    quant_table.convertTo(quant_double, CV_64F);
+    cv::Mat block_float;
+    original_block.convertTo(block_float, CV_64F);
 
-    cv::Mat result_double;
-    cv::divide(block_double, quant_double, result_double);
+    cv::Mat dct_coeffs;
+    cv::dct(block_float, dct_coeffs);
 
-    cv::Mat rounded(8, 8, CV_32S);
-    for (int i = 0; i < 8; ++i) {
-        for (int j = 0; j < 8; ++j) {
-            rounded.at<int>(i, j) = static_cast<int>(
-                std::round(result_double.at<double>(i, j)));
-        }
-    }
+    cv::Mat quant_table_float;
+    quant_table.convertTo(quant_table_float, CV_64F); 
 
-    return rounded * quant_table;
+    cv::Mat quantized_coeffs;
+    cv::divide(dct_coeffs, quant_table_float, quantized_coeffs); 
+    quantized_coeffs.convertTo(quantized_coeffs, CV_64F, 1.0, 0.5); 
+
+    cv::Mat dequantized_coeffs;
+    cv::multiply(quantized_coeffs, quant_table_float, dequantized_coeffs);
+
+    cv::Mat reconstructed_block;
+    cv::idct(dequantized_coeffs, reconstructed_block);
+
+    cv::Mat final_block;
+    reconstructed_block.convertTo(final_block, CV_8U, 1.0, 0.5); 
+
+    return final_block.clone();
 }
