@@ -9,26 +9,31 @@
 #include "config.h"
 #include <array>
 
-// Инициализация генератора случайных чисел
+// Initializes the random number generator
 void init_random();
 
-// Генерация случайного числа в диапазоне [0.0, 1.0]
+// Generates a random number in the range [0.0, 1.0]
 double rand_num();
 
-// Генерация нормально распределенного числа
+// Generates a normally distributed number
 double randn();
 
-// Генерация значения rho на основе параметра alpha
+// Generates a value of rho based on the parameter alpha
 double new_rho(double alpha);
 
-// Генерация четырёх уникальных индексов
+// Generates four unique indices
 void gen_indexes(std::array<size_t, 4>& indexes, size_t cur_ind, size_t best_ind);
 
-// Генерация одного случайного индекса без проверки
+// Generates a random index without checking
 size_t gen_random_index();
 
+// Generates a random number in the range from -1 to 1 inclusive
 double rand_neg_one_to_one();
 
+// Generates a random value of 0 or 1 of type unsigned char
 unsigned char rand_binary();
+
+// Generates a random integer in the range [1, 100] inclusive
+int rand_int_1_to_100();
 
 #endif // RANDOM_UTILS_H
