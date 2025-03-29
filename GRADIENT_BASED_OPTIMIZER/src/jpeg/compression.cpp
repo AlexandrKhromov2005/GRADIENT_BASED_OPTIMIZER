@@ -8,15 +8,14 @@ cv::Mat compress_block(cv::Mat& original_block, int quality) {
     original_block.convertTo(block_double, CV_64F);
     quant_table.convertTo(quant_double, CV_64F);
 
-    cv::Mat result_float;
-    cv::divide(block_double, quant_double, result_float);
+    cv::Mat result_double;
+    cv::divide(block_double, quant_double, result_double);
 
     cv::Mat rounded(8, 8, CV_32S);
     for (int i = 0; i < 8; ++i) {
         for (int j = 0; j < 8; ++j) {
             rounded.at<int>(i, j) = static_cast<int>(
-                std::round(result_float.at<float>(i, j))
-                );
+                std::round(result_double.at<double>(i, j)));
         }
     }
 
