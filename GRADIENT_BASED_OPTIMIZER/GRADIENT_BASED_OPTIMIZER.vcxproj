@@ -142,6 +142,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\image_processing_custom.cpp" />
+    <ClCompile Include="src\jpeg\compression.cpp" />
     <ClCompile Include="src\launch.cpp" />
     <ClCompile Include="src\population.cpp" />
     <ClCompile Include="src\random_utils.cpp" />
@@ -153,6 +154,8 @@
     <ClInclude Include="src\gbo.h" />
     <ClInclude Include="src\image_metrics.h" />
     <ClInclude Include="src\image_processing_custom.h" />
+    <ClInclude Include="src\jpeg\compression.h" />
+    <ClInclude Include="src\jpeg\quantization_tables.h" />
     <ClInclude Include="src\launch.h" />
     <ClInclude Include="src\population.h" />
     <ClInclude Include="src\random_utils.h" />

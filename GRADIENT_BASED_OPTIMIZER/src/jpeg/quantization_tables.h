@@ -49,21 +49,22 @@ constexpr auto generate_all_quantization_tables() {
 
 constexpr auto quantization_tables = generate_all_quantization_tables();
 
-const std::vector<cv::Mat> get_quantization_tables() {
-    std::vector<cv::Mat> tables;
-    tables.reserve(100);
+inline cv::Mat qtable_to_mat(const std::array<std::array<int, 8>, 8>& arr) {
+    cv::Mat mat(8, 8, CV_32S);
 
-    for (int quality = 1; quality <= 100; ++quality) {
-        const auto& quant_table = quantization_tables[quality - 1];
-        cv::Mat mat(8, 8, CV_32S);
-
-        for (int i = 0; i < 8; ++i) {
-            for (int j = 0; j < 8; ++j) {
-                mat.at<int>(i, j) = quant_table[i][j];
-            }
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 8; ++j) {
+            mat.at<int>(i, j) = arr[i][j];
         }
-        tables.push_back(mat.clone());
     }
 
-    return tables;
+    return mat.clone();
+}
+
+inline std::array<cv::Mat, 100> quantization_mats;
+
+inline void initialize_quantization_mats() {
+    for (int q = 0; q < 100; ++q) {
+        quantization_mats[q] = qtable_to_mat(quantization_tables[q]);
+    }
 }

@@ -40,7 +40,7 @@ cv::Mat Population::apply_vec(const cv::Mat& block, std::array<double, VEC_SIZE>
 
 
 
-double Population::calculateOf(const cv::Mat& block, const std::array<double, VEC_SIZE>& vec, uchar bit) {
+double Population::calculateOf(const cv::Mat& block, const std::array<double, VEC_SIZE>& vec, uchar bit, int quality) {
     cv::Mat blockDouble;
     block.convertTo(blockDouble, CV_64F);
     cv::Mat DCTblock;
@@ -53,7 +53,6 @@ double Population::calculateOf(const cv::Mat& block, const std::array<double, VE
     newblockDouble.convertTo(newblock, CV_8U);
 
     // emulate random JPEG-attack
-    int quality = rand_int_1_to_100();
     cv::Mat attackedBlock = compress_block(newblock, quality);
 
     cv::Mat attackedBlockDouble;
@@ -73,13 +72,13 @@ double Population::calculateOf(const cv::Mat& block, const std::array<double, VE
 }
 
 
-void Population::initOf(const cv::Mat& block, uchar bit) {
+void Population::initOf(const cv::Mat& block, uchar bit, int quality) {
     double ofbest = DBL_MAX;
     double ofworst = -DBL_MAX;
 
     size_t ibest = 0, iworst = 0;
     for (size_t i = 0; i < POP_SIZE; ++i) {
-        vecs[i].second = calculateOf(block, vecs[i].first, bit);
+        vecs[i].second = calculateOf(block, vecs[i].first, bit, quality);
         if (vecs[i].second > ofworst) {
             ofworst = vecs[i].second;
             iworst = i;

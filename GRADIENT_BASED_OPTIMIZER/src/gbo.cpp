@@ -38,12 +38,9 @@ std::array<double, VEC_SIZE> gsr_func(double rho2, std::array<double, VEC_SIZE> 
 
 void GBO::main_loop() {
 	Population population = Population();
-	population.initOf(block, bit);
-	//for (size_t i = 0; i < VEC_SIZE; ++i) {
-	//	std::cout << population.vecs[i].second << " ";
-	//}
-	//std::cout << std::endl;
-	//std::cout << "pop init" << std::endl;
+	int quality = rand_int_1_to_100();
+	population.initOf(block, bit, quality);
+	
 	for (size_t m = 0; m < ITERATIONS; ++m) {
 		double betta = 0.2 + (1.2 - 0.2) * pow(1.0 - pow(static_cast<double>(m + 1) / static_cast<double>(ITERATIONS), 3.0), 2.0);
 		double angle = 1.5 * M_PI;
@@ -138,7 +135,7 @@ void GBO::main_loop() {
 			//std::cout << "leo end" << std::endl;
 
 
-			double x_next_of = population.calculateOf(block, x_next, bit);
+			double x_next_of = population.calculateOf(block, x_next, bit, quality);
 			VecOf trial = {};
 			trial.first = x_next;
 			trial.second = x_next_of;

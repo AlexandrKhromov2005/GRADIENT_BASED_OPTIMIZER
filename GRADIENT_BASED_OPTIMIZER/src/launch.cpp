@@ -8,11 +8,12 @@ void embend_wm(const std::string& image, const std::string& new_image, const std
 	std::vector<cv::Mat> image_vec = splitInto8x8Blocks(cv_image);
 	std::vector<int> wm_vec = convertWatermarkToBinary(cv_wm);
 
+	initialize_quantization_mats();
+
 	size_t image_size = image_vec.size();
 	for (size_t i = 0; i < image_size; ++i) {
 		GBO gbo(wm_vec[i % WM_SIZE], image_vec[i]);
 		gbo.main_loop();
-
 	}
 
 	const cv::Mat cv_new_image = merge8x8Blocks(image_vec, cv_image.rows, cv_image.cols);
