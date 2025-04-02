@@ -15,7 +15,7 @@ Population::Population() {
 }
 
 cv::Mat Population::apply_vec(const cv::Mat& block, std::array<double, VEC_SIZE> vec) {
-    constexpr std::array<std::pair<std::size_t, std::size_t>, 22> ZONE0 = { {
+    constexpr std::array<std::pair<std::size_t, std::size_t>, VEC_SIZE> ZONE0 = { {
         {6, 0}, {5, 1}, {4, 2}, {3, 3},
         {2, 4}, {1, 5}, {0, 6}, {0, 7},
         {1, 6}, {2, 5}, {3, 4}, {4, 3},
