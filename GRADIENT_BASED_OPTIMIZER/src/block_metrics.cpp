@@ -32,10 +32,10 @@ double calculatePSNR(const cv::Mat& block1, const cv::Mat& block2) {
 
 double calc_s_zero(const cv::Mat& block) {
     constexpr std::array<std::pair<std::size_t, std::size_t>, VEC_SIZE / 2> REG0 = { {
-        {7, 1}, {6, 1}, {5, 1},
-        {5, 3}, {4, 3}, {3, 3},
-        {3, 5}, {2, 5}, {1, 5},
-        {1, 7}, {0, 7}
+        {6, 0}, {7, 1}, {5, 1},
+        {6, 2}, {4, 3}, {3, 5},
+        {2, 4}, {2, 6}, {1, 5},
+        {1, 7}, {0, 6}
 
     } };
 
@@ -52,10 +52,10 @@ double calc_s_zero(const cv::Mat& block) {
 
 double calc_s_one(const cv::Mat& block) {
     constexpr std::array<std::pair<std::size_t, std::size_t>, VEC_SIZE / 2> REG1 = { {
-        {7, 0}, {6, 0},
-        {6, 2}, {5, 2}, {4, 2},
-        {4, 4}, {3, 4}, {2, 4},
-        {2, 6}, {1, 6}, {0, 6}
+        {7, 0}, {6, 1},
+        {5, 2}, {5, 3}, {4, 2},
+        {4, 4}, {3, 3}, {3, 4},
+        {2, 5}, {1, 6}, {0, 7}
     } };
 
     double sum = 0.0;
