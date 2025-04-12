@@ -36,6 +36,7 @@ double calc_s_zero(const cv::Mat& block) {
         {5, 3}, {4, 3}, {3, 3},
         {3, 5}, {2, 5}, {1, 5},
         {1, 7}, {0, 7}
+
     } };
 
     double sum = 0.0;
