@@ -31,20 +31,19 @@ constexpr std::array<std::array<int, 8>, 8> generate_quantization_table(int qual
     return quantTable;
 }
 
-template<int Quality>
-constexpr std::array<std::array<int, 8>, 8> generate_q_table() {
-    return generate_quantization_table(Quality);
-}
-
-template<int... Qualities>
-constexpr auto generate_tables_impl(std::integer_sequence<int, Qualities...>) {
-    return std::array<std::array<std::array<int, 8>, 8>, sizeof...(Qualities)>{
-        generate_quantization_table(Qualities + 1)...
-    };
-}
-
 constexpr auto generate_all_quantization_tables() {
-    return generate_tables_impl(std::make_integer_sequence<int, 100>{});
+    return std::array<std::array<std::array<int, 8>, 8>, 10>{
+        generate_quantization_table(10),
+            generate_quantization_table(20),
+            generate_quantization_table(30),
+            generate_quantization_table(40),
+            generate_quantization_table(50),
+            generate_quantization_table(60),
+            generate_quantization_table(70),
+            generate_quantization_table(80),
+            generate_quantization_table(90),
+            generate_quantization_table(100)
+    };
 }
 
 constexpr auto quantization_tables = generate_all_quantization_tables();
@@ -61,10 +60,10 @@ inline cv::Mat qtable_to_mat(const std::array<std::array<int, 8>, 8>& arr) {
     return mat.clone();
 }
 
-inline std::array<cv::Mat, 100> quantization_mats;
+inline std::array<cv::Mat, 10> quantization_mats;
 
 inline void initialize_quantization_mats() {
-    for (int q = 0; q < 100; ++q) {
+    for (int q = 0; q < 10; ++q) {
         quantization_mats[q] = qtable_to_mat(quantization_tables[q]);
     }
 }

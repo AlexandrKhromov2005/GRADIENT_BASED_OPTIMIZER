@@ -70,7 +70,7 @@ unsigned char rand_binary() {
 }
 
 // Generates a random integer in the range [1, 100] inclusive
-int rand_int_1_to_100() {
-    std::uniform_int_distribution<int> int_dist(1, 100);  // Distribution for integers from 1 to 100
+int rand_int_1_to_10() {
+    std::uniform_int_distribution<int> int_dist(1, 10);  // Distribution for integers from 1 to 100
     return int_dist(generator);  // Generates a random integer in the specified range
 }

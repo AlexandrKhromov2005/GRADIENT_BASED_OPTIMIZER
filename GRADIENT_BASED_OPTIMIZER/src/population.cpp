@@ -53,7 +53,7 @@ double Population::calculateOf(const cv::Mat& block, const std::array<double, VE
     newblockDouble.convertTo(newblock, CV_8U);
 
     // emulate random JPEG-attack
-    int quality = rand_int_1_to_100();
+    int quality = rand_int_1_to_10();
     cv::Mat attackedBlock = compress_block(newblock, quality);
 
     cv::Mat attackedBlockDouble;
