@@ -20,9 +20,9 @@ public:
 
 	Population();
 	void initOf(const cv::Mat& block, uchar bit);
-	cv::Mat apply_vec(const cv::Mat &block, std::array<double, VEC_SIZE> vec);
-	double calculateOf(const cv::Mat &block, const std::array<double, VEC_SIZE>& vec, uchar bit);
-	void update(VecOf trial , size_t vec_ind);
+	cv::Mat apply_vec(const cv::Mat& block, std::array<double, VEC_SIZE> vec);
+	double calculateOf(const cv::Mat& block, const std::array<double, VEC_SIZE>& vec, uchar bit);
+	void update(VecOf trial, size_t vec_ind);
 };
 
 

@@ -1,5 +1,6 @@
 #include "gbo.h"
 #include <iostream>
+#include <omp.h>
 
 
 std::array<double, VEC_SIZE> gsr_func(double rho2, std::array<double, VEC_SIZE> best_x, std::array<double, VEC_SIZE> worst_x, std::array<double, VEC_SIZE> cur_x, std::array<double, VEC_SIZE> xr1, std::array<double, VEC_SIZE> dm, std::array<double, VEC_SIZE> xm, size_t flag) {
@@ -9,6 +10,7 @@ std::array<double, VEC_SIZE> gsr_func(double rho2, std::array<double, VEC_SIZE> 
 	double c = randn();
 	std::array<double, VEC_SIZE> delx = { 0.0 };
 	double eps = rand_num() * 0.01;
+
 	for (size_t i = 0; i < VEC_SIZE; ++i) {
 		double delta = 2.0 * a * std::fabs(xm[i] - cur_x[i]);
 		double step = 0.5 * (best_x[i] - xr1[i] + delta);
@@ -17,6 +19,7 @@ std::array<double, VEC_SIZE> gsr_func(double rho2, std::array<double, VEC_SIZE> 
 	}
 
 	std::array<double, VEC_SIZE> xs = (flag == 1) ? cur_x : best_x;
+
 	for (size_t i = 0; i < VEC_SIZE; ++i) {
 		xs[i] = xs[i] -  gsr[i] + dm[i];
 	}
@@ -67,6 +70,7 @@ void GBO::main_loop() {
 			gsr = gsr_func(rho2, population.vecs[population.best_ind].first, population.worst_vec.first, population.vecs[cur_vec].first, population.vecs[indexes[0]].first, dm, xm, 1);
 			dm_rand = rand_num();
 			dm.fill(0);
+
 			for (size_t i = 0; i < VEC_SIZE; ++i) {
 				dm[i] = dm_rand * rho1 * (population.vecs[population.best_ind].first[i] - population.vecs[indexes[0]].first[i]);
 				x1[i] = population.vecs[cur_vec].first[i] - gsr[i] + dm[i];
@@ -74,6 +78,7 @@ void GBO::main_loop() {
 
 			dm_rand = rand_num();
 			dm.fill(0);
+
 			for (size_t i = 0; i < VEC_SIZE; ++i) {
 				dm[i] = dm_rand * rho1 * (population.vecs[indexes[0]].first[i] - population.vecs[indexes[1]].first[i]);
 			}
@@ -82,6 +87,7 @@ void GBO::main_loop() {
 
 			dm_rand = rand_num();
 			dm.fill(0);
+
 			for (size_t i = 0; i < VEC_SIZE; ++i) {
 				dm[i] = dm_rand * rho1 * (population.vecs[indexes[0]].first[i] - population.vecs[indexes[1]].first[i]);
 				x2[i] = population.vecs[population.best_ind].first[i] - gsr[i] + dm[i];
@@ -101,7 +107,7 @@ void GBO::main_loop() {
 
 
 			if (rand_num() < PR) {
-				double L1 = (rand_num() < 0.5) ? 0.0 : 1.0;
+				double L1 = rand_binary();
 				double u1 = L1 * 2.0 * rand_num() + (1.0 - L1);
 				double u2 = L1 * rand_num() + (1.0 - L1);
 				double u3 = L1 * rand_num() + (1.0 - L1);
@@ -112,11 +118,12 @@ void GBO::main_loop() {
 				std::array<double, VEC_SIZE> x_p = population.vecs[gen_random_index()].first;
 				std::array<double, VEC_SIZE> x_rand;
 				x_rand.fill(0);
+
 				for (size_t i = 0; i < VEC_SIZE; ++i) {
 					x_rand[i] = TH * (2.0 * rand_num() - 1.0);
 				}
 				double L2 = (rand_num() < 0.5) ? 0.0 : 1.0;
-				
+
 				for (size_t i = 0; i < VEC_SIZE; ++i) {
 					x_mk[i] = L2 * x_p[i] + (1.0 - L2) * x_rand[i];
 				}
@@ -126,7 +133,9 @@ void GBO::main_loop() {
 				double f2 = rand_neg_one_to_one();
 
 				for (size_t i = 0; i < VEC_SIZE; ++i) {
-					x_next[i] = Y[i] + f1 * (u1 * population.vecs[population.best_ind].first[i] - u2 * x_mk[i]) + f2 * rho1 * (u3 * (x2[i] - x1[i]) + u2 * (population.vecs[indexes[0]].first[i] - population.vecs[indexes[1]].first[i])) * 0.5;
+					double term1 = f1 * (u1 * population.vecs[population.best_ind].first[i] - u2 * x_mk[i]);
+					double term2 = f2 * rho1 * (u3 * (x2[i] - x1[i]) + u2 * (population.vecs[indexes[0]].first[i] - population.vecs[indexes[1]].first[i])) * 0.5;
+					x_next[i] = Y[i] + term1 + term2;
 					x_next[i] = std::clamp(x_next[i], -TH, TH);
 				}
 			}

@@ -1,6 +1,7 @@
 #include "population.h"
 #include <iostream>
-#include <sstream>
+#include <sstream>m
+#include <omp.h>
 
 Population::Population() {
     for (size_t i = 0; i < POP_SIZE; ++i) {
@@ -26,6 +27,7 @@ cv::Mat Population::apply_vec(const cv::Mat& block, std::array<double, VEC_SIZE>
 
     cv::Mat new_block = block.clone();
 
+    #pragma omp parallel for
     for (size_t i = 0; i < VEC_SIZE; ++i) {
         int row = static_cast<int>(ZONE0[i].first);
         int col = static_cast<int>(ZONE0[i].second);

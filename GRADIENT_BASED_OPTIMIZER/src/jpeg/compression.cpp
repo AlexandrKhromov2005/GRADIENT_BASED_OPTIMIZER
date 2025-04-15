@@ -14,8 +14,8 @@ cv::Mat compress_block(cv::Mat& original_block, int quality) {
 
     cv::Mat quantized_coeffs;
     cv::divide(dct_coeffs, quant_table_float, quantized_coeffs);
-    quantized_coeffs.convertTo(quantized_coeffs, CV_32S); 
-    quantized_coeffs.convertTo(quantized_coeffs, CV_64F); 
+    quantized_coeffs.convertTo(quantized_coeffs, CV_32S);
+    quantized_coeffs.convertTo(quantized_coeffs, CV_64F);
 
     cv::Mat dequantized_coeffs;
     cv::multiply(quantized_coeffs, quant_table_float, dequantized_coeffs);

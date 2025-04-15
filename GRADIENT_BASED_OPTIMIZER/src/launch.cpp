@@ -189,21 +189,32 @@ void processAttack(
 	output.close();
 }
 
-void launch(const std::string& image, const std::string& new_image,const std::string& wm, const std::string& new_wm){
+void launch(const std::string& image, const std::string& new_image, const std::string& wm, const std::string& new_wm) {
 	std::vector<cv::Mat> embeded_images;
 	cv::Mat cv_image = readImage(image);
 	cv::Mat cv_wm = readImage(wm);
 
+	// Замер времени встраивания водяного знака
+	auto start_embed = std::chrono::high_resolution_clock::now();
+
 	for (size_t i = 0; i < 10; ++i) {
+		auto iter_start = std::chrono::high_resolution_clock::now();
+
 		embend_wm(image, new_image, wm);
 		get_wm(new_image, new_wm);
 		embeded_images.push_back(readImage(new_image));
-		std::cout<< "\r" << i << "/10" << std::flush;
+
+		auto iter_end = std::chrono::high_resolution_clock::now();
+		auto iter_duration = std::chrono::duration_cast<std::chrono::milliseconds>(iter_end - iter_start);
+
+		std::cout << "\r" << i << "/10 - " << iter_duration.count() << " ms per image" << std::flush;
 	}
-	std::cout << "\r" << std::flush;
 
+	auto end_embed = std::chrono::high_resolution_clock::now();
+	auto embed_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_embed - start_embed);
 
-
+	std::cout << "\nTotal embedding time: " << embed_duration.count() << " ms" << std::endl;
+	std::cout << "Average time per image: " << embed_duration.count() / 10 << " ms" << std::endl;
 
 	std::vector<AttackConfig> attacks = {
 		{"No attack", [](const cv::Mat& img) { return img; }},
@@ -228,10 +239,26 @@ void launch(const std::string& image, const std::string& new_image,const std::st
 
 	std::string result_filename = "results_" + getFileNameWithoutExtension(image) + ".txt";
 
+	// Замер времени обработки атак
+	auto start_attacks = std::chrono::high_resolution_clock::now();
+
 	for (const auto& attack : attacks) {
-		MetricCalculator metric = attack.use_cropped_comparison ? computeMSE : computeMSE; 
+		auto attack_start = std::chrono::high_resolution_clock::now();
+
+		MetricCalculator metric = attack.use_cropped_comparison ? computeMSE : computeMSE;
 		processAttack(embeded_images, cv_image, cv_wm, attack, metric, 10, result_filename);
+
+		auto attack_end = std::chrono::high_resolution_clock::now();
+		auto attack_duration = std::chrono::duration_cast<std::chrono::milliseconds>(attack_end - attack_start);
+
+		std::cout << "Attack '" << attack.name << "' processed in " << attack_duration.count() << " ms" << std::endl;
 	}
+
+	auto end_attacks = std::chrono::high_resolution_clock::now();
+	auto attacks_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_attacks - start_attacks);
+
+	std::cout << "\nTotal attacks processing time: " << attacks_duration.count() << " ms" << std::endl;
+	std::cout << "Average time per attack: " << attacks_duration.count() / attacks.size() << " ms" << std::endl;
 }
 
 

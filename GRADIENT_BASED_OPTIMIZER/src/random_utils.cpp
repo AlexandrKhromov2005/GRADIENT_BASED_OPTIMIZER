@@ -35,18 +35,15 @@ double new_rho(double alpha) {
 
 // Generates four unique indices
 void gen_indexes(std::array<size_t, 4>& indexes, size_t cur_ind, size_t best_ind) {
-    int cnt = 0;
     std::array<bool, POP_SIZE> used_indices = { false };
     used_indices[cur_ind] = true;
     used_indices[best_ind] = true;
 
-    while (cnt < 4) {
-        size_t temp = gen_random_index();
-        if (!used_indices[temp]) {
-            indexes[cnt] = temp;
-            cnt++;
-            used_indices[temp] = true;
-        }
+    for (size_t& idx : indexes) {
+        do {
+            idx = gen_random_index();
+        } while (used_indices[idx]);
+        used_indices[idx] = true;
     }
 }
 
@@ -71,6 +68,6 @@ unsigned char rand_binary() {
 
 // Generates a random integer in the range [1, 100] inclusive
 int rand_int_1_to_10() {
-    std::uniform_int_distribution<int> int_dist(1, 10);  // Distribution for integers from 1 to 100
+    std::uniform_int_distribution<int> int_dist(1, 10);  // Distribution for integers from 1 to 5
     return int_dist(generator);  // Generates a random integer in the specified range
 }

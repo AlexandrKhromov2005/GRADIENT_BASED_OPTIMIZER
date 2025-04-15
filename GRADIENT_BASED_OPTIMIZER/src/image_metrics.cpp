@@ -51,17 +51,26 @@ double computeBER(const cv::Mat& image1, const cv::Mat& image2) {
 
 double computeNCC(const cv::Mat& img1, const cv::Mat& img2) {
     cv::Mat img1f, img2f;
-    img1.convertTo(img1f, CV_32F);
-    img2.convertTo(img2f, CV_32F);
+    img1.convertTo(img1f, CV_64F);
+    img2.convertTo(img2f, CV_64F);
 
-    cv::Scalar mean1, stddev1, mean2, stddev2;
-    meanStdDev(img1f, mean1, stddev1);
-    meanStdDev(img2f, mean2, stddev2);
+    cv::Scalar mean1 = cv::mean(img1f);
+    cv::Scalar mean2 = cv::mean(img2f);
 
-    cv::Mat norm1 = (img1f - mean1[0]) / stddev1[0];
-    cv::Mat norm2 = (img2f - mean2[0]) / stddev2[0];
+    img1f -= mean1[0];
+    img2f -= mean2[0];
 
-    return mean(norm1.mul(norm2))[0];
+    double stddev1 = std::sqrt(cv::sum(img1f.mul(img1f))[0] / img1f.total());
+    double stddev2 = std::sqrt(cv::sum(img2f.mul(img2f))[0] / img2f.total());
+
+    if (stddev1 < 1e-10 || stddev2 < 1e-10) {
+        return (stddev1 < 1e-10 && stddev2 < 1e-10) ? 1.0 : 0.0;
+    }
+
+    img1f /= stddev1;
+    img2f /= stddev2;
+
+    return cv::sum(img1f.mul(img2f))[0] / img1f.total();
 }
 
 double computeSSIM(const cv::Mat& img1, const cv::Mat& img2) {
