@@ -144,9 +144,9 @@ void GBO::main_loop() {
 
 
 			double x_next_of = population.calculateOf(block, x_next, bit);
-			VecOf trial = {};
-			trial.first = x_next;
-			trial.second = x_next_of;
+			VecOf trial = { x_next , x_next_of };
+			//trial.first = x_next;
+			//trial.second = x_next_of;
 			population.update(trial, cur_vec);
 			//std::cout << population.vecs[population.best_ind].second << std::endl;
 
