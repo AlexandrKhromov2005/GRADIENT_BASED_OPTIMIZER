@@ -113,10 +113,10 @@ void GBO::main_loop() {
 				double u3 = L1 * rand_num() + (1.0 - L1);
 
 				double nu2 = rand_num();
-				std::array<double, VEC_SIZE> x_mk = {};
+				std::array<double, VEC_SIZE> x_mk = {0.0};
 				x_mk.fill(0);
 				std::array<double, VEC_SIZE> x_p = population.vecs[gen_random_index()].first;
-				std::array<double, VEC_SIZE> x_rand;
+				std::array<double, VEC_SIZE> x_rand = { 0.0 };
 				x_rand.fill(0);
 
 				for (size_t i = 0; i < VEC_SIZE; ++i) {
@@ -144,9 +144,9 @@ void GBO::main_loop() {
 
 
 			double x_next_of = population.calculateOf(block, x_next, bit);
-			VecOf trial = {};
-			trial.first = x_next;
-			trial.second = x_next_of;
+			VecOf trial = { x_next , x_next_of };
+			//trial.first = x_next;
+			//trial.second = x_next_of;
 			population.update(trial, cur_vec);
 			//std::cout << population.vecs[population.best_ind].second << std::endl;
 

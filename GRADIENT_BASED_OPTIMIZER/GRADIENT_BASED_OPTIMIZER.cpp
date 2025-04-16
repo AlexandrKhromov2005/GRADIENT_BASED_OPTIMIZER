@@ -7,21 +7,14 @@ int main()
 {
     auto start = std::chrono::high_resolution_clock::now();
 
-    std::vector<std::string> names = { "airplane", "baboon", "boat", "bridge",
-                                      "earth_from_space", "lake", "lenna", "pepper" };
+    const std::string image = "images/airplane.png";  
+    const std::string cvz = "images/watermark.png";
+    const std::string new_image = "images/new_airplane.png";  
+    const std::string extracted_cvz = "images/airplane_wm.png";  
 
-    for (std::string name : names) {
-        std::cout << name << " is started" << std::endl;
-
-        const std::string image = "images/" + name + ".png";
-        const std::string cvz = "images/watermark.png";
-        const std::string new_image = "images/new_" + name + ".png";
-        const std::string extracted_cvz = "images/" + name + "_wm.png";
-
-        launch(image, new_image, cvz, extracted_cvz);
-
-        std::cout << name << " is finished" << std::endl;
-    }
+    std::cout << "Processing image: " << image << std::endl;
+    launch(image, new_image, cvz, extracted_cvz);
+    std::cout << "Processing completed." << std::endl;
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = end - start;
