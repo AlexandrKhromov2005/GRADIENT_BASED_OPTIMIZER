@@ -16,18 +16,21 @@ constexpr std::array<std::array<int, 8>, 8> BASE_TABLE = { {
     {72, 92, 95, 98, 112, 100, 103, 99}
 } };
 
-constexpr int generate_quantization_value(int base, int quality) {
-    const double value = (base * 100.0) / quality;
-    return static_cast<int>(value + 0.5) < 1 ? 1 : static_cast<int>(value + 0.5);
+constexpr double calculate_scale_factor(int quality) {
+    return (quality < 50) ? 5000.0 / quality : 200.0 - 2.0 * quality;
 }
 
 constexpr std::array<std::array<int, 8>, 8> generate_quantization_table(int quality) {
+    const double scale_factor = calculate_scale_factor(quality);
     std::array<std::array<int, 8>, 8> quantTable{};
+
     for (int i = 0; i < 8; ++i) {
         for (int j = 0; j < 8; ++j) {
-            quantTable[i][j] = generate_quantization_value(BASE_TABLE[i][j], quality);
+            int q = static_cast<int>(BASE_TABLE[i][j] * scale_factor / 100.0);
+            quantTable[i][j] = (q > 0) ? q : 1;
         }
     }
+
     return quantTable;
 }
 
