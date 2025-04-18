@@ -12,9 +12,10 @@
 class GBO {
 public:
 	uchar bit;
+	int index;
 	cv::Mat &block;
 	void main_loop();
-	GBO(uchar bit, cv::Mat &block) : bit(bit), block(block) {}
+	GBO(uchar bit, cv::Mat &block, int index) : bit(bit), block(block), index(index) {}
 
 };
 

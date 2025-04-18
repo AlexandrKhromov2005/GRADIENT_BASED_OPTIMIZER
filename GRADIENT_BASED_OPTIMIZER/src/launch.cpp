@@ -2,7 +2,7 @@
 #include <omp.h>
 
 
-void embend_wm(const std::string& image, const std::string& new_image, const std::string& wm) {
+void embend_wm(const std::string& image, const std::string& new_image, const std::string& wm, const int index) {
 	const cv::Mat cv_image = readImage(image);
 	const cv::Mat cv_wm = readImage(wm);
 
@@ -15,7 +15,7 @@ void embend_wm(const std::string& image, const std::string& new_image, const std
 
 #pragma omp parallel for
 	for (size_t i = 0; i < image_size; ++i) {
-		GBO gbo(wm_vec[i % WM_SIZE], image_vec[i]);
+		GBO gbo(wm_vec[i % WM_SIZE], image_vec[i], index);
 		gbo.main_loop();
 	}
 
@@ -23,7 +23,7 @@ void embend_wm(const std::string& image, const std::string& new_image, const std
 	writeImage(new_image, cv_new_image);
 }
 
-void get_wm(const std::string& image, const std::string& new_image) {
+void get_wm(const std::string& image, const std::string& new_image, const int index) {
 	const cv::Mat cv_image = readImage(image);
 	std::vector<cv::Mat> image_vec = splitInto8x8Blocks(cv_image);
 	std::vector<int> wm_vec(WM_SIZE, 0);
@@ -33,8 +33,8 @@ void get_wm(const std::string& image, const std::string& new_image) {
 		image_vec[i].convertTo(dbl_block, CV_64F);
 		cv::Mat dct_block;
 		cv::dct(dbl_block, dct_block);
-		double s0 = calc_s_zero(dct_block);
-		double s1 = calc_s_one(dct_block);
+		double s0 = calc_s_zero(dct_block, index);
+		double s1 = calc_s_one(dct_block, index);
 		if (s0 < s1) {
 			++wm_vec[i % WM_SIZE];
 		}
@@ -66,7 +66,7 @@ void get_wm(const std::string& image, const std::string& new_image) {
 	writeImage(new_image, wm);
 }
 
-cv::Mat get_wm(const cv::Mat& cv_image) {
+cv::Mat get_wm(const cv::Mat& cv_image, const int index) {
 	std::vector<cv::Mat> image_vec = splitInto8x8Blocks(cv_image);
 	std::vector<int> wm_vec(WM_SIZE, 0);
 
@@ -75,8 +75,8 @@ cv::Mat get_wm(const cv::Mat& cv_image) {
 		image_vec[i].convertTo(dbl_block, CV_64F);
 		cv::Mat dct_block;
 		cv::dct(dbl_block, dct_block);
-		double s0 = calc_s_zero(dct_block);
-		double s1 = calc_s_one(dct_block);
+		double s0 = calc_s_zero(dct_block, index);
+		double s1 = calc_s_one(dct_block, index);
 		if (s0 < s1) {
 			++wm_vec[i % WM_SIZE];
 		}
@@ -134,7 +134,8 @@ void processAttack(
 	const AttackConfig& config,
 	MetricCalculator metric,
 	int iterations = 10,
-	const std::string& output_file = "")
+	const std::string& output_file = "",
+	const int index = 0)
 {
 	double mse_total = 0, psnr_total = 0, ncc_total = 0, ber_total = 0, ssim_total = 0;
 	double max_mse = 0, max_psnr = 0, max_ncc = 0, max_ber = 0, max_ssim = 0;
@@ -155,7 +156,7 @@ void processAttack(
 		cv::Mat original = config.use_cropped_comparison ?
 			config.attack(cv_image.clone()) : cv_image.clone();
 
-		cv::Mat wm = get_wm(img);
+		cv::Mat wm = get_wm(img, index);
 
 		double mse = metric(original, img);
 		double psnr= computePSNR(original, img);
@@ -192,7 +193,7 @@ void processAttack(
 	output.close();
 }
 
-void launch(const std::string& image, const std::string& new_image, const std::string& wm, const std::string& new_wm) {
+void launch(const std::string& image, const std::string& new_image, const std::string& wm, const std::string& new_wm, const int index) {
 	std::vector<cv::Mat> embeded_images;
 	cv::Mat cv_image = readImage(image);
 	cv::Mat cv_wm = readImage(wm);
@@ -203,8 +204,8 @@ void launch(const std::string& image, const std::string& new_image, const std::s
 	for (size_t i = 0; i < 10; ++i) {
 		auto iter_start = std::chrono::high_resolution_clock::now();
 
-		embend_wm(image, new_image, wm);
-		get_wm(new_image, new_wm);
+		embend_wm(image, new_image, wm, index);
+		get_wm(new_image, new_wm, index);
 		embeded_images.push_back(readImage(new_image));
 
 		auto iter_end = std::chrono::high_resolution_clock::now();
@@ -240,7 +241,7 @@ void launch(const std::string& image, const std::string& new_image, const std::s
 		{"Cropping from Edge", [](const cv::Mat& img) { return cropFromEdge(img, 100); }, true}
 	};
 
-	std::string result_filename = "results_" + getFileNameWithoutExtension(image) + ".txt";
+	std::string result_filename = "res" + std::to_string(index) + "/results_" + getFileNameWithoutExtension(image) + ".txt";
 
 	// Замер времени обработки атак
 	auto start_attacks = std::chrono::high_resolution_clock::now();
@@ -249,7 +250,7 @@ void launch(const std::string& image, const std::string& new_image, const std::s
 		auto attack_start = std::chrono::high_resolution_clock::now();
 
 		MetricCalculator metric = attack.use_cropped_comparison ? computeMSE : computeMSE;
-		processAttack(embeded_images, cv_image, cv_wm, attack, metric, 10, result_filename);
+		processAttack(embeded_images, cv_image, cv_wm, attack, metric, 10, result_filename, index);
 
 		auto attack_end = std::chrono::high_resolution_clock::now();
 		auto attack_duration = std::chrono::duration_cast<std::chrono::milliseconds>(attack_end - attack_start);

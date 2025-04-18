@@ -42,7 +42,7 @@ cv::Mat Population::apply_vec(const cv::Mat& block, std::array<double, VEC_SIZE>
 
 
 
-double Population::calculateOf(const cv::Mat& block, const std::array<double, VEC_SIZE>& vec, uchar bit) {
+double Population::calculateOf(const cv::Mat& block, const std::array<double, VEC_SIZE>& vec, uchar bit, const int index) {
     cv::Mat blockDouble;
     block.convertTo(blockDouble, CV_64F);
     cv::Mat DCTblock;
@@ -63,8 +63,8 @@ double Population::calculateOf(const cv::Mat& block, const std::array<double, VE
     cv::Mat attackedDCTblock;
     cv::dct(attackedBlockDouble, attackedDCTblock);
 
-    double s0 = calc_s_zero(attackedDCTblock);
-    double s1 = calc_s_one(attackedDCTblock);
+    double s0 = calc_s_zero(attackedDCTblock, index);
+    double s1 = calc_s_one(attackedDCTblock, index);
     double psnr = calculatePSNR(block, newblock);
 
     if (s0 < 0.001 || std::isnan(s0) || std::isinf(s0)) s0 = 0.001;
@@ -75,13 +75,13 @@ double Population::calculateOf(const cv::Mat& block, const std::array<double, VE
 }
 
 
-void Population::initOf(const cv::Mat& block, uchar bit) {
+void Population::initOf(const cv::Mat& block, uchar bit, const int index) {
     double ofbest = DBL_MAX;
     double ofworst = -DBL_MAX;
 
     size_t ibest = 0, iworst = 0;
     for (size_t i = 0; i < POP_SIZE; ++i) {
-        vecs[i].second = calculateOf(block, vecs[i].first, bit);
+        vecs[i].second = calculateOf(block, vecs[i].first, bit, index);
         if (vecs[i].second > ofworst) {
             ofworst = vecs[i].second;
             iworst = i;

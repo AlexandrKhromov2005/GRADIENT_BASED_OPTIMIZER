@@ -19,9 +19,9 @@ public:
 	size_t best_ind;
 
 	Population();
-	void initOf(const cv::Mat& block, uchar bit);
+	void initOf(const cv::Mat& block, uchar bit, const int index);
 	cv::Mat apply_vec(const cv::Mat& block, std::array<double, VEC_SIZE> vec);
-	double calculateOf(const cv::Mat& block, const std::array<double, VEC_SIZE>& vec, uchar bit);
+	double calculateOf(const cv::Mat& block, const std::array<double, VEC_SIZE>& vec, uchar bit, const int index);
 	void update(VecOf trial, size_t vec_ind);
 };
 

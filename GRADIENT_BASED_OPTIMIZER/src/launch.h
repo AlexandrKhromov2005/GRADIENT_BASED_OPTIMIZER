@@ -19,7 +19,7 @@
 #include <chrono>
 #include "jpeg/quantization_tables.h"
 
-void launch(const std::string& image, const std::string& new_image, const std::string& wm, const std::string& new_wm);
+void launch(const std::string& image, const std::string& new_image, const std::string& wm, const std::string& new_wm, const int index);
 
 #endif // LAUNCH_H
 
