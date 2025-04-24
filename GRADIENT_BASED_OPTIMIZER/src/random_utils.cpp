@@ -67,7 +67,11 @@ unsigned char rand_binary() {
 }
 
 // Generates a random integer in the range [1, 100] inclusive
+<<<<<<< HEAD
 int rand_int_1_to_11() {
+=======
+int rand_int_1_to_10() {
+>>>>>>> origin/master
     std::uniform_int_distribution<int> int_dist(1, 11);  // Distribution for integers from 1 to 5
     return int_dist(generator);  // Generates a random integer in the specified range
 }

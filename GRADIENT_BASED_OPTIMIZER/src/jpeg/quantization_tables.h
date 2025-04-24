@@ -36,6 +36,13 @@ constexpr std::array<std::array<int, 8>, 8> generate_quantization_table(int qual
 
 constexpr auto generate_all_quantization_tables() {
     return std::array<std::array<std::array<int, 8>, 8>, 11>{
+<<<<<<< HEAD
+=======
+           /* generate_quantization_table(30),
+            generate_quantization_table(35),
+            generate_quantization_table(40),
+            generate_quantization_table(45),*/
+>>>>>>> origin/master
             generate_quantization_table(50),
             generate_quantization_table(55),
             generate_quantization_table(60),
@@ -64,7 +71,7 @@ inline cv::Mat qtable_to_mat(const std::array<std::array<int, 8>, 8>& arr) {
     return mat.clone();
 }
 
-inline std::array<cv::Mat, 15> quantization_mats;
+inline std::array<cv::Mat, 11> quantization_mats;
 
 inline void initialize_quantization_mats() {
     for (int q = 0; q < 11; ++q) {
