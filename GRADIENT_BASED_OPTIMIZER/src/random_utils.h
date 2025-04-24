@@ -34,6 +34,6 @@ double rand_neg_one_to_one();
 unsigned char rand_binary();
 
 // Generates a random integer in the range [1, 100] inclusive
-int rand_int_1_to_10();
+int rand_int_1_to_11();
 
 #endif // RANDOM_UTILS_H

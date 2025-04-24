@@ -8,11 +8,10 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     std::vector<std::string> names = { "airplane", "baboon", "boat", "bridge",
-                                      "earth_from_space", "lake", "lenna", "pepper" };
+                                      "earth_from_space", "lake", "lenna", "pepper"  };
     for (int index = 0; index < 19; ++index) {
         for (std::string name : names) {
             std::cout << name << " is started" << std::endl;
-
             const std::string image = "images/" + name + ".png";
             const std::string cvz = "images/watermark.png";
             const std::string new_image = "images/new_" + name + ".png";

@@ -152,6 +152,8 @@ void GBO::main_loop() {
 
 
 		}
+
+		//std::cout << m << ") " << population.vecs[population.best_ind].second << std::endl;
 	}
 
 	cv::Mat blockDouble;
