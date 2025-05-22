@@ -1,0 +1,73 @@
+# --- Сгенерированные CMake файлы ---
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+*.cmake
+
+# --- Каталоги сборки ---
+build/
+bin/
+out/
+x64/
+x86/
+Debug/
+Release/
+*.dir/
+*.vcxproj.*
+*.vcxproj
+*.sln
+*.suo
+*.opensdf
+*.sdf
+
+# --- Временные и бинарные файлы ---
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+
+# --- Логи и кэши ---
+*.log
+*.cache
+*.pid
+
+# --- Файлы IDE ---
+.vscode/
+.idea/
+*.user
+*.ncb
+*.sln
+*.filters
+
+# --- Системные файлы ---
+.DS_Store
+Thumbs.db
+
+# --- Документация ---
+docs/_build/
+docs/html/
+docs/latex/
+
+# --- Тестовые данные ---
+*.test
+*.testdata
+
+# --- Пакеты ---
+*.deb
+*.rpm
+*.tar.gz
+*.zip
+
+# --- Прочие артефакты ---
+*.swp
+*~
+*.bak
+*.tmp
