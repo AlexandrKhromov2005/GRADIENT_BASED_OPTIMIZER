@@ -71,3 +71,7 @@ docs/latex/
 *~
 *.bak
 *.tmp
+
+# --- Исполняемые файлы ---
+
+GRADIENT_BASED_OPTIMIZER
