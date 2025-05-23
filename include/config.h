@@ -9,5 +9,6 @@
 #define M_PI            3.14159265358979323846
 #define ANGLE           1.5 * M_PI
 #define SIGN(x)         ((x) >= 0.0? 1.0 : -1.0)
+#define PR              0.5
 
 #endif //CONFIG_H

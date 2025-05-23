@@ -30,22 +30,32 @@ struct Population {
     Population(Block b, Mask rS0, Mask rS1, Mask wC, uchar bit);
     void update(Individual trial, size_t indexOfUpdatingIndividual);
     void GBO();
-    populationVector GSR(GSR_Kit gsrKit);
+    GBOVector GSR(GSR_Kit gsrKit);
 };
 
 struct GSR_Kit {
-    populationVector    delx;
-    populationVector    delta;
-    populationVector    step;
-    populationVector    dm;
-    populationVector    xs;
-    populationVector    gsr;
+    GBOVector           delx;
+    GBOVector           delta;
+    GBOVector           step;
+    GBOVector           dm;
+    GBOVector           xs;
+    GBOVector           gsr;
+    GBOVector           xr1;      
+    GBOVector           xr2;      
+    GBOVector           xr3;      
+    GBOVector           xr4;      
+    GBOVector           x_best;   
+    GBOVector           x_worst;  
+    GBOVector           x_current;
+    GBOVector           yp;       
+    GBOVector           yq;       
+
     double              eps;
-    std::vector<size_t> indexes;
-    size_t              iocv;
     double              rho1;
     double              rho2;
 
+    std::vector<size_t> indexes;
+    size_t              iocv;
 };
 
 #endif //POPULATION_H

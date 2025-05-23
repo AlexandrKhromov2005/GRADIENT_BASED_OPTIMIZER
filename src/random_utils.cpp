@@ -63,3 +63,19 @@ int generateFastPopulationIndex() {
     );
     return 1 + generator() % POPULATION_SIZE;
 }
+
+//randomBinaryFast returns randomly 0 or 1
+double randomBinaryFast() {
+    thread_local std::mt19937 gen(std::random_device{}());
+    thread_local std::bernoulli_distribution dist(0.5); 
+    
+    return dist(gen) ? 1.0 : 0.0;
+}
+
+//randomBinaryFast returns randomly 1 or -1
+double randomOneFast() {
+    thread_local std::mt19937 gen(std::random_device{}());
+    thread_local std::bernoulli_distribution dist(0.5);
+    
+    return dist(gen) ? 1.0 : -1.0;
+}
