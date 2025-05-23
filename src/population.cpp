@@ -5,18 +5,15 @@
 
 //applyVector is need for applying vector to block
 void Individual::applyVector(Block& block, Mask coords) {
-    cv::Mat mask = cv::Mat::zeros(8, 8, CV_8U);
-    
-    cv::parallel_for_(cv::Range(0, coords.size()), [&](const cv::Range& range) {
-        for (int i = range.start; i < range.end; ++i) {
-            const auto& [y, x] = coords[i];
-            if (y >= 0 && y < mask.rows && x >= 0 && x < mask.cols) {
-                mask.at<uchar>(y, x) = 1;
+    cv::parallel_for_(
+        cv::Range(0, static_cast<int>(coords.size())),
+        [&](const cv::Range& range) {
+            for (int idx = range.start; idx < range.end; ++idx) {
+                const auto& [i, j] = coords[idx];
+                block.frequencyDomain(i, j) += vector(i, j);
             }
         }
-    });
-
-    cv::add(block.frequencyDomain, vector, block.frequencyDomain, mask);
+    );
 }
 
 //calcObjectiveFunction return valure of objective function for current solution
@@ -27,13 +24,14 @@ void Individual::calcObjectiveFunction(Block& block, uchar bit, Mask coords, Mas
     double s0 = block.calcAbsSum(rS0);
     double s1 = block.calcAbsSum(rS1);
     objectiveFunctionValue =  (bit == 0? (s1/s0) : (s0/s1)) * psnr * 0.01;
+    block.frequencyDomain = block.frequencyDomain_.clone(); //reset to initial value
 }
 
 
 //Population is need for inititialisation population
 Population::Population(Block b, Mask rS0, Mask rS1, Mask wC, uchar bit)
 : block(b), regionOfS0(rS0),regionOfS1(rS1), wholeСoefficient(wC), bit(bit) {
-    Individual ws = Individual{.objectiveFunctionValue = 10.0};
+    Individual ws = Individual{.objectiveFunctionValue = 100.0};
     size_t iobs = 0;
     for (int i = 0; i < POPULATION_SIZE; ++i){
         cv::parallel_for_(cv::Range(0, wC.size()), [&](const cv::Range& range){
@@ -55,4 +53,16 @@ Population::Population(Block b, Mask rS0, Mask rS1, Mask wC, uchar bit)
 
     worstSolution = ws;
     indexOfBestSolution = iobs;
+}
+
+//update is need for updating vectors in population
+void Population::update(Individual trial, size_t indexOfUpdatingIndividual) {
+    if (trial.objectiveFunctionValue < individuals[indexOfUpdatingIndividual].objectiveFunctionValue) {
+        individuals[indexOfUpdatingIndividual] = trial;
+        if (individuals[indexOfUpdatingIndividual].objectiveFunctionValue < individuals[indexOfBestSolution].objectiveFunctionValue) {
+            indexOfBestSolution = indexOfUpdatingIndividual;
+        }
+    } else if (individuals[indexOfUpdatingIndividual].objectiveFunctionValue > worstSolution.objectiveFunctionValue) {
+        worstSolution = individuals[indexOfUpdatingIndividual];
+    }
 }

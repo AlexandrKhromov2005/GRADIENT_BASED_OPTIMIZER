@@ -26,6 +26,8 @@ struct Population {
     uchar                                   bit;
 
     Population(Block b, Mask rS0, Mask rS1, Mask wC, uchar bit);
+    void update(Individual trial, size_t indexOfUpdatingIndividual);
+    void GBO();
 };
 
 #endif //POPULATION_H
