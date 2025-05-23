@@ -113,7 +113,7 @@ GBOVector operator+(double scalar, const GBOVector& vec) {
 }
 
 //clampVector clamps all values of vector
-void clampVector(GBOVector& vec, double th = TH) {
+void clampVector(GBOVector& vec, double th) {
     std::transform(std::execution::par_unseq,
                   vec.begin(), vec.end(),
                   vec.begin(),

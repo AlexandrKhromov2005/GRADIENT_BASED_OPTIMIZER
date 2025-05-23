@@ -9,30 +9,6 @@
 #include "smart_block.h"
 #include "random_utils.h"
 
-struct Individual {
-    populationVector    vector;
-    double              objectiveFunctionValue;
-    
-    void                applyVector(Block& block, Mask coords);
-    void                calcObjectiveFunction(Block& block, uchar bit, Mask coords, Mask rS0, Mask rS1);
-};
-
-struct Population {
-    Block                                   block;
-    std::array<Individual, POPULATION_SIZE> individuals;
-    Individual                              worstSolution;
-    size_t                                  indexOfBestSolution;  
-    Mask                                    regionOfS0;
-    Mask                                    regionOfS1;
-    Mask                                    wholeСoefficient;
-    uchar                                   bit;
-
-    Population(Block b, Mask rS0, Mask rS1, Mask wC, uchar bit);
-    void update(Individual trial, size_t indexOfUpdatingIndividual);
-    void GBO();
-    GBOVector GSR(GSR_Kit gsrKit);
-};
-
 struct GSR_Kit {
     GBOVector           delx;
     GBOVector           delta;
@@ -56,6 +32,30 @@ struct GSR_Kit {
 
     std::vector<size_t> indexes;
     size_t              iocv;
+};
+
+struct Individual {
+    populationVector    vector;
+    double              objectiveFunctionValue;
+    
+    void                applyVector(Block& block, Mask coords);
+    void                calcObjectiveFunction(Block& block, uchar bit, Mask coords, Mask rS0, Mask rS1);
+};
+
+struct Population {
+    Block                                   block;
+    std::array<Individual, POPULATION_SIZE> individuals;
+    Individual                              worstSolution;
+    size_t                                  indexOfBestSolution;  
+    Mask                                    regionOfS0;
+    Mask                                    regionOfS1;
+    Mask                                    wholeСoefficient;
+    uchar                                   bit;
+
+    Population(Block b, Mask rS0, Mask rS1, Mask wC, uchar bit);
+    void update(Individual trial, size_t indexOfUpdatingIndividual);
+    void GBO();
+    GBOVector GSR(GSR_Kit gsrKit);
 };
 
 #endif //POPULATION_H
