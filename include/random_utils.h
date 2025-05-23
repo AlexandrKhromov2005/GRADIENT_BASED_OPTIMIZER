@@ -6,5 +6,9 @@
 #include "config.h"
 
 double randomDoubleForPopulation();
+double randomDoubleZeroToOne();
+std::vector<size_t> generateFourUniqueIndices(size_t excludeIndex1, size_t excludeIndex2);
+double generateNormalZeroToOne();
+int generateFastPopulationIndex();
 
 #endif //RANDOM_UTILS
