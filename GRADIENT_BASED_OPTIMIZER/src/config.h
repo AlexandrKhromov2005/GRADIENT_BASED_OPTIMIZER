@@ -7,4 +7,4 @@
 #define SIGN(x) ((x) >= 0.0? 1.0 : -1.0)
 #define PR 0.5
 #define WM_SIZE 1024
-//#define EPS 0.05
+//#define EPS 0.05 

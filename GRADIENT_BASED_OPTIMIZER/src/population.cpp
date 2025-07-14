@@ -57,7 +57,7 @@ double Population::calculateOf(const cv::Mat& block, const std::array<double, VE
     double s0 = calc_s_zero(newblockDouble, index);
     double s1 = calc_s_one(newblockDouble, index);
     double psnr = calculatePSNR(block, newblock);
-
+     
     if (s0 < 0.001 || std::isnan(s0) || std::isinf(s0)) s0 = 0.001;
     if (s1 < 0.001 || std::isnan(s1) || std::isinf(s1)) s1 = 0.001;
 
