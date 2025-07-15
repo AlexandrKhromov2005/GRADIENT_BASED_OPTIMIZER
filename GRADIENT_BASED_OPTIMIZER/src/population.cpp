@@ -53,7 +53,7 @@ double Population::calculateOf(const cv::Mat& block, const std::array<double, VE
     cv::idct(newDCTblock, newblockDouble);
     cv::Mat newblock;
     newblockDouble.convertTo(newblock, CV_8U);
-
+     
     double s0 = calc_s_zero(newblockDouble, index);
     double s1 = calc_s_one(newblockDouble, index);
     double psnr = calculatePSNR(block, newblock);
