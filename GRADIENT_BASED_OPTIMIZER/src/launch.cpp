@@ -189,16 +189,16 @@ void processAttack(
 	output.close();
 }
 
-void launch(const std::string& image, const std::string& new_image,const std::string& wm, const std::string& new_wm){
+void launch(const std::string& image, const std::string& new_image,const std::string& wm, const std::string& new_wm, int iterations){
 	std::vector<cv::Mat> embeded_images;
 	cv::Mat cv_image = readImage(image);
 	cv::Mat cv_wm = readImage(wm);
 
-	for (size_t i = 0; i < 10; ++i) {
+	for (size_t i = 0; i < iterations; ++i) {
 		embend_wm(image, new_image, wm);
 		get_wm(new_image, new_wm);
 		embeded_images.push_back(readImage(new_image));
-		std::cout<< "\r" << i << "/10" << std::flush;
+		std::cout<< "\r" << i << "/" << iterations << std::flush;
 	}
 	std::cout << "\r" << std::flush;
 
@@ -230,7 +230,7 @@ void launch(const std::string& image, const std::string& new_image,const std::st
 
 	for (const auto& attack : attacks) {
 		MetricCalculator metric = attack.use_cropped_comparison ? computeMSE : computeMSE; 
-		processAttack(embeded_images, cv_image, cv_wm, attack, metric, 10, result_filename);
+		processAttack(embeded_images, cv_image, cv_wm, attack, metric, iterations, result_filename);
 	}
 }
 

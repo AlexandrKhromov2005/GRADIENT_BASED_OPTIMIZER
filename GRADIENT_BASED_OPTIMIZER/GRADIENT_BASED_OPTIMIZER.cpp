@@ -3,8 +3,26 @@
 #include <opencv2/opencv.hpp>
 #include "src/launch.h"
 
-int main()
+int main(int argc, char* argv[])
 {
+    bool test_mode = false;
+    
+    if (argc > 1) {
+        std::string arg = argv[1];
+        if (arg == "--test" || arg == "-t") {
+            test_mode = true;
+            std::cout << "Test mode: 1 iteration per image" << std::endl;
+        } else if (arg == "--help" || arg == "-h") {
+            std::cout << "Usage: " << argv[0] << " [--test|-t] [--help|-h]" << std::endl;
+            std::cout << "  --test, -t    Test mode (1 iteration per image)" << std::endl;
+            std::cout << "  default       Main mode (10 iterations per image)" << std::endl;
+            return 0;
+        }
+    }
+    
+    if (!test_mode) {
+        std::cout << "Main mode: 10 iterations per image" << std::endl;
+    }
     auto start = std::chrono::high_resolution_clock::now();
 
     std::vector<std::string> names = { "airplane", "baboon", "boat", "bridge",
@@ -18,7 +36,8 @@ int main()
         const std::string new_image = "images/new_" + name + ".png";
         const std::string extracted_cvz = "images/" + name + "_wm.png";
 
-        launch(image, new_image, cvz, extracted_cvz);
+        int iterations = test_mode ? 1 : 10;
+        launch(image, new_image, cvz, extracted_cvz, iterations);
 
         std::cout << name << " is finished" << std::endl;
     }

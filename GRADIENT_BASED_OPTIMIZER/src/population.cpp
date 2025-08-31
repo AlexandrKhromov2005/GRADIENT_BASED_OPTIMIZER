@@ -52,16 +52,9 @@ double Population::calculateOf(const cv::Mat& block, const std::array<double, VE
     cv::Mat newblock;
     newblockDouble.convertTo(newblock, CV_8U);
 
-    // emulate random JPEG-attack
-    cv::Mat attackedBlock = compress_block(newblock, quality);
-
-    cv::Mat attackedBlockDouble;
-    attackedBlock.convertTo(attackedBlockDouble, CV_64F);
-    cv::Mat attackedDCTblock;
-    cv::dct(attackedBlockDouble, attackedDCTblock);
-
-    double s0 = calc_s_zero(attackedDCTblock);
-    double s1 = calc_s_one(attackedDCTblock);
+    // No JPEG attack during embedding - use original transformed block
+    double s0 = calc_s_zero(newDCTblock);
+    double s1 = calc_s_one(newDCTblock);
     double psnr = calculatePSNR(block, newblock);
 
     if (s0 < 0.001 || std::isnan(s0) || std::isinf(s0)) s0 = 0.001;

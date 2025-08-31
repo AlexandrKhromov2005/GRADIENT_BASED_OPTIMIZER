@@ -8,7 +8,6 @@
 #include <opencv2/opencv.hpp>
 #include <cmath>
 #include "block_metrics.h"
-#include "jpeg/compression.h"
 
 using VecOf = std::pair<std::array<double, VEC_SIZE>, double>;
 

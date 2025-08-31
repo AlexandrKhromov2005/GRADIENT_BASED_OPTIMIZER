@@ -1,4 +1,5 @@
 #include "random_utils.h"
+#include <algorithm>
 
 std::random_device rd1;
 static std::mt19937 generator(rd1());
