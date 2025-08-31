@@ -16,6 +16,8 @@ public:
 	void main_loop();
 	GBO(uchar bit, cv::Mat &block) : bit(bit), block(block) {}
 
+private:
+	size_t getVectorSize();
 };
 
 #endif // GBO_H

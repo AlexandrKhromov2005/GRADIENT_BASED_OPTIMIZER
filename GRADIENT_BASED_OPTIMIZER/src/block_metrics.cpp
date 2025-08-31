@@ -3,6 +3,7 @@
 #include <cmath>
 #include <limits>
 #include "block_metrics.h"
+#include "embedding_schemes.h"
 #include "config.h"
 
 double calculateMSE(const cv::Mat& block1, const cv::Mat& block2) {
@@ -31,18 +32,12 @@ double calculatePSNR(const cv::Mat& block1, const cv::Mat& block2) {
 }
 
 double calc_s_zero(const cv::Mat& block) {
-    constexpr std::array<std::pair<std::size_t, std::size_t>, VEC_SIZE / 2> REG0 = { {
-        {7, 1}, {6, 1}, {5, 1},
-        {5, 3}, {4, 3}, {3, 3},
-        {3, 5}, {2, 5}, {1, 5},
-        {1, 7}, {0, 7}
-
-    } };
+    const auto& REG0 = getCurrentREG0();
 
     double sum = 0.0;
     for (const auto& coord : REG0) {
-        int row = static_cast<int>(coord.first);
-        int col = static_cast<int>(coord.second);
+        int row = coord.first;
+        int col = coord.second;
         double value = block.at<double>(row, col);
         sum += std::fabs(value);
     }
@@ -51,18 +46,13 @@ double calc_s_zero(const cv::Mat& block) {
 }
 
 double calc_s_one(const cv::Mat& block) {
-    constexpr std::array<std::pair<std::size_t, std::size_t>, VEC_SIZE / 2> REG1 = { {
-        {7, 0}, {6, 0},
-        {6, 2}, {5, 2}, {4, 2},
-        {4, 4}, {3, 4}, {2, 4},
-        {2, 6}, {1, 6}, {0, 6}
-    } };
+    const auto& REG1 = getCurrentREG1();
 
     double sum = 0.0;
     for (const auto& coord : REG1) {
-        int row = static_cast<int>(coord.first);
-        int col = static_cast<int>(coord.second);
-        float value = block.at<double>(row, col);
+        int row = coord.first;
+        int col = coord.second;
+        double value = block.at<double>(row, col);
         sum += std::fabs(value);
     }
 

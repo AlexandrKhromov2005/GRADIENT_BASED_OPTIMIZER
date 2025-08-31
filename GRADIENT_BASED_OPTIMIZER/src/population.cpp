@@ -1,10 +1,13 @@
 #include "population.h"
+#include "embedding_schemes.h"
 #include <iostream>
 #include <sstream>
 
 Population::Population() {
+    vecs.resize(POP_SIZE);
     for (size_t i = 0; i < POP_SIZE; ++i) {
-        for (size_t j = 0; j < VEC_SIZE; ++j) {
+        vecs[i].first.resize(CURRENT_VEC_SIZE);
+        for (size_t j = 0; j < CURRENT_VEC_SIZE; ++j) {
             vecs[i].first[j] = TH * (2.0 * rand_num() - 1.0);
         }
         vecs[i].second = DBL_MAX;
@@ -14,21 +17,16 @@ Population::Population() {
     worst_vec.second = -DBL_MAX;
 }
 
-cv::Mat Population::apply_vec(const cv::Mat& block, std::array<double, VEC_SIZE> vec) {
-    constexpr std::array<std::pair<std::size_t, std::size_t>, VEC_SIZE> ZONE0 = { {
-        {6, 0}, {5, 1}, {4, 2}, {3, 3},
-        {2, 4}, {1, 5}, {0, 6}, {0, 7},
-        {1, 6}, {2, 5}, {3, 4}, {4, 3},
-        {5, 2}, {6, 1}, {7, 0}, {7, 1},
-        {6, 2}, {5, 3}, {4, 4}, {3, 5},
-        {2, 6}, {1, 7}
-    } };
+cv::Mat Population::apply_vec(const cv::Mat& block, const std::vector<double>& vec) {
+    const auto& ZONE0 = getCurrentZONE0();
 
     cv::Mat new_block = block.clone();
 
-    for (size_t i = 0; i < VEC_SIZE; ++i) {
-        int row = static_cast<int>(ZONE0[i].first);
-        int col = static_cast<int>(ZONE0[i].second);
+    // Use full scheme size
+    size_t max_elements = std::min(vec.size(), ZONE0.size());
+    for (size_t i = 0; i < max_elements; ++i) {
+        int row = ZONE0[i].first;
+        int col = ZONE0[i].second;
 
         double original_val = block.at<double>(row, col);
         double computed_val = SIGN(original_val) * std::fabs(std::fabs(original_val) + vec[i]);
@@ -40,7 +38,7 @@ cv::Mat Population::apply_vec(const cv::Mat& block, std::array<double, VEC_SIZE>
 
 
 
-double Population::calculateOf(const cv::Mat& block, const std::array<double, VEC_SIZE>& vec, uchar bit, int quality) {
+double Population::calculateOf(const cv::Mat& block, const std::vector<double>& vec, uchar bit, int quality) {
     cv::Mat blockDouble;
     block.convertTo(blockDouble, CV_64F);
     cv::Mat DCTblock;
@@ -88,7 +86,7 @@ void Population::initOf(const cv::Mat& block, uchar bit, int quality) {
 
 }
 
-void Population::update(VecOf trial, size_t vec_ind) {
+void Population::update(const VecOf& trial, size_t vec_ind) {
     if (trial.second < vecs[vec_ind].second) {
         vecs[vec_ind] = trial;
         if (vecs[vec_ind].second < vecs[best_ind].second) {

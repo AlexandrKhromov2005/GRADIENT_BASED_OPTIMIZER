@@ -383,4 +383,5 @@ CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/block_metri
  /usr/include/opencv4/opencv2/video/tracking.hpp \
  /usr/include/opencv4/opencv2/video/background_segm.hpp \
  /home/alex/projects/GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER/src/block_metrics.h \
+ /home/alex/projects/GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.h \
  /home/alex/projects/GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER/src/config.h

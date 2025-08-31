@@ -406,4 +406,6 @@ CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_
  /usr/include/c++/14/bits/fs_fwd.h /usr/include/c++/14/bits/fs_path.h \
  /usr/include/c++/14/codecvt /usr/include/c++/14/bits/fs_dir.h \
  /usr/include/c++/14/bits/fs_ops.h \
- /home/alex/projects/GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER/src/jpeg/quantization_tables.h
+ /home/alex/projects/GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER/src/jpeg/quantization_tables.h \
+ /home/alex/projects/GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.h \
+ /home/alex/projects/GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER/src/dataset_generation.h
