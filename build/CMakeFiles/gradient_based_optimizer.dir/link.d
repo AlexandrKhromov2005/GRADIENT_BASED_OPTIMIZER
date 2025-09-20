@@ -14,8 +14,6 @@ gradient_based_optimizer: \
   CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.o \
   CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.o \
   CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/dataset_generation.cpp.o \
-  CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.o \
-  CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.o \
   /usr/lib/x86_64-linux-gnu/libopencv_stitching.so.4.10.0 \
   /usr/lib/x86_64-linux-gnu/libopencv_alphamat.so.4.10.0 \
   /usr/lib/x86_64-linux-gnu/libopencv_aruco.so.4.10.0 \
@@ -52,9 +50,6 @@ gradient_based_optimizer: \
   /usr/lib/x86_64-linux-gnu/libopencv_wechat_qrcode.so.4.10.0 \
   /usr/lib/x86_64-linux-gnu/libopencv_xobjdetect.so.4.10.0 \
   /usr/lib/x86_64-linux-gnu/libopencv_xphoto.so.4.10.0 \
-  /tmp/libtorch/lib/libtorch.so \
-  /tmp/libtorch/lib/libc10.so \
-  /tmp/libtorch/lib/libkineto.a \
   /usr/lib/x86_64-linux-gnu/libopencv_highgui.so.4.10.0 \
   /usr/lib/x86_64-linux-gnu/libopencv_datasets.so.4.10.0 \
   /usr/lib/x86_64-linux-gnu/libopencv_plot.so.4.10.0 \
@@ -74,9 +69,6 @@ gradient_based_optimizer: \
   /usr/lib/x86_64-linux-gnu/libopencv_photo.so.4.10.0 \
   /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.10.0 \
   /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.10.0 \
-  /tmp/libtorch/lib/libtorch_cpu.so \
-  /tmp/libtorch/lib/libc10.so \
-  /tmp/libtorch/lib/libtorch.so \
   /usr/lib/gcc/x86_64-linux-gnu/14/libstdc++.so \
   /usr/lib/gcc/x86_64-linux-gnu/14/../../../x86_64-linux-gnu/libm.so \
   /usr/lib/gcc/x86_64-linux-gnu/14/../../../x86_64-linux-gnu/libm.so \
@@ -103,7 +95,6 @@ gradient_based_optimizer: \
   /usr/lib/gcc/x86_64-linux-gnu/14/libgcc.a \
   /usr/lib/gcc/x86_64-linux-gnu/14/crtendS.o \
   /usr/lib/gcc/x86_64-linux-gnu/14/../../../x86_64-linux-gnu/crtn.o \
-  /lib64/ld-linux-x86-64.so.2 \
   /lib/x86_64-linux-gnu/libjpeg.so.8 \
   /lib/x86_64-linux-gnu/libwebp.so.7 \
   /lib/x86_64-linux-gnu/libpng16.so.16 \
@@ -120,16 +111,7 @@ gradient_based_optimizer: \
   /lib/x86_64-linux-gnu/liblapack.so.3 \
   /lib/x86_64-linux-gnu/libblas.so.3 \
   /lib/x86_64-linux-gnu/libtbb.so.12 \
-  /lib/i386-linux-gnu/librt.so.1 \
-  /usr/lib/i386-linux-gnu/librt.so.1 \
-  /lib/x86_64-linux-gnu/librt.so.1 \
-  /lib/i386-linux-gnu/libdl.so.2 \
-  /usr/lib/i386-linux-gnu/libdl.so.2 \
-  /lib/x86_64-linux-gnu/libdl.so.2 \
-  /lib/i386-linux-gnu/libpthread.so.0 \
-  /usr/lib/i386-linux-gnu/libpthread.so.0 \
-  /lib/x86_64-linux-gnu/libpthread.so.0 \
-  /tmp/libtorch/lib/libgomp-52f2fd74.so.1 \
+  /lib64/ld-linux-x86-64.so.2 \
   /lib/x86_64-linux-gnu/libsharpyuv.so.0 \
   /lib/x86_64-linux-gnu/libgdcmDICT.so.3.0 \
   /lib/x86_64-linux-gnu/libgdcmjpeg8.so.3.0 \
@@ -330,10 +312,6 @@ CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_s
 
 CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/dataset_generation.cpp.o:
 
-CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.o:
-
-CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.o:
-
 /usr/lib/x86_64-linux-gnu/libopencv_stitching.so.4.10.0:
 
 /usr/lib/x86_64-linux-gnu/libopencv_alphamat.so.4.10.0:
@@ -406,12 +384,6 @@ CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_w
 
 /usr/lib/x86_64-linux-gnu/libopencv_xphoto.so.4.10.0:
 
-/tmp/libtorch/lib/libtorch.so:
-
-/tmp/libtorch/lib/libc10.so:
-
-/tmp/libtorch/lib/libkineto.a:
-
 /usr/lib/x86_64-linux-gnu/libopencv_highgui.so.4.10.0:
 
 /usr/lib/x86_64-linux-gnu/libopencv_datasets.so.4.10.0:
@@ -449,12 +421,6 @@ CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_w
 /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.10.0:
 
 /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.10.0:
-
-/tmp/libtorch/lib/libtorch_cpu.so:
-
-/tmp/libtorch/lib/libc10.so:
-
-/tmp/libtorch/lib/libtorch.so:
 
 /usr/lib/gcc/x86_64-linux-gnu/14/libstdc++.so:
 
@@ -508,8 +474,6 @@ CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_w
 
 /usr/lib/gcc/x86_64-linux-gnu/14/../../../x86_64-linux-gnu/crtn.o:
 
-/lib64/ld-linux-x86-64.so.2:
-
 /lib/x86_64-linux-gnu/libjpeg.so.8:
 
 /lib/x86_64-linux-gnu/libwebp.so.7:
@@ -542,25 +506,7 @@ CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_w
 
 /lib/x86_64-linux-gnu/libtbb.so.12:
 
-/lib/i386-linux-gnu/librt.so.1:
-
-/usr/lib/i386-linux-gnu/librt.so.1:
-
-/lib/x86_64-linux-gnu/librt.so.1:
-
-/lib/i386-linux-gnu/libdl.so.2:
-
-/usr/lib/i386-linux-gnu/libdl.so.2:
-
-/lib/x86_64-linux-gnu/libdl.so.2:
-
-/lib/i386-linux-gnu/libpthread.so.0:
-
-/usr/lib/i386-linux-gnu/libpthread.so.0:
-
-/lib/x86_64-linux-gnu/libpthread.so.0:
-
-/tmp/libtorch/lib/libgomp-52f2fd74.so.1:
+/lib64/ld-linux-x86-64.so.2:
 
 /lib/x86_64-linux-gnu/libsharpyuv.so.0:
 

@@ -11,15 +11,6 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/3.31.6/CMakeCCompiler.cmake"
   "CMakeFiles/3.31.6/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.31.6/CMakeSystem.cmake"
-  "/tmp/libtorch/share/cmake/Caffe2/Caffe2Config.cmake"
-  "/tmp/libtorch/share/cmake/Caffe2/Caffe2ConfigVersion.cmake"
-  "/tmp/libtorch/share/cmake/Caffe2/Caffe2Targets-release.cmake"
-  "/tmp/libtorch/share/cmake/Caffe2/Caffe2Targets.cmake"
-  "/tmp/libtorch/share/cmake/Caffe2/public/mkl.cmake"
-  "/tmp/libtorch/share/cmake/Caffe2/public/mkldnn.cmake"
-  "/tmp/libtorch/share/cmake/Caffe2/public/utils.cmake"
-  "/tmp/libtorch/share/cmake/Torch/TorchConfig.cmake"
-  "/tmp/libtorch/share/cmake/Torch/TorchConfigVersion.cmake"
   "/usr/lib/x86_64-linux-gnu/cmake/opencv4/OpenCVConfig-version.cmake"
   "/usr/lib/x86_64-linux-gnu/cmake/opencv4/OpenCVConfig.cmake"
   "/usr/lib/x86_64-linux-gnu/cmake/opencv4/OpenCVModules-release.cmake"
@@ -153,5 +144,4 @@ set(CMAKE_MAKEFILE_PRODUCTS
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/gradient_based_optimizer.dir/DependInfo.cmake"
-  "CMakeFiles/classifier_example.dir/DependInfo.cmake"
   )
