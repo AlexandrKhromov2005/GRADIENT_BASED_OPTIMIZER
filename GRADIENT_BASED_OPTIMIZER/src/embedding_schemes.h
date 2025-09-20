@@ -7,6 +7,10 @@
 #include <map>
 #include "config.h"
 
+#ifdef TORCH_AVAILABLE
+#include "ensemble_classifier.h"
+#endif
+
 struct EmbeddingScheme {
     std::string name;
     std::string description;
@@ -29,11 +33,25 @@ public:
     std::vector<std::string> getAvailableSchemes() const;
     void setCurrentScheme(const std::string& schemeId);
     const EmbeddingScheme* getCurrentScheme() const;
+    
+#ifdef TORCH_AVAILABLE
+    // Classifier integration methods
+    bool initializeClassifier(const std::vector<std::string>& model_paths, 
+                             const std::vector<float>& thresholds, 
+                             bool use_cuda = true);
+    std::string selectSchemeForEmbedding(const cv::Mat& block_8x8);
+    std::string predictSchemeForExtraction(const cv::Mat& block_8x8);
+#endif
 
 private:
     EmbeddingSchemeManager() = default;
     std::map<std::string, EmbeddingScheme> schemes;
     std::string currentSchemeId = "scheme1";
+    
+#ifdef TORCH_AVAILABLE
+    std::unique_ptr<EnsembleClassifier> classifier_;
+    bool classifier_initialized_ = false;
+#endif
 };
 
 // Global functions to access current scheme data

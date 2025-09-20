@@ -20,5 +20,9 @@
 
 void launch(const std::string& image, const std::string& new_image, const std::string& wm, const std::string& new_wm, int iterations = 10);
 
+#ifdef TORCH_AVAILABLE
+void launch_with_classifier(const std::string& image, const std::string& new_image, const std::string& wm, const std::string& new_wm, int iterations = 10);
+#endif
+
 #endif // LAUNCH_H
 

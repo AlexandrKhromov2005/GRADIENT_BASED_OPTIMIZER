@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #define VEC_SIZE_DEFAULT 22
 #define POP_SIZE 30
 #define ITERATIONS 40

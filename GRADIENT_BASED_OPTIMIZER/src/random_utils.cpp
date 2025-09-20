@@ -25,7 +25,7 @@ double rand_num() {
 // Generates a normally distributed number (Box-Muller method)
 double randn() {
     init_random();
-    double val = std::clamp(dist(gen), 0.0, 1.0);
+    double val = std::max(0.0, std::min(1.0, dist(gen)));
     return val;
 }
 

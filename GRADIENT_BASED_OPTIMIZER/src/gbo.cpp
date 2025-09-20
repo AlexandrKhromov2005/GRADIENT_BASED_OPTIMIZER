@@ -1,6 +1,7 @@
 #include "gbo.h"
 #include "embedding_schemes.h"
 #include <iostream>
+#include <algorithm>
 
 
 std::vector<double> gsr_func(double rho2, const std::vector<double>& best_x, const std::vector<double>& worst_x, const std::vector<double>& cur_x, const std::vector<double>& xr1, const std::vector<double>& dm, const std::vector<double>& xm, size_t flag) {
@@ -99,7 +100,7 @@ void GBO::main_loop() {
 			for (size_t i = 0; i < CURRENT_VEC_SIZE; ++i) {
 				x3[i] = population.vecs[cur_vec].first[i] - rho1 * (x2[i] - x1[i]);
 				x_next[i] = ra * (rb * x1[i] + (1 - rb) * x2[i]) + (1 - ra) * x3[i];
-				x_next[i] = std::clamp(x_next[i], -TH, TH);
+				x_next[i] = std::max(-TH, std::min(TH, x_next[i]));
 			}
 
 
@@ -128,7 +129,7 @@ void GBO::main_loop() {
 
 				for (size_t i = 0; i < CURRENT_VEC_SIZE; ++i) {
 					x_next[i] = Y[i] + f1 * (u1 * population.vecs[population.best_ind].first[i] - u2 * x_mk[i]) + f2 * rho1 * (u3 * (x2[i] - x1[i]) + u2 * (population.vecs[indexes[0]].first[i] - population.vecs[indexes[1]].first[i])) * 0.5;
-					x_next[i] = std::clamp(x_next[i], -TH, TH);
+					x_next[i] = std::max(-TH, std::min(TH, x_next[i]));
 				}
 			}
 

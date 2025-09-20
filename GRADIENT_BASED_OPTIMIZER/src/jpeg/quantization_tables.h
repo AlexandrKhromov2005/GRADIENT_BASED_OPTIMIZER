@@ -21,7 +21,7 @@ constexpr int generate_quantization_value(int base, int quality) {
     return static_cast<int>(value + 0.5) < 1 ? 1 : static_cast<int>(value + 0.5);
 }
 
-constexpr std::array<std::array<int, 8>, 8> generate_quantization_table(int quality) {
+inline std::array<std::array<int, 8>, 8> generate_quantization_table(int quality) {
     std::array<std::array<int, 8>, 8> quantTable{};
     for (int i = 0; i < 8; ++i) {
         for (int j = 0; j < 8; ++j) {
@@ -32,22 +32,22 @@ constexpr std::array<std::array<int, 8>, 8> generate_quantization_table(int qual
 }
 
 template<int Quality>
-constexpr std::array<std::array<int, 8>, 8> generate_q_table() {
+inline std::array<std::array<int, 8>, 8> generate_q_table() {
     return generate_quantization_table(Quality);
 }
 
 template<int... Qualities>
-constexpr auto generate_tables_impl(std::integer_sequence<int, Qualities...>) {
+inline auto generate_tables_impl(std::integer_sequence<int, Qualities...>) {
     return std::array<std::array<std::array<int, 8>, 8>, sizeof...(Qualities)>{
         generate_quantization_table(Qualities + 1)...
     };
 }
 
-constexpr auto generate_all_quantization_tables() {
+inline auto generate_all_quantization_tables() {
     return generate_tables_impl(std::make_integer_sequence<int, 100>{});
 }
 
-constexpr auto quantization_tables = generate_all_quantization_tables();
+inline auto quantization_tables = generate_all_quantization_tables();
 
 inline cv::Mat qtable_to_mat(const std::array<std::array<int, 8>, 8>& arr) {
     cv::Mat mat(8, 8, CV_32S);

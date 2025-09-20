@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <memory>
 
 // Global dynamic vector size
 size_t CURRENT_VEC_SIZE = VEC_SIZE_DEFAULT;
@@ -195,3 +196,77 @@ const std::vector<std::pair<int, int>>& getCurrentZONE0() {
     static std::vector<std::pair<int, int>> empty;
     return empty;
 }
+
+#ifdef TORCH_AVAILABLE
+// Classifier integration methods
+bool EmbeddingSchemeManager::initializeClassifier(const std::vector<std::string>& model_paths,
+                                                  const std::vector<float>& thresholds,
+                                                  bool use_cuda) {
+    try {
+        classifier_ = std::make_unique<EnsembleClassifier>(model_paths, thresholds, use_cuda);
+        classifier_initialized_ = true;
+        std::cout << "✅ Classifier initialized successfully" << std::endl;
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "❌ Failed to initialize classifier: " << e.what() << std::endl;
+        classifier_initialized_ = false;
+        return false;
+    }
+}
+
+std::string EmbeddingSchemeManager::selectSchemeForEmbedding(const cv::Mat& block_8x8) {
+    if (!classifier_initialized_ || !classifier_) {
+        std::cout << "⚠️ Classifier not initialized, using default scheme2" << std::endl;
+        return "scheme2";
+    }
+    
+    try {
+        auto result = classifier_->predict(block_8x8, true); // use TTA
+        
+        // Map classifier result to embedding scheme
+        std::string selected_scheme;
+        if (result.predicted_class == 0) {
+            selected_scheme = "scheme2";  // scheme_0 -> scheme2
+        } else {
+            selected_scheme = "scheme3";  // scheme_1 -> scheme3
+        }
+        
+        std::cout << "🎯 Block classified as " << result.class_name 
+                  << " (confidence: " << (result.confidence * 100) << "%) -> using " 
+                  << selected_scheme << std::endl;
+        
+        return selected_scheme;
+    } catch (const std::exception& e) {
+        std::cerr << "❌ Classifier prediction failed: " << e.what() << std::endl;
+        return "scheme2"; // fallback
+    }
+}
+
+std::string EmbeddingSchemeManager::predictSchemeForExtraction(const cv::Mat& block_8x8) {
+    if (!classifier_initialized_ || !classifier_) {
+        std::cout << "⚠️ Classifier not initialized, trying scheme2 for extraction" << std::endl;
+        return "scheme2";
+    }
+    
+    try {
+        auto result = classifier_->predict(block_8x8, true); // use TTA
+        
+        // Map classifier result to extraction scheme
+        std::string predicted_scheme;
+        if (result.predicted_class == 0) {
+            predicted_scheme = "scheme2";  // scheme_0 -> scheme2
+        } else {
+            predicted_scheme = "scheme3";  // scheme_1 -> scheme3
+        }
+        
+        std::cout << "🔍 Block predicted as " << result.class_name 
+                  << " (confidence: " << (result.confidence * 100) << "%) -> extracting with " 
+                  << predicted_scheme << std::endl;
+        
+        return predicted_scheme;
+    } catch (const std::exception& e) {
+        std::cerr << "❌ Classifier prediction failed: " << e.what() << std::endl;
+        return "scheme2"; // fallback
+    }
+}
+#endif

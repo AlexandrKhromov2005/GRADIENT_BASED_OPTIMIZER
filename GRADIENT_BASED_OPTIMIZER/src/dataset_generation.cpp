@@ -1,6 +1,10 @@
 #include "dataset_generation.h"
 #include "embedding_schemes.h"
 #include "config.h"
+
+#ifdef TORCH_AVAILABLE
+#include "embedding_with_classifier.h"
+#endif
 #include "random_utils.h"
 #include "population.h"
 #include "gbo.h"
@@ -9,6 +13,8 @@
 #include <filesystem>
 #include <fstream>
 #include <vector>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #define BLOCK_SIZE 8
 
@@ -52,10 +58,10 @@ void generate_dataset(double tau_max) {
     auto& manager = EmbeddingSchemeManager::getInstance();
     
     // Create output directories
-    std::filesystem::create_directories("dataset");
-    std::filesystem::create_directories("dataset/Dir1");
-    std::filesystem::create_directories("dataset/Dir2"); 
-    std::filesystem::create_directories("dataset/Dir_rand");
+    system("mkdir -p dataset");
+    system("mkdir -p dataset/Dir1");
+    system("mkdir -p dataset/Dir2");
+    system("mkdir -p dataset/Dir_rand");
     
     std::vector<std::string> image_names = {"airplane", "baboon", "boat", "bridge", 
                                            "earth_from_space", "lake", "lenna", "pepper"};
@@ -162,13 +168,10 @@ void generate_dataset(double tau_max) {
     
     std::cout << "Dataset generation completed!" << std::endl;
     
-    // Count files in each directory
-    int count_dir1 = std::distance(std::filesystem::directory_iterator("dataset/Dir1"), 
-                                  std::filesystem::directory_iterator{});
-    int count_dir2 = std::distance(std::filesystem::directory_iterator("dataset/Dir2"), 
-                                  std::filesystem::directory_iterator{});
-    int count_dir_rand = std::distance(std::filesystem::directory_iterator("dataset/Dir_rand"), 
-                                      std::filesystem::directory_iterator{});
+    // Count files in each directory (simplified)
+    int count_dir1 = system("ls dataset/Dir1/*.png 2>/dev/null | wc -l");
+    int count_dir2 = system("ls dataset/Dir2/*.png 2>/dev/null | wc -l");
+    int count_dir_rand = system("ls dataset/Dir_rand/*.png 2>/dev/null | wc -l");
     
     int total_blocks = count_dir1 + count_dir2 + count_dir_rand;
     int expected_total = 8 * 4096; // 8 images × 4096 blocks each
@@ -183,3 +186,149 @@ void generate_dataset(double tau_max) {
         std::cout << "WARNING: Block count mismatch! Difference: " << (total_blocks - expected_total) << std::endl;
     }
 }
+
+#ifdef TORCH_AVAILABLE
+// Initialize classifier for dataset generation
+bool initialize_classifier_for_dataset() {
+    std::vector<std::string> model_paths = {
+        "best_scheme_classifier_torchscript.pt",
+        "ensemble_model_1_torchscript.pt"
+    };
+    std::vector<float> thresholds = {0.510f, 0.510f};
+    
+    std::cout << "🤖 Initializing classifier for dataset generation..." << std::endl;
+    
+    if (EmbeddingWithClassifier::initializeClassifier(model_paths, thresholds, true)) {
+        std::cout << "✅ Classifier initialized successfully for dataset generation" << std::endl;
+        return true;
+    } else {
+        std::cerr << "❌ Failed to initialize classifier for dataset generation" << std::endl;
+        return false;
+    }
+}
+
+// New dataset generation function with classifier integration
+void generate_dataset_with_classifier(double tau_max) {
+    std::cout << "🚀 Starting dataset generation WITH classifier integration" << std::endl;
+    
+    // Initialize classifier
+    if (!initialize_classifier_for_dataset()) {
+        std::cerr << "❌ Cannot proceed without classifier. Falling back to original method." << std::endl;
+        generate_dataset(tau_max);
+        return;
+    }
+    
+    // Create output directories
+    system("mkdir -p dataset_classifier");
+    system("mkdir -p dataset_classifier/scheme2_selected");
+    system("mkdir -p dataset_classifier/scheme3_selected");
+    system("mkdir -p dataset_classifier/extraction_correct");
+    system("mkdir -p dataset_classifier/extraction_incorrect");
+    
+    std::vector<std::string> image_names = {"airplane", "baboon", "boat", "bridge", 
+                                           "earth_from_space", "lake", "lenna", "pepper"};
+    
+    int total_blocks = 0;
+    int scheme2_selected = 0;
+    int scheme3_selected = 0;
+    int extraction_correct = 0;
+    int extraction_incorrect = 0;
+    
+    for (const std::string& name : image_names) {
+        std::cout << "🖼️ Processing " << name << "..." << std::endl;
+        
+        std::string image_path = "images/" + name + ".png";
+        cv::Mat original_color = cv::imread(image_path, cv::IMREAD_COLOR);
+        cv::Mat original_image;
+        cv::cvtColor(original_color, original_image, cv::COLOR_BGR2GRAY);
+        
+        if (original_image.empty()) {
+            std::cout << "❌ Error: Could not load " << name << std::endl;
+            continue;
+        }
+        
+        // Process image in 8x8 blocks
+        int block_count = 0;
+        for (int y = 0; y <= original_image.rows - BLOCK_SIZE; y += BLOCK_SIZE) {
+            for (int x = 0; x <= original_image.cols - BLOCK_SIZE; x += BLOCK_SIZE) {
+                cv::Rect block_rect(x, y, BLOCK_SIZE, BLOCK_SIZE);
+                cv::Mat block = original_image(block_rect);
+                
+                // Test with random bit
+                uchar test_bit = rand() % 2;
+                
+                // Embed using classifier-selected scheme
+                cv::Mat embedded_block = EmbeddingWithClassifier::embedBitWithSchemeSelection(
+                    block, test_bit);
+                
+                // Extract using classifier-predicted scheme
+                uchar extracted_bit = EmbeddingWithClassifier::extractBitWithSchemePrediction(
+                    embedded_block);
+                
+                // Determine which scheme was selected for embedding
+                auto& manager = EmbeddingSchemeManager::getInstance();
+                std::string current_scheme_name = manager.getCurrentScheme() ? 
+                    manager.getCurrentScheme()->name : "unknown";
+                
+                // Save block based on selected scheme
+                std::string scheme_filename = name + "_block_" + std::to_string(block_count) + ".png";
+                std::string scheme_path;
+                
+                if (current_scheme_name.find("scheme2") != std::string::npos || 
+                    current_scheme_name.find("Original") != std::string::npos) {
+                    scheme_path = "dataset_classifier/scheme2_selected/" + scheme_filename;
+                    scheme2_selected++;
+                } else {
+                    scheme_path = "dataset_classifier/scheme3_selected/" + scheme_filename;
+                    scheme3_selected++;
+                }
+                
+                cv::imwrite(scheme_path, block);
+                
+                // Save block based on extraction correctness
+                std::string correctness_filename = name + "_embedded_block_" + std::to_string(block_count) + ".png";
+                std::string correctness_path;
+                
+                if (test_bit == extracted_bit) {
+                    correctness_path = "dataset_classifier/extraction_correct/" + correctness_filename;
+                    extraction_correct++;
+                } else {
+                    correctness_path = "dataset_classifier/extraction_incorrect/" + correctness_filename;
+                    extraction_incorrect++;
+                }
+                
+                cv::imwrite(correctness_path, embedded_block);
+                
+                // Log progress every 100 blocks
+                if (block_count % 100 == 0) {
+                    std::cout << "⚡ Processed " << block_count << " blocks for " << name << std::endl;
+                }
+                
+                block_count++;
+                total_blocks++;
+            }
+        }
+        
+        std::cout << "✅ Completed " << name << " with " << block_count << " blocks" << std::endl;
+    }
+    
+    // Print statistics
+    std::cout << "\n📊 Dataset Generation Results:" << std::endl;
+    std::cout << "Total blocks processed: " << total_blocks << std::endl;
+    std::cout << "Scheme2 selected: " << scheme2_selected << " (" << (double)scheme2_selected/total_blocks*100 << "%)" << std::endl;
+    std::cout << "Scheme3 selected: " << scheme3_selected << " (" << (double)scheme3_selected/total_blocks*100 << "%)" << std::endl;
+    std::cout << "Extraction correct: " << extraction_correct << " (" << (double)extraction_correct/total_blocks*100 << "%)" << std::endl;
+    std::cout << "Extraction incorrect: " << extraction_incorrect << " (" << (double)extraction_incorrect/total_blocks*100 << "%)" << std::endl;
+    
+    double accuracy = (double)extraction_correct / total_blocks * 100.0;
+    std::cout << "\n🎯 Overall extraction accuracy: " << accuracy << "%" << std::endl;
+    
+    if (accuracy > 90.0) {
+        std::cout << "🎉 Excellent performance!" << std::endl;
+    } else if (accuracy > 70.0) {
+        std::cout << "👍 Good performance" << std::endl;
+    } else {
+        std::cout << "⚠️ Performance needs improvement" << std::endl;
+    }
+}
+#endif
