@@ -63,8 +63,22 @@ void generate_dataset(double tau_max) {
     system("mkdir -p dataset/Dir2");
     system("mkdir -p dataset/Dir_rand");
     
-    std::vector<std::string> image_names = {"airplane", "baboon", "boat", "bridge", 
-                                           "earth_from_space", "lake", "lenna", "pepper"};
+    // Automatically find all PNG images in the images directory (excluding watermark)
+    std::vector<std::string> image_names;
+    std::string images_dir = "images";
+    
+    for (const auto& entry : std::filesystem::directory_iterator(images_dir)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".png") {
+            std::string filename = entry.path().stem().string();
+            // Skip watermark.png as it's used as watermark, not as source image
+            if (filename != "watermark") {
+                image_names.push_back(filename);
+            }
+        }
+    }
+    
+    std::sort(image_names.begin(), image_names.end());
+    std::cout << "Found " << image_names.size() << " images to process" << std::endl;
     
     std::cout << "Starting dataset generation with tau_max = " << tau_max << std::endl;
     
@@ -174,7 +188,7 @@ void generate_dataset(double tau_max) {
     int count_dir_rand = system("ls dataset/Dir_rand/*.png 2>/dev/null | wc -l");
     
     int total_blocks = count_dir1 + count_dir2 + count_dir_rand;
-    int expected_total = 8 * 4096; // 8 images × 4096 blocks each
+    int expected_total = image_names.size() * 4096; // number of images × 4096 blocks each
     
     std::cout << "Results:" << std::endl;
     std::cout << "Dir1 (scheme2 better): " << count_dir1 << " blocks" << std::endl;
@@ -225,8 +239,22 @@ void generate_dataset_with_classifier(double tau_max) {
     system("mkdir -p dataset_classifier/extraction_correct");
     system("mkdir -p dataset_classifier/extraction_incorrect");
     
-    std::vector<std::string> image_names = {"airplane", "baboon", "boat", "bridge", 
-                                           "earth_from_space", "lake", "lenna", "pepper"};
+    // Automatically find all PNG images in the images directory (excluding watermark)
+    std::vector<std::string> image_names;
+    std::string images_dir = "images";
+    
+    for (const auto& entry : std::filesystem::directory_iterator(images_dir)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".png") {
+            std::string filename = entry.path().stem().string();
+            // Skip watermark.png as it's used as watermark, not as source image
+            if (filename != "watermark") {
+                image_names.push_back(filename);
+            }
+        }
+    }
+    
+    std::sort(image_names.begin(), image_names.end());
+    std::cout << "Found " << image_names.size() << " images to process" << std::endl;
     
     int total_blocks = 0;
     int scheme2_selected = 0;
