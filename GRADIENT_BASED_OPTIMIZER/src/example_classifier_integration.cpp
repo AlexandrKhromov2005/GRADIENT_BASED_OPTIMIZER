@@ -7,15 +7,12 @@ int main() {
     std::cout << "🚀 Testing Classifier Integration with Embedding System" << std::endl;
     
     try {
-        // Step 1: Initialize classifier
-        std::vector<std::string> model_paths = {
-            "best_scheme_classifier_torchscript.pt",
-            "ensemble_model_1_torchscript.pt"
-        };
-        std::vector<float> thresholds = {0.510f, 0.510f};
+        // Step 1: Initialize single classifier with final_model.pt
+        std::string model_path = "final_model.pt";
+        float threshold = 0.5f;
         
-        std::cout << "📦 Initializing classifier..." << std::endl;
-        if (!EmbeddingWithClassifier::initializeClassifier(model_paths, thresholds, true)) {
+        std::cout << "📦 Initializing single classifier..." << std::endl;
+        if (!EmbeddingWithClassifier::initializeSingleClassifier(model_path, threshold, true)) {
             std::cerr << "❌ Failed to initialize classifier. Exiting." << std::endl;
             return -1;
         }

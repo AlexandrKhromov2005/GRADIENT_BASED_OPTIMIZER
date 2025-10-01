@@ -9,6 +9,7 @@
 
 #ifdef TORCH_AVAILABLE
 #include "ensemble_classifier.h"
+#include "single_classifier.h"
 #endif
 
 struct EmbeddingScheme {
@@ -35,10 +36,16 @@ public:
     const EmbeddingScheme* getCurrentScheme() const;
     
 #ifdef TORCH_AVAILABLE
-    // Classifier integration methods
+    // Classifier integration methods (for ensemble)
     bool initializeClassifier(const std::vector<std::string>& model_paths, 
                              const std::vector<float>& thresholds, 
                              bool use_cuda = true);
+    
+    // Single classifier integration methods
+    bool initializeSingleClassifier(const std::string& model_path,
+                                   float threshold = 0.5f,
+                                   bool use_cuda = true);
+    
     std::string selectSchemeForEmbedding(const cv::Mat& block_8x8);
     std::string predictSchemeForExtraction(const cv::Mat& block_8x8);
 #endif
@@ -50,7 +57,10 @@ private:
     
 #ifdef TORCH_AVAILABLE
     std::unique_ptr<EnsembleClassifier> classifier_;
+    std::unique_ptr<SingleClassifier> single_classifier_;
     bool classifier_initialized_ = false;
+    bool single_classifier_initialized_ = false;
+    bool use_single_classifier_ = false;  // flag to choose between ensemble and single
 #endif
 };
 

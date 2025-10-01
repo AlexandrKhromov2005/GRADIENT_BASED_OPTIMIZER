@@ -15,14 +15,38 @@ bool EmbeddingWithClassifier::initializeClassifier(const std::vector<std::string
         return false;
     }
     
-    // Initialize the classifier
+    // Initialize the ensemble classifier
     bool success = manager.initializeClassifier(model_paths, thresholds, use_cuda);
     classifier_ready_ = success;
     
     if (success) {
-        std::cout << "🚀 EmbeddingWithClassifier initialized successfully" << std::endl;
+        std::cout << "🚀 EmbeddingWithClassifier (Ensemble) initialized successfully" << std::endl;
     } else {
-        std::cerr << "❌ Failed to initialize EmbeddingWithClassifier" << std::endl;
+        std::cerr << "❌ Failed to initialize EmbeddingWithClassifier (Ensemble)" << std::endl;
+    }
+    
+    return success;
+}
+
+bool EmbeddingWithClassifier::initializeSingleClassifier(const std::string& model_path,
+                                                        float threshold,
+                                                        bool use_cuda) {
+    auto& manager = EmbeddingSchemeManager::getInstance();
+    
+    // Load embedding schemes first
+    if (!manager.loadSchemes()) {
+        std::cerr << "❌ Failed to load embedding schemes" << std::endl;
+        return false;
+    }
+    
+    // Initialize the single classifier
+    bool success = manager.initializeSingleClassifier(model_path, threshold, use_cuda);
+    classifier_ready_ = success;
+    
+    if (success) {
+        std::cout << "🚀 EmbeddingWithClassifier (Single) initialized successfully" << std::endl;
+    } else {
+        std::cerr << "❌ Failed to initialize EmbeddingWithClassifier (Single)" << std::endl;
     }
     
     return success;

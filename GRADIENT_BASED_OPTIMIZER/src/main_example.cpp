@@ -1,22 +1,18 @@
 
-#include "ensemble_classifier.h"
+#include "single_classifier.h"
 #include <iostream>
 
 int main() {
     try {
-        // Пути к моделям и их пороги
-        std::vector<std::string> model_paths = {
-            "best_scheme_classifier_torchscript.pt",
-            "ensemble_model_1_torchscript.pt"
-        };
+        // Путь к модели и её порог
+        std::string model_path = "final_model.pt";
+        float threshold = 0.5f;
         
-        std::vector<float> thresholds = {0.510f, 0.510f};  // Пороги из метаданных
-        
-        // Создание ансамбля
-        EnsembleClassifier ensemble(model_paths, thresholds, true);  // true = использовать CUDA
+        // Создание single classifier
+        SingleClassifier classifier(model_path, threshold, true);  // true = использовать CUDA
         
         // Предсказание для одного изображения
-        auto result = ensemble.predict("test_image.jpg", true);  // true = использовать TTA
+        auto result = classifier.predict("test_image.jpg", true);  // true = использовать TTA
         
         std::cout << "Класс: " << result.class_name << std::endl;
         std::cout << "Уверенность: " << (result.confidence * 100) << "%" << std::endl;

@@ -136,6 +136,71 @@ bool EmbeddingSchemeManager::loadSchemes(const std::string& filename) {
     
     schemes["scheme3"] = scheme3;
 
+    // Parse extended_scheme 
+    EmbeddingScheme extended_scheme;
+    extended_scheme.name = "Extended Scheme";
+    extended_scheme.description = "Extended embedding scheme with 12+13 elements";
+    
+    // extended_scheme REG0 (12 elements)
+    extended_scheme.REG0 = {
+        {2, 3},
+        {7, 1}, {6, 1}, {5, 1},
+        {5, 3}, {4, 3}, {3, 3},
+        {3, 5}, {2, 5}, {1, 5},
+        {1, 7}, {0, 7}
+    };
+    
+    // extended_scheme REG1 (13 elements)
+    extended_scheme.REG1 = {
+        {1, 4}, {3, 2},
+        {7, 0}, {6, 0},
+        {6, 2}, {5, 2}, {4, 2},
+        {4, 4}, {3, 4}, {2, 4},
+        {2, 6}, {1, 6}, {0, 6}
+    };
+    
+    // extended_scheme ZONE0 (25 elements)
+    extended_scheme.ZONE0 = {
+        {2, 3}, {1, 4}, {3, 2},
+        {6, 0}, {5, 1}, {4, 2}, {3, 3},
+        {2, 4}, {1, 5}, {0, 6}, {0, 7},
+        {1, 6}, {2, 5}, {3, 4}, {4, 3},
+        {5, 2}, {6, 1}, {7, 0}, {7, 1},
+        {6, 2}, {5, 3}, {4, 4}, {3, 5},
+        {2, 6}, {1, 7}
+    };
+    
+    schemes["extended_scheme"] = extended_scheme;
+
+    // Parse standard_scheme
+    EmbeddingScheme standard_scheme;
+    standard_scheme.name = "Standard Scheme";
+    standard_scheme.description = "Standard size embedding scheme with 11+11 elements";
+    
+    // standard_scheme REG0 (11 elements)
+    standard_scheme.REG0 = {
+        {7, 0}, {7, 1}, {6, 0},
+        {6, 1}, {6, 2}, {5, 1},
+        {5, 2}, {5, 3}, {4, 2},
+        {4, 3}, {3, 3}
+    };
+    
+    // standard_scheme REG1 (11 elements)
+    standard_scheme.REG1 = {
+        {4, 4}, {3, 4},
+        {3, 5}, {2, 4}, {2, 5},
+        {2, 6}, {1, 5}, {1, 6},
+        {1, 7}, {0, 6}, {0, 7}
+    };
+    
+    // standard_scheme ZONE0 (22 elements)
+    standard_scheme.ZONE0 = {
+        {7, 0}, {7, 1}, {6, 0}, {6, 1}, {6, 2}, {5, 1}, {5, 2}, {5, 3}, {4, 2}, {4, 3}, {3, 3},
+        {4, 4}, {3, 4}, {3, 5}, {2, 4}, {2, 5}, {2, 6}, {1, 5}, {1, 6}, {1, 7}, {0, 6}, {0, 7}
+    };
+    
+    schemes["standard_scheme"] = standard_scheme;
+
     std::cout << "Loaded " << schemes.size() << " embedding schemes" << std::endl;
     return true;
 }
@@ -205,68 +270,131 @@ bool EmbeddingSchemeManager::initializeClassifier(const std::vector<std::string>
     try {
         classifier_ = std::make_unique<EnsembleClassifier>(model_paths, thresholds, use_cuda);
         classifier_initialized_ = true;
-        std::cout << "✅ Classifier initialized successfully" << std::endl;
+        use_single_classifier_ = false;
+        std::cout << "✅ Ensemble Classifier initialized successfully" << std::endl;
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "❌ Failed to initialize classifier: " << e.what() << std::endl;
+        std::cerr << "❌ Failed to initialize ensemble classifier: " << e.what() << std::endl;
         classifier_initialized_ = false;
         return false;
     }
 }
 
-std::string EmbeddingSchemeManager::selectSchemeForEmbedding(const cv::Mat& block_8x8) {
-    if (!classifier_initialized_ || !classifier_) {
-        std::cout << "⚠️ Classifier not initialized, using default scheme2" << std::endl;
-        return "scheme2";
-    }
-    
+bool EmbeddingSchemeManager::initializeSingleClassifier(const std::string& model_path,
+                                                       float threshold,
+                                                       bool use_cuda) {
     try {
-        auto result = classifier_->predict(block_8x8, true); // use TTA
-        
-        // Map classifier result to embedding scheme
-        std::string selected_scheme;
-        if (result.predicted_class == 0) {
-            selected_scheme = "scheme2";  // scheme_0 -> scheme2
-        } else {
-            selected_scheme = "scheme3";  // scheme_1 -> scheme3
-        }
-        
-        std::cout << "🎯 Block classified as " << result.class_name 
-                  << " (confidence: " << (result.confidence * 100) << "%) -> using " 
-                  << selected_scheme << std::endl;
-        
-        return selected_scheme;
+        single_classifier_ = std::make_unique<SingleClassifier>(model_path, threshold, use_cuda);
+        single_classifier_initialized_ = single_classifier_->isLoaded();
+        use_single_classifier_ = true;
+        std::cout << "✅ Single Classifier initialized successfully" << std::endl;
+        return single_classifier_initialized_;
     } catch (const std::exception& e) {
-        std::cerr << "❌ Classifier prediction failed: " << e.what() << std::endl;
-        return "scheme2"; // fallback
+        std::cerr << "❌ Failed to initialize single classifier: " << e.what() << std::endl;
+        single_classifier_initialized_ = false;
+        return false;
     }
 }
 
-std::string EmbeddingSchemeManager::predictSchemeForExtraction(const cv::Mat& block_8x8) {
-    if (!classifier_initialized_ || !classifier_) {
-        std::cout << "⚠️ Classifier not initialized, trying scheme2 for extraction" << std::endl;
-        return "scheme2";
+std::string EmbeddingSchemeManager::selectSchemeForEmbedding(const cv::Mat& block_8x8) {
+    // Check if single classifier is available and preferred
+    if (use_single_classifier_ && single_classifier_initialized_ && single_classifier_) {
+        try {
+            auto result = single_classifier_->predict(block_8x8, true); // use TTA
+            
+            // Map classifier result to embedding scheme
+            std::string selected_scheme;
+            if (result.predicted_class == 0) {
+                selected_scheme = "scheme2";  // scheme_0 -> scheme2
+            } else {
+                selected_scheme = "scheme3";  // scheme_1 -> scheme3
+            }
+            
+            std::cout << "🎯 Block classified as " << result.class_name 
+                      << " (confidence: " << (result.confidence * 100) << "%) -> using " 
+                      << selected_scheme << " [Single Classifier]" << std::endl;
+            
+            return selected_scheme;
+        } catch (const std::exception& e) {
+            std::cerr << "❌ Single classifier prediction failed: " << e.what() << std::endl;
+        }
     }
     
-    try {
-        auto result = classifier_->predict(block_8x8, true); // use TTA
-        
-        // Map classifier result to extraction scheme
-        std::string predicted_scheme;
-        if (result.predicted_class == 0) {
-            predicted_scheme = "scheme2";  // scheme_0 -> scheme2
-        } else {
-            predicted_scheme = "scheme3";  // scheme_1 -> scheme3
+    // Fallback to ensemble classifier
+    if (classifier_initialized_ && classifier_) {
+        try {
+            auto result = classifier_->predict(block_8x8, true); // use TTA
+            
+            // Map classifier result to embedding scheme
+            std::string selected_scheme;
+            if (result.predicted_class == 0) {
+                selected_scheme = "scheme2";  // scheme_0 -> scheme2
+            } else {
+                selected_scheme = "scheme3";  // scheme_1 -> scheme3
+            }
+            
+            std::cout << "🎯 Block classified as " << result.class_name 
+                      << " (confidence: " << (result.confidence * 100) << "%) -> using " 
+                      << selected_scheme << " [Ensemble Classifier]" << std::endl;
+            
+            return selected_scheme;
+        } catch (const std::exception& e) {
+            std::cerr << "❌ Ensemble classifier prediction failed: " << e.what() << std::endl;
         }
-        
-        std::cout << "🔍 Block predicted as " << result.class_name 
-                  << " (confidence: " << (result.confidence * 100) << "%) -> extracting with " 
-                  << predicted_scheme << std::endl;
-        
-        return predicted_scheme;
-    } catch (const std::exception& e) {
-        std::cerr << "❌ Classifier prediction failed: " << e.what() << std::endl;
-        return "scheme2"; // fallback
     }
+    
+    std::cout << "⚠️ No classifier initialized, using default scheme2" << std::endl;
+    return "scheme2";
+}
+
+std::string EmbeddingSchemeManager::predictSchemeForExtraction(const cv::Mat& block_8x8) {
+    // Check if single classifier is available and preferred
+    if (use_single_classifier_ && single_classifier_initialized_ && single_classifier_) {
+        try {
+            auto result = single_classifier_->predict(block_8x8, true); // use TTA
+            
+            // Map classifier result to extraction scheme
+            std::string predicted_scheme;
+            if (result.predicted_class == 0) {
+                predicted_scheme = "scheme2";  // scheme_0 -> scheme2
+            } else {
+                predicted_scheme = "scheme3";  // scheme_1 -> scheme3
+            }
+            
+            std::cout << "🔍 Block predicted as " << result.class_name 
+                      << " (confidence: " << (result.confidence * 100) << "%) -> extracting with " 
+                      << predicted_scheme << " [Single Classifier]" << std::endl;
+            
+            return predicted_scheme;
+        } catch (const std::exception& e) {
+            std::cerr << "❌ Single classifier prediction failed: " << e.what() << std::endl;
+        }
+    }
+    
+    // Fallback to ensemble classifier
+    if (classifier_initialized_ && classifier_) {
+        try {
+            auto result = classifier_->predict(block_8x8, true); // use TTA
+            
+            // Map classifier result to extraction scheme
+            std::string predicted_scheme;
+            if (result.predicted_class == 0) {
+                predicted_scheme = "scheme2";  // scheme_0 -> scheme2
+            } else {
+                predicted_scheme = "scheme3";  // scheme_1 -> scheme3
+            }
+            
+            std::cout << "🔍 Block predicted as " << result.class_name 
+                      << " (confidence: " << (result.confidence * 100) << "%) -> extracting with " 
+                      << predicted_scheme << " [Ensemble Classifier]" << std::endl;
+            
+            return predicted_scheme;
+        } catch (const std::exception& e) {
+            std::cerr << "❌ Ensemble classifier prediction failed: " << e.what() << std::endl;
+        }
+    }
+    
+    std::cout << "⚠️ No classifier initialized, trying scheme2 for extraction" << std::endl;
+    return "scheme2";
 }
 #endif

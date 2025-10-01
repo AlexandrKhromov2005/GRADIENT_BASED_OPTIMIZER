@@ -7,15 +7,37 @@ cd images/
 
 # Original source images that should be kept
 original_images=(
+    "aerial.png"
+    "affine.png"
     "airplane.png"
-    "baboon.png" 
+    "apc.png"
+    "baboon.png"
+    "big_bird.png"
     "boat.png"
     "bridge.png"
+    "butterfly.png"
+    "car_and_apcs.png"
+    "corrall.png"
+    "cross_road.png"
+    "dve_chaika.png"
     "earth_from_space.png"
+    "fish.png"
     "lake.png"
     "lenna.png"
+    "meow.png"
+    "mokey.png"
+    "mountain.png"
+    "old_cycle.png"
+    "old_pair.png"
+    "owl.png"
     "pepper.png"
+    "single_tower_twin.png"
+    "splash.png"
+    "stream_and_bridge.png"
+    "tank.png"
+    "truck_and_apcs.png"
     "watermark.png"
+    "wild_west_building.png"
 )
 
 # Count files before cleaning

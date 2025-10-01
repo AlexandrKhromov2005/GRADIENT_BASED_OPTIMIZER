@@ -388,31 +388,27 @@ void get_wm_with_ensemble(const std::string& image, const std::string& new_image
 
 // Основная функция launch с классификатором
 void launch_with_classifier(const std::string& image, const std::string& new_image, const std::string& wm, const std::string& new_wm, int iterations) {
-	std::cout << "🤖 Launching with Ensemble AI classifier integration..." << std::endl;
+	std::cout << "🤖 Launching with Single AI classifier integration (final_model.pt)..." << std::endl;
 	
-	// Инициализация ансамбля классификаторов
-	std::vector<std::string> model_paths = {
-		"best_scheme_classifier_torchscript.pt",
-		"ensemble_model_1_torchscript.pt"
-	};
-	std::vector<float> thresholds = {0.510f, 0.510f};
+	// Инициализация single классификатора с final_model.pt
+	std::string model_path = "final_model_torchscript.pt";
+	float threshold = 0.5f;
 	
-	std::unique_ptr<EnsembleClassifier> ensemble_classifier;
-	try {
-		ensemble_classifier = std::make_unique<EnsembleClassifier>(model_paths, thresholds, true);
-	} catch (const std::exception& e) {
-		std::cerr << "❌ Failed to initialize ensemble classifier: " << e.what() << std::endl;
+	// Инициализируем single classifier через EmbeddingWithClassifier
+	if (!EmbeddingWithClassifier::initializeSingleClassifier(model_path, threshold, true)) {
+		std::cerr << "❌ Failed to initialize single classifier with final_model.pt" << std::endl;
 		throw std::runtime_error("Cannot proceed without classifier in --classifier mode");
 	}
+	std::cout << "✅ Single classifier initialized successfully" << std::endl;
 	
 	std::vector<cv::Mat> embeded_images;
 	cv::Mat cv_image = readImage(image);
 	cv::Mat cv_wm = readImage(wm);
 
-	// Выполняем итерации встраивания/извлечения с ансамблем классификаторов
+	// Выполняем итерации встраивания/извлечения с single классификатором
 	for (size_t i = 0; i < iterations; ++i) {
-		embend_wm_with_ensemble(image, new_image, wm, ensemble_classifier.get());
-		get_wm_with_ensemble(new_image, new_wm, ensemble_classifier.get());
+		embend_wm_with_classifier(image, new_image, wm);
+		get_wm_with_classifier(new_image, new_wm);
 		embeded_images.push_back(readImage(new_image));
 		std::cout << "\r" << i << "/" << iterations << std::flush;
 	}

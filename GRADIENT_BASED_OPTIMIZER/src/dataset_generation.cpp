@@ -1,6 +1,7 @@
 #include "dataset_generation.h"
 #include "embedding_schemes.h"
 #include "config.h"
+#include <dirent.h>
 
 #ifdef TORCH_AVAILABLE
 #include "embedding_with_classifier.h"
@@ -10,7 +11,6 @@
 #include "gbo.h"
 #include "block_metrics.h"
 #include <iostream>
-#include <filesystem>
 #include <fstream>
 #include <vector>
 #include <sys/stat.h>
@@ -67,14 +67,18 @@ void generate_dataset(double tau_max) {
     std::vector<std::string> image_names;
     std::string images_dir = "images";
     
-    for (const auto& entry : std::filesystem::directory_iterator(images_dir)) {
-        if (entry.is_regular_file() && entry.path().extension() == ".png") {
-            std::string filename = entry.path().stem().string();
-            // Skip watermark.png as it's used as watermark, not as source image
-            if (filename != "watermark") {
-                image_names.push_back(filename);
+    DIR* dir = opendir(images_dir.c_str());
+    if (dir) {
+        struct dirent* entry;
+        while ((entry = readdir(dir)) != nullptr) {
+            std::string filename = entry->d_name;
+            if (filename.find(".png") != std::string::npos && filename != "watermark.png") {
+                // Remove .png extension
+                std::string stem = filename.substr(0, filename.find_last_of('.'));
+                image_names.push_back(stem);
             }
         }
+        closedir(dir);
     }
     
     std::sort(image_names.begin(), image_names.end());
@@ -90,11 +94,17 @@ void generate_dataset(double tau_max) {
         
         cv::Mat original_color = cv::imread(image_path, cv::IMREAD_COLOR);
         cv::Mat original_image;
+        
+        if (original_color.empty()) {
+            std::cout << "Error: Could not load " << name << std::endl;
+            continue;
+        }
+        
         cv::cvtColor(original_color, original_image, cv::COLOR_BGR2GRAY);
         cv::Mat watermark = cv::imread(watermark_path, cv::IMREAD_GRAYSCALE);
         
         if (original_image.empty() || watermark.empty()) {
-            std::cout << "Error: Could not load " << name << " or watermark" << std::endl;
+            std::cout << "Error: Could not process " << name << " or watermark" << std::endl;
             continue;
         }
         
@@ -106,54 +116,54 @@ void generate_dataset(double tau_max) {
                 cv::Mat block = original_image(block_rect);
                 
                 int quality = rand_int_1_to_100();
-                int total_error_scheme2 = 0;
-                int total_error_scheme3 = 0;
+                int total_error_standard = 0;
+                int total_error_extended = 0;
                 
                 // Test both bits (0 and 1) with both schemes and all attack types
                 for (uchar test_bit = 0; test_bit <= 1; test_bit++) {
-                    // Test with scheme2 (original)
-                    manager.setCurrentScheme("scheme2");
+                    // Test with standard_scheme (22 elements)
+                    manager.setCurrentScheme("standard_scheme");
                     
-                    cv::Mat block_copy2 = block.clone();
-                    GBO gbo_scheme2(test_bit, block_copy2);
-                    gbo_scheme2.main_loop();
-                    cv::Mat embedded_scheme2 = block_copy2.clone();
+                    cv::Mat block_copy_std = block.clone();
+                    GBO gbo_standard(test_bit, block_copy_std);
+                    gbo_standard.main_loop();
+                    cv::Mat embedded_standard = block_copy_std.clone();
                     
-                    // Apply attacks to scheme2 result
-                    cv::Mat scheme2_jpeg = jpeg_attack(embedded_scheme2, 70);
-                    cv::Mat scheme2_contrast = contrast_increase_attack(embedded_scheme2, 1.2);
+                    // Apply attacks to standard_scheme result
+                    cv::Mat standard_jpeg = jpeg_attack(embedded_standard, 70);
+                    cv::Mat standard_contrast = contrast_increase_attack(embedded_standard, 1.2);
                     
-                    // Test extraction for scheme2
-                    if (extract_bit_from_block(embedded_scheme2) != test_bit) total_error_scheme2++;
-                    if (extract_bit_from_block(scheme2_jpeg) != test_bit) total_error_scheme2++;
-                    if (extract_bit_from_block(scheme2_contrast) != test_bit) total_error_scheme2++;
+                    // Test extraction for standard_scheme
+                    if (extract_bit_from_block(embedded_standard) != test_bit) total_error_standard++;
+                    if (extract_bit_from_block(standard_jpeg) != test_bit) total_error_standard++;
+                    if (extract_bit_from_block(standard_contrast) != test_bit) total_error_standard++;
                     
-                    // Test with scheme3 (experimental)
-                    manager.setCurrentScheme("scheme3");
+                    // Test with extended_scheme (25 elements)
+                    manager.setCurrentScheme("extended_scheme");
                     
-                    cv::Mat block_copy3 = block.clone();
-                    GBO gbo_scheme3(test_bit, block_copy3);
-                    gbo_scheme3.main_loop();
-                    cv::Mat embedded_scheme3 = block_copy3.clone();
+                    cv::Mat block_copy_ext = block.clone();
+                    GBO gbo_extended(test_bit, block_copy_ext);
+                    gbo_extended.main_loop();
+                    cv::Mat embedded_extended = block_copy_ext.clone();
                     
-                    // Apply attacks to scheme3 result
-                    cv::Mat scheme3_jpeg = jpeg_attack(embedded_scheme3, 70);
-                    cv::Mat scheme3_contrast = contrast_increase_attack(embedded_scheme3, 1.2);
+                    // Apply attacks to extended_scheme result
+                    cv::Mat extended_jpeg = jpeg_attack(embedded_extended, 70);
+                    cv::Mat extended_contrast = contrast_increase_attack(embedded_extended, 1.2);
                     
-                    // Test extraction for scheme3
-                    if (extract_bit_from_block(embedded_scheme3) != test_bit) total_error_scheme3++;
-                    if (extract_bit_from_block(scheme3_jpeg) != test_bit) total_error_scheme3++;
-                    if (extract_bit_from_block(scheme3_contrast) != test_bit) total_error_scheme3++;
+                    // Test extraction for extended_scheme
+                    if (extract_bit_from_block(embedded_extended) != test_bit) total_error_extended++;
+                    if (extract_bit_from_block(extended_jpeg) != test_bit) total_error_extended++;
+                    if (extract_bit_from_block(extended_contrast) != test_bit) total_error_extended++;
                 }
                 
                 // Determine classification based on total errors
                 std::string output_dir;
                 
-                // Classification logic: Dir1 if tau2 < tau_max, Dir2 if tau3 <= tau_max <= tau2, else Dir_rand
-                if (total_error_scheme2 < (int)tau_max) {
-                    output_dir = "dataset/Dir1";  // scheme2 good (tau2 < tau_max)
-                } else if (total_error_scheme3 <= (int)tau_max && (int)tau_max <= total_error_scheme2) {
-                    output_dir = "dataset/Dir2";  // scheme3 acceptable and scheme2 worse (tau3 <= tau_max <= tau2)
+                // Classification logic: Dir1 if standard < tau_max, Dir2 if extended <= tau_max <= standard, else Dir_rand
+                if (total_error_standard < (int)tau_max) {
+                    output_dir = "dataset/Dir1";  // standard_scheme good (standard < tau_max)
+                } else if (total_error_extended <= (int)tau_max && (int)tau_max <= total_error_standard) {
+                    output_dir = "dataset/Dir2";  // extended_scheme acceptable and standard worse (extended <= tau_max <= standard)
                 } else {
                     output_dir = "dataset/Dir_rand";  // other cases
                 }
@@ -166,8 +176,8 @@ void generate_dataset(double tau_max) {
                 
                 // Log the results
                 std::cout << "Block " << block_count << ": " 
-                         << "scheme2_total(" << total_error_scheme2 << ") "
-                         << "scheme3_total(" << total_error_scheme3 << ") "
+                         << "standard_total(" << total_error_standard << ") "
+                         << "extended_total(" << total_error_extended << ") "
                          << "-> " << output_dir << std::endl;
                 
                 block_count++;
@@ -182,17 +192,25 @@ void generate_dataset(double tau_max) {
     
     std::cout << "Dataset generation completed!" << std::endl;
     
-    // Count files in each directory (simplified)
-    int count_dir1 = system("ls dataset/Dir1/*.png 2>/dev/null | wc -l");
-    int count_dir2 = system("ls dataset/Dir2/*.png 2>/dev/null | wc -l");
-    int count_dir_rand = system("ls dataset/Dir_rand/*.png 2>/dev/null | wc -l");
+    // Count files in each directory
+    FILE* fp;
+    int count_dir1 = 0, count_dir2 = 0, count_dir_rand = 0;
+    
+    fp = popen("ls dataset/Dir1/*.png 2>/dev/null | wc -l", "r");
+    if (fp) { fscanf(fp, "%d", &count_dir1); pclose(fp); }
+    
+    fp = popen("ls dataset/Dir2/*.png 2>/dev/null | wc -l", "r");
+    if (fp) { fscanf(fp, "%d", &count_dir2); pclose(fp); }
+    
+    fp = popen("ls dataset/Dir_rand/*.png 2>/dev/null | wc -l", "r");
+    if (fp) { fscanf(fp, "%d", &count_dir_rand); pclose(fp); }
     
     int total_blocks = count_dir1 + count_dir2 + count_dir_rand;
     int expected_total = image_names.size() * 4096; // number of images × 4096 blocks each
     
     std::cout << "Results:" << std::endl;
-    std::cout << "Dir1 (scheme2 better): " << count_dir1 << " blocks" << std::endl;
-    std::cout << "Dir2 (scheme3 better): " << count_dir2 << " blocks" << std::endl;
+    std::cout << "Dir1 (standard_scheme better): " << count_dir1 << " blocks" << std::endl;
+    std::cout << "Dir2 (extended_scheme better): " << count_dir2 << " blocks" << std::endl;
     std::cout << "Dir_rand (equivalent): " << count_dir_rand << " blocks" << std::endl;
     std::cout << "Total: " << total_blocks << " blocks (expected: " << expected_total << ")" << std::endl;
     
@@ -204,15 +222,12 @@ void generate_dataset(double tau_max) {
 #ifdef TORCH_AVAILABLE
 // Initialize classifier for dataset generation
 bool initialize_classifier_for_dataset() {
-    std::vector<std::string> model_paths = {
-        "best_scheme_classifier_torchscript.pt",
-        "ensemble_model_1_torchscript.pt"
-    };
-    std::vector<float> thresholds = {0.510f, 0.510f};
+    std::string model_path = "final_model_torchscript.pt";
+    float threshold = 0.5f;
     
-    std::cout << "🤖 Initializing classifier for dataset generation..." << std::endl;
+    std::cout << "🤖 Initializing single classifier for dataset generation..." << std::endl;
     
-    if (EmbeddingWithClassifier::initializeClassifier(model_paths, thresholds, true)) {
+    if (EmbeddingWithClassifier::initializeSingleClassifier(model_path, threshold, true)) {
         std::cout << "✅ Classifier initialized successfully for dataset generation" << std::endl;
         return true;
     } else {
@@ -243,14 +258,18 @@ void generate_dataset_with_classifier(double tau_max) {
     std::vector<std::string> image_names;
     std::string images_dir = "images";
     
-    for (const auto& entry : std::filesystem::directory_iterator(images_dir)) {
-        if (entry.is_regular_file() && entry.path().extension() == ".png") {
-            std::string filename = entry.path().stem().string();
-            // Skip watermark.png as it's used as watermark, not as source image
-            if (filename != "watermark") {
-                image_names.push_back(filename);
+    DIR* dir = opendir(images_dir.c_str());
+    if (dir) {
+        struct dirent* entry;
+        while ((entry = readdir(dir)) != nullptr) {
+            std::string filename = entry->d_name;
+            if (filename.find(".png") != std::string::npos && filename != "watermark.png") {
+                // Remove .png extension
+                std::string stem = filename.substr(0, filename.find_last_of('.'));
+                image_names.push_back(stem);
             }
         }
+        closedir(dir);
     }
     
     std::sort(image_names.begin(), image_names.end());
@@ -268,10 +287,16 @@ void generate_dataset_with_classifier(double tau_max) {
         std::string image_path = "images/" + name + ".png";
         cv::Mat original_color = cv::imread(image_path, cv::IMREAD_COLOR);
         cv::Mat original_image;
+        
+        if (original_color.empty()) {
+            std::cout << "❌ Error: Could not load " << name << std::endl;
+            continue;
+        }
+        
         cv::cvtColor(original_color, original_image, cv::COLOR_BGR2GRAY);
         
         if (original_image.empty()) {
-            std::cout << "❌ Error: Could not load " << name << std::endl;
+            std::cout << "❌ Error: Could not process " << name << std::endl;
             continue;
         }
         

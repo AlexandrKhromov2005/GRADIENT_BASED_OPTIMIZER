@@ -129,6 +129,32 @@ gradient_based_optimizer/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/build
 .PHONY : gradient_based_optimizer/fast
 
+#=============================================================================
+# Target rules for targets named classifier_example
+
+# Build rule for target.
+classifier_example: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 classifier_example
+.PHONY : classifier_example
+
+# fast build rule for target.
+classifier_example/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/build
+.PHONY : classifier_example/fast
+
+#=============================================================================
+# Target rules for targets named single_classifier_example
+
+# Build rule for target.
+single_classifier_example: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 single_classifier_example
+.PHONY : single_classifier_example
+
+# fast build rule for target.
+single_classifier_example/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/build
+.PHONY : single_classifier_example/fast
+
 GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER.o: GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER.cpp.o
 .PHONY : GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER.o
 
@@ -183,6 +209,8 @@ GRADIENT_BASED_OPTIMIZER/src/block_metrics.o: GRADIENT_BASED_OPTIMIZER/src/block
 # target to build an object file
 GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.o
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.o
 
 GRADIENT_BASED_OPTIMIZER/src/block_metrics.i: GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.i
@@ -191,6 +219,8 @@ GRADIENT_BASED_OPTIMIZER/src/block_metrics.i: GRADIENT_BASED_OPTIMIZER/src/block
 # target to preprocess a source file
 GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.i
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.i
 
 GRADIENT_BASED_OPTIMIZER/src/block_metrics.s: GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.s
@@ -199,6 +229,8 @@ GRADIENT_BASED_OPTIMIZER/src/block_metrics.s: GRADIENT_BASED_OPTIMIZER/src/block
 # target to generate assembly for a file
 GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.s
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.s
 
 GRADIENT_BASED_OPTIMIZER/src/dataset_generation.o: GRADIENT_BASED_OPTIMIZER/src/dataset_generation.cpp.o
@@ -231,6 +263,8 @@ GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.o: GRADIENT_BASED_OPTIMIZER/src/e
 # target to build an object file
 GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.o
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.o
 
 GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.i: GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.i
@@ -239,6 +273,8 @@ GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.i: GRADIENT_BASED_OPTIMIZER/src/e
 # target to preprocess a source file
 GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.i
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.i
 
 GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.s: GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.s
@@ -247,7 +283,117 @@ GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.s: GRADIENT_BASED_OPTIMIZER/src/e
 # target to generate assembly for a file
 GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.s
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp.s
+
+GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.o: GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.o
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.o
+
+# target to build an object file
+GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.o
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.o
+
+GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.i: GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.i
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.i
+
+# target to preprocess a source file
+GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.i
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.i
+
+GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.s: GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.s
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.s
+
+# target to generate assembly for a file
+GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.s
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp.s
+
+GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.o: GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.o
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.o
+
+# target to build an object file
+GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.o
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.o
+
+GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.i: GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.i
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.i
+
+# target to preprocess a source file
+GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.i
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.i
+
+GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.s: GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.s
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.s
+
+# target to generate assembly for a file
+GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.s
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp.s
+
+GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.o: GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp.o
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.o
+
+# target to build an object file
+GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp.o
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp.o
+
+GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.i: GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp.i
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.i
+
+# target to preprocess a source file
+GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp.i
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp.i
+
+GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.s: GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp.s
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.s
+
+# target to generate assembly for a file
+GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp.s
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp.s
+
+GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.o: GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp.o
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.o
+
+# target to build an object file
+GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp.o
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp.o
+
+GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.i: GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp.i
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.i
+
+# target to preprocess a source file
+GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp.i
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp.i
+
+GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.s: GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp.s
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.s
+
+# target to generate assembly for a file
+GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp.s
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp.s
 
 GRADIENT_BASED_OPTIMIZER/src/gbo.o: GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.o
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/gbo.o
@@ -255,6 +401,8 @@ GRADIENT_BASED_OPTIMIZER/src/gbo.o: GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.o
 # target to build an object file
 GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.o
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.o
 
 GRADIENT_BASED_OPTIMIZER/src/gbo.i: GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.i
@@ -263,6 +411,8 @@ GRADIENT_BASED_OPTIMIZER/src/gbo.i: GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.i
 # target to preprocess a source file
 GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.i
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.i
 
 GRADIENT_BASED_OPTIMIZER/src/gbo.s: GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.s
@@ -271,6 +421,8 @@ GRADIENT_BASED_OPTIMIZER/src/gbo.s: GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.s
 # target to generate assembly for a file
 GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.s
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/gbo.cpp.s
 
 GRADIENT_BASED_OPTIMIZER/src/image_metrics.o: GRADIENT_BASED_OPTIMIZER/src/image_metrics.cpp.o
@@ -303,6 +455,8 @@ GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.o: GRADIENT_BASED_OPTIMIZER
 # target to build an object file
 GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.o
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.o
 
 GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.i: GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.i
@@ -311,6 +465,8 @@ GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.i: GRADIENT_BASED_OPTIMIZER
 # target to preprocess a source file
 GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.i
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.i
 
 GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.s: GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.s
@@ -319,6 +475,8 @@ GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.s: GRADIENT_BASED_OPTIMIZER
 # target to generate assembly for a file
 GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.s
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp.s
 
 GRADIENT_BASED_OPTIMIZER/src/jpeg/compression.o: GRADIENT_BASED_OPTIMIZER/src/jpeg/compression.cpp.o
@@ -375,6 +533,8 @@ GRADIENT_BASED_OPTIMIZER/src/population.o: GRADIENT_BASED_OPTIMIZER/src/populati
 # target to build an object file
 GRADIENT_BASED_OPTIMIZER/src/population.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/population.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/population.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/population.cpp.o
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/population.cpp.o
 
 GRADIENT_BASED_OPTIMIZER/src/population.i: GRADIENT_BASED_OPTIMIZER/src/population.cpp.i
@@ -383,6 +543,8 @@ GRADIENT_BASED_OPTIMIZER/src/population.i: GRADIENT_BASED_OPTIMIZER/src/populati
 # target to preprocess a source file
 GRADIENT_BASED_OPTIMIZER/src/population.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/population.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/population.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/population.cpp.i
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/population.cpp.i
 
 GRADIENT_BASED_OPTIMIZER/src/population.s: GRADIENT_BASED_OPTIMIZER/src/population.cpp.s
@@ -391,6 +553,8 @@ GRADIENT_BASED_OPTIMIZER/src/population.s: GRADIENT_BASED_OPTIMIZER/src/populati
 # target to generate assembly for a file
 GRADIENT_BASED_OPTIMIZER/src/population.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/population.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/population.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/population.cpp.s
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/population.cpp.s
 
 GRADIENT_BASED_OPTIMIZER/src/random_utils.o: GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.o
@@ -399,6 +563,8 @@ GRADIENT_BASED_OPTIMIZER/src/random_utils.o: GRADIENT_BASED_OPTIMIZER/src/random
 # target to build an object file
 GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.o
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.o
 
 GRADIENT_BASED_OPTIMIZER/src/random_utils.i: GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.i
@@ -407,6 +573,8 @@ GRADIENT_BASED_OPTIMIZER/src/random_utils.i: GRADIENT_BASED_OPTIMIZER/src/random
 # target to preprocess a source file
 GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.i
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.i
 
 GRADIENT_BASED_OPTIMIZER/src/random_utils.s: GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.s
@@ -415,7 +583,39 @@ GRADIENT_BASED_OPTIMIZER/src/random_utils.s: GRADIENT_BASED_OPTIMIZER/src/random
 # target to generate assembly for a file
 GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.s
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp.s
+
+GRADIENT_BASED_OPTIMIZER/src/single_classifier.o: GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.o
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/single_classifier.o
+
+# target to build an object file
+GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.o
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.o
+
+GRADIENT_BASED_OPTIMIZER/src/single_classifier.i: GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.i
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/single_classifier.i
+
+# target to preprocess a source file
+GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.i
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.i
+
+GRADIENT_BASED_OPTIMIZER/src/single_classifier.s: GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.s
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/single_classifier.s
+
+# target to generate assembly for a file
+GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.s
+.PHONY : GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp.s
 
 # Help Target
 help:
@@ -425,7 +625,9 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... classifier_example"
 	@echo "... gradient_based_optimizer"
+	@echo "... single_classifier_example"
 	@echo "... GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER.o"
 	@echo "... GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER.i"
 	@echo "... GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER.s"
@@ -441,6 +643,18 @@ help:
 	@echo "... GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.o"
 	@echo "... GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.i"
 	@echo "... GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.s"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.o"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.i"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.s"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.o"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.i"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.s"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.o"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.i"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.s"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.o"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.i"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.s"
 	@echo "... GRADIENT_BASED_OPTIMIZER/src/gbo.o"
 	@echo "... GRADIENT_BASED_OPTIMIZER/src/gbo.i"
 	@echo "... GRADIENT_BASED_OPTIMIZER/src/gbo.s"
@@ -462,6 +676,9 @@ help:
 	@echo "... GRADIENT_BASED_OPTIMIZER/src/random_utils.o"
 	@echo "... GRADIENT_BASED_OPTIMIZER/src/random_utils.i"
 	@echo "... GRADIENT_BASED_OPTIMIZER/src/random_utils.s"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/single_classifier.o"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/single_classifier.i"
+	@echo "... GRADIENT_BASED_OPTIMIZER/src/single_classifier.s"
 .PHONY : help
 
 

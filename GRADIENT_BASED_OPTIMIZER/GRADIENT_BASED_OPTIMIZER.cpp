@@ -14,6 +14,7 @@ int main(int argc, char* argv[])
     bool test_mode = false;
     bool dataset_mode = false;
     bool classifier_mode = false;
+    bool dataset_classifier_mode = false;
     bool example_mode = false;
     double tau_max = 10.0;
     std::string scheme_id = "scheme1";
@@ -33,6 +34,9 @@ int main(int argc, char* argv[])
         } else if (arg == "--classifier" || arg == "-c") {
             classifier_mode = true;
             std::cout << "Metrics evaluation with classifier integration" << std::endl;
+        } else if (arg == "--dataset-classifier") {
+            dataset_classifier_mode = true;
+            std::cout << "Dataset generation with classifier integration mode" << std::endl;
         } else if (arg == "--example" || arg == "-e") {
             example_mode = true;
             std::cout << "Classifier integration example mode" << std::endl;
@@ -49,6 +53,7 @@ int main(int argc, char* argv[])
             std::cout << "  --test, -t         Test mode (1 iteration per image)" << std::endl;
             std::cout << "  --dataset, -d      Dataset generation mode (scheme2 vs scheme3)" << std::endl;
             std::cout << "  --classifier, -c   Metrics evaluation WITH classifier integration" << std::endl;
+            std::cout << "  --dataset-classifier Full experiment: dataset generation WITH classifier" << std::endl;
             std::cout << "  --example, -e      Run classifier integration example" << std::endl;
             std::cout << "  --tau-max VALUE    Maximum error threshold for dataset (default: 10.0)" << std::endl;
             std::cout << "  --scheme, -s ID    Use embedding scheme (scheme1, scheme2, scheme3)" << std::endl;
@@ -75,6 +80,14 @@ int main(int argc, char* argv[])
     if (dataset_mode) {
         std::cout << "Dataset generation mode: comparing scheme2 vs scheme3" << std::endl;
         generate_dataset(tau_max);
+    } else if (dataset_classifier_mode) {
+#ifdef TORCH_AVAILABLE
+        std::cout << "🤖 Full experiment: Dataset generation WITH classifier integration (final_model.pt)" << std::endl;
+        generate_dataset_with_classifier(tau_max);
+#else
+        std::cerr << "❌ Dataset classifier mode requires PyTorch installation" << std::endl;
+        return -1;
+#endif
     } else if (classifier_mode) {
 #ifdef TORCH_AVAILABLE
         std::cout << "🤖 Metrics evaluation WITH classifier integration" << std::endl;
@@ -108,14 +121,11 @@ int main(int argc, char* argv[])
 #ifdef TORCH_AVAILABLE
         std::cout << "🧪 Running classifier integration example..." << std::endl;
         
-        // Initialize classifier
-        std::vector<std::string> model_paths = {
-            "best_scheme_classifier_torchscript.pt",
-            "ensemble_model_1_torchscript.pt"
-        };
-        std::vector<float> thresholds = {0.510f, 0.510f};
+        // Initialize single classifier with final_model.pt
+        std::string model_path = "final_model_torchscript.pt";
+        float threshold = 0.5f;
         
-        if (EmbeddingWithClassifier::initializeClassifier(model_paths, thresholds, true)) {
+        if (EmbeddingWithClassifier::initializeSingleClassifier(model_path, threshold, true)) {
             // Test on a single image
             std::string test_image_path = "images/lenna.png";
             cv::Mat test_image = cv::imread(test_image_path, cv::IMREAD_GRAYSCALE);
