@@ -12,13 +12,22 @@
 
 using VecOf = std::pair<std::vector<double>, double>;
 
+enum class AttackType {
+	NONE,           // No attack (original objective function)
+	JPEG70,         // JPEG compression quality 70
+	CONTRAST,       // Contrast increase
+	SALT_PEPPER     // Salt-pepper noise
+};
+
 class Population {
 public:
 	std::vector<VecOf> vecs;
 	VecOf worst_vec;
 	size_t best_ind;
+	AttackType attack_type;
 
 	Population();
+	Population(AttackType attack);
 	void initOf(const cv::Mat& block, uchar bit, int quality);
 	cv::Mat apply_vec(const cv::Mat &block, const std::vector<double>& vec);
 	double calculateOf(const cv::Mat &block, const std::vector<double>& vec, uchar bit, int quality);

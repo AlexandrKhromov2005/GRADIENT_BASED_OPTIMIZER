@@ -13,8 +13,10 @@ class GBO {
 public:
 	uchar bit;
 	cv::Mat &block;
+	AttackType attack_type;
 	void main_loop();
-	GBO(uchar bit, cv::Mat &block) : bit(bit), block(block) {}
+	GBO(uchar bit, cv::Mat &block) : bit(bit), block(block), attack_type(AttackType::NONE) {}
+	GBO(uchar bit, cv::Mat &block, AttackType attack) : bit(bit), block(block), attack_type(attack) {}
 
 private:
 	size_t getVectorSize();

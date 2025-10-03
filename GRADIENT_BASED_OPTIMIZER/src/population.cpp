@@ -1,9 +1,24 @@
 #include "population.h"
 #include "embedding_schemes.h"
+#include "attacks.h"
 #include <iostream>
 #include <sstream>
 
-Population::Population() {
+Population::Population() : attack_type(AttackType::NONE) {
+    vecs.resize(POP_SIZE);
+    for (size_t i = 0; i < POP_SIZE; ++i) {
+        vecs[i].first.resize(CURRENT_VEC_SIZE);
+        for (size_t j = 0; j < CURRENT_VEC_SIZE; ++j) {
+            vecs[i].first[j] = TH * (2.0 * rand_num() - 1.0);
+        }
+        vecs[i].second = DBL_MAX;
+    }
+    best_ind = 0;
+    worst_vec.first = vecs[0].first;
+    worst_vec.second = -DBL_MAX;
+}
+
+Population::Population(AttackType attack) : attack_type(attack) {
     vecs.resize(POP_SIZE);
     for (size_t i = 0; i < POP_SIZE; ++i) {
         vecs[i].first.resize(CURRENT_VEC_SIZE);
@@ -50,10 +65,27 @@ double Population::calculateOf(const cv::Mat& block, const std::vector<double>& 
     cv::Mat newblock;
     newblockDouble.convertTo(newblock, CV_8U);
 
-    // No JPEG attack during embedding - use original transformed block
-    double s0 = calc_s_zero(newDCTblock);
-    double s1 = calc_s_one(newDCTblock);
-    double psnr = calculatePSNR(block, newblock);
+    // Apply attack if specified
+    cv::Mat attackedBlock = newblock;
+    if (attack_type == AttackType::JPEG70) {
+        attackedBlock = jpegCompression(newblock, 70);
+    } else if (attack_type == AttackType::CONTRAST) {
+        attackedBlock = contrastIncrease(newblock, 1.5);
+    } else if (attack_type == AttackType::SALT_PEPPER) {
+        attackedBlock = saltPepperNoise(newblock, 0.02);
+    }
+
+    // Calculate s0 and s1 from attacked block (or original if no attack)
+    cv::Mat attackedBlockDouble;
+    attackedBlock.convertTo(attackedBlockDouble, CV_64F);
+    cv::Mat attackedDCTblock;
+    cv::dct(attackedBlockDouble, attackedDCTblock);
+
+    double s0 = calc_s_zero(attackedDCTblock);
+    double s1 = calc_s_one(attackedDCTblock);
+
+    // PSNR between attacked and original block
+    double psnr = calculatePSNR(block, attackedBlock);
 
     if (s0 < 0.001 || std::isnan(s0) || std::isinf(s0)) s0 = 0.001;
     if (s1 < 0.001 || std::isnan(s1) || std::isinf(s1)) s1 = 0.001;

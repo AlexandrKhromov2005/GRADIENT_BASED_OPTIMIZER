@@ -450,5 +450,129 @@ void launch_with_classifier(const std::string& image, const std::string& new_ima
 }
 #endif
 
+// Generate random binary watermark
+std::vector<int> generateRandomWatermark() {
+	std::vector<int> wm(WM_SIZE);
+	for (size_t i = 0; i < WM_SIZE; ++i) {
+		wm[i] = rand() % 2;
+	}
+	return wm;
+}
+
+// Embed watermark into 256x256 quadrant using specified attack type
+cv::Mat embedIntoQuadrant(const cv::Mat& quadrant, const std::vector<int>& wm, AttackType attack_type) {
+	std::vector<cv::Mat> blocks = splitInto8x8Blocks(quadrant);
+
+	size_t num_blocks = blocks.size();
+	for (size_t i = 0; i < num_blocks; ++i) {
+		GBO gbo(wm[i % WM_SIZE], blocks[i], attack_type);
+		gbo.main_loop();
+	}
+
+	return merge8x8Blocks(blocks, quadrant.rows, quadrant.cols);
+}
+
+// Main function: embed same watermark into 4 quadrants with different objectives
+void embed_quadrants_with_objectives(const std::string& image_path, const std::string& output_path) {
+	cv::Mat image = readImage(image_path);
+
+	// Verify image is 512x512
+	if (image.rows != 512 || image.cols != 512) {
+		std::cerr << "Error: Image must be 512x512, got " << image.rows << "x" << image.cols << std::endl;
+		return;
+	}
+
+	initialize_quantization_mats();
+
+	// Generate single random watermark
+	std::vector<int> wm = generateRandomWatermark();
+
+	// Split into 4 quadrants (256x256 each)
+	cv::Mat N1 = image(cv::Rect(0, 0, 256, 256)).clone();
+	cv::Mat N2 = image(cv::Rect(256, 0, 256, 256)).clone();
+	cv::Mat N3 = image(cv::Rect(0, 256, 256, 256)).clone();
+	cv::Mat N4 = image(cv::Rect(256, 256, 256, 256)).clone();
+
+	std::cout << "Embedding into quadrant N1 (no attack)..." << std::endl;
+	cv::Mat N1_embedded = embedIntoQuadrant(N1, wm, AttackType::NONE);
+
+	std::cout << "Embedding into quadrant N2 (JPEG70 robust)..." << std::endl;
+	cv::Mat N2_embedded = embedIntoQuadrant(N2, wm, AttackType::JPEG70);
+
+	std::cout << "Embedding into quadrant N3 (Contrast robust)..." << std::endl;
+	cv::Mat N3_embedded = embedIntoQuadrant(N3, wm, AttackType::CONTRAST);
+
+	std::cout << "Embedding into quadrant N4 (Salt-Pepper robust)..." << std::endl;
+	cv::Mat N4_embedded = embedIntoQuadrant(N4, wm, AttackType::SALT_PEPPER);
+
+	// Merge quadrants back into 512x512 image
+	cv::Mat result(512, 512, image.type());
+	N1_embedded.copyTo(result(cv::Rect(0, 0, 256, 256)));
+	N2_embedded.copyTo(result(cv::Rect(256, 0, 256, 256)));
+	N3_embedded.copyTo(result(cv::Rect(0, 256, 256, 256)));
+	N4_embedded.copyTo(result(cv::Rect(256, 256, 256, 256)));
+
+	writeImage(output_path, result);
+	std::cout << "Saved result to: " << output_path << std::endl;
+}
+
+// Dataset generation: apply attacks and save to directories
+void generate_quadrant_dataset(const std::string& input_dir, const std::string& output_base_dir) {
+	// Create output directories using system calls
+	system(("mkdir -p " + output_base_dir + "/Dir1").c_str());
+	system(("mkdir -p " + output_base_dir + "/Dir2").c_str());
+	system(("mkdir -p " + output_base_dir + "/Dir3").c_str());
+	system(("mkdir -p " + output_base_dir + "/Dir4").c_str());
+
+	// List of image files to process
+	std::vector<std::string> image_files = {
+		"airplane.png", "baboon.png", "boat.png", "bridge.png",
+		"earth_from_space.png", "lake.png", "lenna.png", "pepper.png"
+	};
+
+	for (const auto& filename : image_files) {
+		std::string image_path = input_dir + "/" + filename;
+
+		// Check if file exists
+		cv::Mat test_read = cv::imread(image_path, cv::IMREAD_GRAYSCALE);
+		if (test_read.empty()) {
+			std::cout << "Skipping " << filename << " (not found or not readable)" << std::endl;
+			continue;
+		}
+
+		std::cout << "Processing: " << filename << std::endl;
+
+		// First embed watermarks into quadrants
+		std::string temp_embedded = output_base_dir + "/temp_" + filename;
+		embed_quadrants_with_objectives(image_path, temp_embedded);
+
+		// Read embedded image
+		cv::Mat embedded = readImage(temp_embedded);
+
+		// Dir1: No attack
+		std::string dir1_path = output_base_dir + "/Dir1/" + filename;
+		writeImage(dir1_path, embedded);
+
+		// Dir2: JPEG70 attack
+		std::string dir2_path = output_base_dir + "/Dir2/" + filename;
+		cv::Mat attacked_jpeg = jpegCompression(embedded, 70);
+		writeImage(dir2_path, attacked_jpeg);
+
+		// Dir3: Contrast increase attack
+		std::string dir3_path = output_base_dir + "/Dir3/" + filename;
+		cv::Mat attacked_contrast = contrastIncrease(embedded, 1.5);
+		writeImage(dir3_path, attacked_contrast);
+
+		// Dir4: Salt-Pepper noise attack
+		std::string dir4_path = output_base_dir + "/Dir4/" + filename;
+		cv::Mat attacked_noise = saltPepperNoise(embedded, 0.02);
+		writeImage(dir4_path, attacked_noise);
+
+		// Remove temporary file
+		remove(temp_embedded.c_str());
+	}
+
+	std::cout << "Dataset generation complete!" << std::endl;
+}
 
 

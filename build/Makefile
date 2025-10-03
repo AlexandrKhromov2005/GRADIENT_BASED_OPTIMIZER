@@ -185,6 +185,8 @@ GRADIENT_BASED_OPTIMIZER/src/attacks.o: GRADIENT_BASED_OPTIMIZER/src/attacks.cpp
 # target to build an object file
 GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.o
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.o
 
 GRADIENT_BASED_OPTIMIZER/src/attacks.i: GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.i
@@ -193,6 +195,8 @@ GRADIENT_BASED_OPTIMIZER/src/attacks.i: GRADIENT_BASED_OPTIMIZER/src/attacks.cpp
 # target to preprocess a source file
 GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.i
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.i
 
 GRADIENT_BASED_OPTIMIZER/src/attacks.s: GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.s
@@ -201,6 +205,8 @@ GRADIENT_BASED_OPTIMIZER/src/attacks.s: GRADIENT_BASED_OPTIMIZER/src/attacks.cpp
 # target to generate assembly for a file
 GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gradient_based_optimizer.dir/build.make CMakeFiles/gradient_based_optimizer.dir/GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/classifier_example.dir/build.make CMakeFiles/classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/single_classifier_example.dir/build.make CMakeFiles/single_classifier_example.dir/GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.s
 .PHONY : GRADIENT_BASED_OPTIMIZER/src/attacks.cpp.s
 
 GRADIENT_BASED_OPTIMIZER/src/block_metrics.o: GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp.o

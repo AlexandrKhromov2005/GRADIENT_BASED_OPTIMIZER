@@ -1,0 +1,5 @@
+threshold: 0.5100000000000001
+accuracy: 0.7377232142857143
+input_size: [1, 192, 192]
+class_names: ['scheme_0', 'scheme_1']
+preprocessing: {'mean': [0.485], 'std': [0.229], 'normalize_range': '0-1'}

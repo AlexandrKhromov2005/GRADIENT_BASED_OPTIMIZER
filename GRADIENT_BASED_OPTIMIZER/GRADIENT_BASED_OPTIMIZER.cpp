@@ -16,6 +16,7 @@ int main(int argc, char* argv[])
     bool classifier_mode = false;
     bool dataset_classifier_mode = false;
     bool example_mode = false;
+    bool quadrant_dataset_mode = false;
     double tau_max = 10.0;
     std::string scheme_id = "scheme1";
     
@@ -40,6 +41,9 @@ int main(int argc, char* argv[])
         } else if (arg == "--example" || arg == "-e") {
             example_mode = true;
             std::cout << "Classifier integration example mode" << std::endl;
+        } else if (arg == "--quadrant-dataset" || arg == "-q") {
+            quadrant_dataset_mode = true;
+            std::cout << "Quadrant dataset generation mode" << std::endl;
         } else if (arg == "--tau-max") {
             if (i + 1 < argc) {
                 tau_max = std::stod(argv[++i]);
@@ -49,16 +53,18 @@ int main(int argc, char* argv[])
                 scheme_id = argv[++i];
             }
         } else if (arg == "--help" || arg == "-h") {
-            std::cout << "Usage: " << argv[0] << " [--test|-t] [--dataset|-d] [--tau-max VALUE] [--scheme|-s scheme_id] [--help|-h]" << std::endl;
-            std::cout << "  --test, -t         Test mode (1 iteration per image)" << std::endl;
-            std::cout << "  --dataset, -d      Dataset generation mode (scheme2 vs scheme3)" << std::endl;
-            std::cout << "  --classifier, -c   Metrics evaluation WITH classifier integration" << std::endl;
-            std::cout << "  --dataset-classifier Full experiment: dataset generation WITH classifier" << std::endl;
-            std::cout << "  --example, -e      Run classifier integration example" << std::endl;
-            std::cout << "  --tau-max VALUE    Maximum error threshold for dataset (default: 10.0)" << std::endl;
-            std::cout << "  --scheme, -s ID    Use embedding scheme (scheme1, scheme2, scheme3)" << std::endl;
-            std::cout << "  --help, -h         Show this help" << std::endl;
-            std::cout << "  default            Main mode (10 iterations per image)" << std::endl;
+            std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
+            std::cout << "Options:" << std::endl;
+            std::cout << "  --test, -t              Test mode (1 iteration per image)" << std::endl;
+            std::cout << "  --dataset, -d           Dataset generation mode (scheme2 vs scheme3)" << std::endl;
+            std::cout << "  --classifier, -c        Metrics evaluation WITH classifier integration" << std::endl;
+            std::cout << "  --dataset-classifier    Full experiment: dataset generation WITH classifier" << std::endl;
+            std::cout << "  --example, -e           Run classifier integration example" << std::endl;
+            std::cout << "  --quadrant-dataset, -q  Generate quadrant-based dataset (4 objectives)" << std::endl;
+            std::cout << "  --tau-max VALUE         Maximum error threshold for dataset (default: 10.0)" << std::endl;
+            std::cout << "  --scheme, -s ID         Use embedding scheme (scheme1, scheme2, scheme3)" << std::endl;
+            std::cout << "  --help, -h              Show this help" << std::endl;
+            std::cout << "  default                 Main mode (10 iterations per image)" << std::endl;
             
             auto schemes = manager.getAvailableSchemes();
             std::cout << "\nAvailable schemes:" << std::endl;
@@ -77,7 +83,12 @@ int main(int argc, char* argv[])
     
     auto start = std::chrono::high_resolution_clock::now();
 
-    if (dataset_mode) {
+    if (quadrant_dataset_mode) {
+        std::cout << "🎯 Quadrant dataset generation mode" << std::endl;
+        std::string input_dir = "images";
+        std::string output_dir = "dataset_quadrant";
+        generate_quadrant_dataset(input_dir, output_dir);
+    } else if (dataset_mode) {
         std::cout << "Dataset generation mode: comparing scheme2 vs scheme3" << std::endl;
         generate_dataset(tau_max);
     } else if (dataset_classifier_mode) {

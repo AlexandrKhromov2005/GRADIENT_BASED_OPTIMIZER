@@ -47,7 +47,7 @@ size_t GBO::getVectorSize() {
 }
 
 void GBO::main_loop() {
-	Population population = Population();
+	Population population = Population(attack_type);
 	int quality = rand_int_1_to_100();
 	population.initOf(block, bit, quality);
 	
