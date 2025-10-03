@@ -25,13 +25,13 @@ nano telegram_config.sh
 # Проверить что работает
 ./test_telegram.sh
 
-# Запустить эксперимент
-./run_experiment_with_telegram.sh --test
+# Запустить генерацию квадрантного датасета
+./run_experiment_with_telegram.sh
 ```
 
 ## ✅ Готово!
 
-Теперь результаты будут приходить в Telegram автоматически!
+Теперь результаты квадрантного датасета будут приходить в Telegram автоматически!
 
 **Полная документация:** [TELEGRAM_GUIDE.md](TELEGRAM_GUIDE.md)
 
@@ -43,30 +43,27 @@ nano telegram_config.sh
 # Быстрый тест (1-2 мин)
 ./run_experiment_with_telegram.sh --test
 
-# Быстрый эксперимент (5-10 мин)
-./run_experiment_with_telegram.sh --quick
+# Генерация квадрантного датасета (основной режим, по умолчанию)
+./run_experiment_with_telegram.sh
 
-# Полный эксперимент (30-60 мин)
-./run_experiment_with_telegram.sh --full
-
-# С классификатором
-./run_experiment_with_telegram.sh --dataset-classifier
+# Без промежуточных сообщений
+./run_experiment_with_telegram.sh --no-progress
 ```
 
 ## Запуск в фоне
 
 ```bash
 # Запустить и отключиться от SSH - результаты придут в Telegram
-screen -S experiment
-./run_experiment_with_telegram.sh --full
+screen -S quadrant_dataset
+./run_experiment_with_telegram.sh
 # Нажать Ctrl+A, затем D
 ```
 
 ## Что получите в Telegram
 
 1. 🚀 Уведомление о старте
-2. 📊 Статистику по завершению
-3. 📦 Архив с результатами
+2. 📊 Статистику: количество квадрантов по каждому типу (Q1, Q2, Q3, Q4)
+3. 📦 Архив с квадрантным датасетом (`dataset_quadrant/`)
 4. 📄 Лог выполнения
 
 ## Помощь

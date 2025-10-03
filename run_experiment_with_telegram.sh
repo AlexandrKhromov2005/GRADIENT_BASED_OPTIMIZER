@@ -14,7 +14,7 @@ echo
 # ПАРАМЕТРЫ
 # ========================================
 
-EXPERIMENT_MODE="full"
+EXPERIMENT_MODE="quadrant-dataset"
 SEND_PROGRESS=true
 COMPRESS_RESULTS=true
 ARCHIVE_NAME="experiment_results_$(date +%Y%m%d_%H%M%S).tar.gz"
@@ -26,20 +26,8 @@ while [[ $# -gt 0 ]]; do
             EXPERIMENT_MODE="test"
             shift
             ;;
-        --quick)
-            EXPERIMENT_MODE="quick"
-            shift
-            ;;
-        --full)
-            EXPERIMENT_MODE="full"
-            shift
-            ;;
-        --dataset)
-            EXPERIMENT_MODE="dataset"
-            shift
-            ;;
-        --dataset-classifier)
-            EXPERIMENT_MODE="dataset-classifier"
+        --quadrant-dataset)
+            EXPERIMENT_MODE="quadrant-dataset"
             shift
             ;;
         --no-progress)
@@ -59,10 +47,7 @@ while [[ $# -gt 0 ]]; do
             echo
             echo "Режимы эксперимента:"
             echo "  --test                Быстрый тест (1 итерация)"
-            echo "  --quick               Быстрый эксперимент (5 изображений)"
-            echo "  --full                Полный эксперимент (по умолчанию)"
-            echo "  --dataset             Генерация датасета scheme2 vs scheme3"
-            echo "  --dataset-classifier  Датасет с классификатором"
+            echo "  --quadrant-dataset    Генерация квадрантного датасета (основной режим)"
             echo
             echo "Опции:"
             echo "  --no-progress         Не отправлять промежуточные сообщения"
@@ -72,9 +57,8 @@ while [[ $# -gt 0 ]]; do
             echo
             echo "Примеры:"
             echo "  $0 --test                    # Быстрый тест с отправкой в Telegram"
-            echo "  $0 --full                    # Полный эксперимент"
-            echo "  $0 --dataset-classifier      # Датасет с классификатором"
-            echo "  $0 --quick --no-progress     # Без промежуточных сообщений"
+            echo "  $0 --quadrant-dataset        # Генерация квадрантного датасета"
+            echo "  $0 --quadrant-dataset --no-progress  # Без промежуточных сообщений"
             exit 0
             ;;
         *)
@@ -219,21 +203,9 @@ case $EXPERIMENT_MODE in
         COMMAND="./build/gradient_based_optimizer --test"
         EXPECTED_TIME="1-2 минуты"
         ;;
-    quick)
-        COMMAND="./run_quick_experiment.sh"
-        EXPECTED_TIME="5-10 минут"
-        ;;
-    dataset)
-        COMMAND="./build/gradient_based_optimizer --dataset"
-        EXPECTED_TIME="15-30 минут"
-        ;;
-    dataset-classifier)
-        COMMAND="./build/gradient_based_optimizer --dataset-classifier"
-        EXPECTED_TIME="20-40 минут"
-        ;;
-    full)
-        COMMAND="./build/gradient_based_optimizer"
-        EXPECTED_TIME="30-60 минут"
+    quadrant-dataset)
+        COMMAND="./build/gradient_based_optimizer --quadrant-dataset"
+        EXPECTED_TIME="зависит от количества изображений"
         ;;
     *)
         echo "❌ Неизвестный режим: $EXPERIMENT_MODE"
@@ -292,44 +264,24 @@ echo "📊 Анализ результатов..."
 # Подсчёт результатов
 results_summary=""
 
-if [ -d "dataset" ]; then
-    scheme2_correct=$(find dataset/scheme2_correct -name "*.png" 2>/dev/null | wc -l)
-    scheme2_incorrect=$(find dataset/scheme2_incorrect -name "*.png" 2>/dev/null | wc -l)
-    scheme3_correct=$(find dataset/scheme3_correct -name "*.png" 2>/dev/null | wc -l)
-    scheme3_incorrect=$(find dataset/scheme3_incorrect -name "*.png" 2>/dev/null | wc -l)
+if [ -d "dataset_quadrant" ]; then
+    # Подсчёт результатов квадрантного датасета
+    q1_images=$(find dataset_quadrant/Q1_* -name "*.png" 2>/dev/null | wc -l)
+    q2_images=$(find dataset_quadrant/Q2_* -name "*.png" 2>/dev/null | wc -l)
+    q3_images=$(find dataset_quadrant/Q3_* -name "*.png" 2>/dev/null | wc -l)
+    q4_images=$(find dataset_quadrant/Q4_* -name "*.png" 2>/dev/null | wc -l)
 
-    total_scheme2=$((scheme2_correct + scheme2_incorrect))
-    total_scheme3=$((scheme3_correct + scheme3_incorrect))
-    total=$((total_scheme2 + total_scheme3))
+    total_quadrants=$((q1_images + q2_images + q3_images + q4_images))
 
-    if [ $total -gt 0 ]; then
-        accuracy=$(echo "scale=1; ($scheme2_correct + $scheme3_correct) * 100 / $total" | bc -l 2>/dev/null || echo "N/A")
-
-        results_summary="📂 <b>Датасет (dataset/):</b>
-• Scheme2: $total_scheme2 блоков ($scheme2_correct правильных)
-• Scheme3: $total_scheme3 блоков ($scheme3_correct правильных)
-• Общая точность: $accuracy%"
-    fi
-fi
-
-if [ -d "dataset_classifier" ]; then
-    scheme2_selected=$(find dataset_classifier/scheme2_selected -name "*.png" 2>/dev/null | wc -l)
-    scheme3_selected=$(find dataset_classifier/scheme3_selected -name "*.png" 2>/dev/null | wc -l)
-    extraction_correct=$(find dataset_classifier/extraction_correct -name "*.png" 2>/dev/null | wc -l)
-    extraction_incorrect=$(find dataset_classifier/extraction_incorrect -name "*.png" 2>/dev/null | wc -l)
-
-    total_classifier=$((extraction_correct + extraction_incorrect))
-
-    if [ $total_classifier -gt 0 ]; then
-        accuracy_classifier=$(echo "scale=1; $extraction_correct * 100 / $total_classifier" | bc -l 2>/dev/null || echo "N/A")
-
+    if [ $total_quadrants -gt 0 ]; then
         results_summary="${results_summary}
 
-📂 <b>Датасет с классификатором:</b>
-• Scheme2 выбрано: $scheme2_selected блоков
-• Scheme3 выбрано: $scheme3_selected блоков
-• Правильно извлечено: $extraction_correct блоков
-• Точность: $accuracy_classifier%"
+📂 <b>Квадрантный датасет (4 цели):</b>
+• Квадрант 1 (Q1): $q1_images изображений
+• Квадрант 2 (Q2): $q2_images изображений
+• Квадрант 3 (Q3): $q3_images изображений
+• Квадрант 4 (Q4): $q4_images изображений
+• Всего квадрантов: $total_quadrants"
     fi
 fi
 
@@ -350,8 +302,7 @@ if [ "$COMPRESS_RESULTS" = true ]; then
     # Определить что архивировать
     ARCHIVE_CONTENT=""
 
-    [ -d "dataset" ] && ARCHIVE_CONTENT="$ARCHIVE_CONTENT dataset/"
-    [ -d "dataset_classifier" ] && ARCHIVE_CONTENT="$ARCHIVE_CONTENT dataset_classifier/"
+    [ -d "dataset_quadrant" ] && ARCHIVE_CONTENT="$ARCHIVE_CONTENT dataset_quadrant/"
     [ -f "$LOG_FILE" ] && ARCHIVE_CONTENT="$ARCHIVE_CONTENT $LOG_FILE"
 
     # Добавить новые изображения если есть

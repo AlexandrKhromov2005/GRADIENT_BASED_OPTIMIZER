@@ -4,10 +4,10 @@
 # Настройте эти переменные перед использованием
 
 # Telegram Bot Token (получить у @BotFather)
-TELEGRAM_BOT_TOKEN=""
+TELEGRAM_BOT_TOKEN="8435862483:AAEfFx5Oh7wmi29R-G7cU6mkXmHfLzPN2YU"
 
 # Telegram Chat ID (получить у @userinfobot или @get_id_bot)
-TELEGRAM_CHAT_ID=""
+TELEGRAM_CHAT_ID="789284353"
 
 # Проверка что переменные заданы
 if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
