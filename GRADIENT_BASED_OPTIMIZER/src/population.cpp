@@ -69,10 +69,10 @@ double Population::calculateOf(const cv::Mat& block, const std::vector<double>& 
     cv::Mat attackedBlock = newblock;
     if (attack_type == AttackType::JPEG70) {
         attackedBlock = jpegCompression(newblock, 70);
+    } else if (attack_type == AttackType::JPEG80) {
+        attackedBlock = jpegCompression(newblock, 80);
     } else if (attack_type == AttackType::CONTRAST) {
-        attackedBlock = contrastIncrease(newblock, 1.5);
-    } else if (attack_type == AttackType::SALT_PEPPER) {
-        attackedBlock = saltPepperNoise(newblock, 0.02);
+        attackedBlock = contrastIncrease(newblock, 1.1);
     }
 
     // Calculate s0 and s1 from attacked block (or original if no attack)

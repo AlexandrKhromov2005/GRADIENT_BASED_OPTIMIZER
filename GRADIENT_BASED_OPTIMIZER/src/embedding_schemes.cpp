@@ -53,19 +53,19 @@ bool EmbeddingSchemeManager::loadSchemes(const std::string& filename) {
     scheme1.name = "Original Scheme";
     scheme1.description = "Original embedding scheme";
     
-    // scheme1 REG0
+    // scheme1 REG0 (11 elements - balanced)
     scheme1.REG0 = {
         {7, 1}, {6, 1}, {5, 1}, {5, 3}, {4, 3}, {3, 3},
         {3, 5}, {2, 5}, {1, 5}, {1, 7}, {0, 7}
     };
-    
-    // scheme1 REG1
+
+    // scheme1 REG1 (11 elements - balanced)
     scheme1.REG1 = {
         {7, 0}, {6, 0}, {6, 2}, {5, 2}, {4, 2},
         {4, 4}, {3, 4}, {2, 4}, {2, 6}, {1, 6}, {0, 6}
     };
-    
-    // scheme1 ZONE0
+
+    // scheme1 ZONE0 (22 elements - balanced 11+11)
     scheme1.ZONE0 = {
         {6, 0}, {5, 1}, {4, 2}, {3, 3}, {2, 4}, {1, 5}, {0, 6}, {0, 7},
         {1, 6}, {2, 5}, {3, 4}, {4, 3}, {5, 2}, {6, 1}, {7, 0}, {7, 1},

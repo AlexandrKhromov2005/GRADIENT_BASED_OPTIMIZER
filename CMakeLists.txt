@@ -46,6 +46,10 @@ if(TORCH_AVAILABLE)
         GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp
         GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp
         GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp
+        GRADIENT_BASED_OPTIMIZER/src/quadrant_classifier.cpp
+        GRADIENT_BASED_OPTIMIZER/src/quadrant_embedding.cpp
+        GRADIENT_BASED_OPTIMIZER/src/attack_type_classifier.cpp
+        GRADIENT_BASED_OPTIMIZER/src/attack_type_embedding.cpp
     )
 endif()
 
@@ -71,6 +75,10 @@ if(TORCH_AVAILABLE)
         GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.h
         GRADIENT_BASED_OPTIMIZER/src/single_classifier.h
         GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.h
+        GRADIENT_BASED_OPTIMIZER/src/quadrant_classifier.h
+        GRADIENT_BASED_OPTIMIZER/src/quadrant_embedding.h
+        GRADIENT_BASED_OPTIMIZER/src/attack_type_classifier.h
+        GRADIENT_BASED_OPTIMIZER/src/attack_type_embedding.h
     )
 endif()
 

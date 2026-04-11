@@ -17,6 +17,11 @@ int main(int argc, char* argv[])
     bool dataset_classifier_mode = false;
     bool example_mode = false;
     bool quadrant_dataset_mode = false;
+    bool quadrant_classifier_mode = false;
+    bool attack_dataset_mode = false;
+    bool attack_classifier_mode = false;
+    bool known_attack_mode = false;
+    bool known_attack_1024_mode = false;
     double tau_max = 10.0;
     std::string scheme_id = "scheme1";
     
@@ -44,6 +49,21 @@ int main(int argc, char* argv[])
         } else if (arg == "--quadrant-dataset" || arg == "-q") {
             quadrant_dataset_mode = true;
             std::cout << "Quadrant dataset generation mode" << std::endl;
+        } else if (arg == "--quadrant-classifier") {
+            quadrant_classifier_mode = true;
+            std::cout << "Quadrant classifier mode (best_model_ultrahighres.pt, 1024x1024)" << std::endl;
+        } else if (arg == "--attack-dataset") {
+            attack_dataset_mode = true;
+            std::cout << "Attack dataset generation mode (NoAttack, JPEG70, JPEG80, ContrastIncrease)" << std::endl;
+        } else if (arg == "--attack-classifier") {
+            attack_classifier_mode = true;
+            std::cout << "Attack classifier mode (model_torchscript.pt, 1024x1024)" << std::endl;
+        } else if (arg == "--known-attack") {
+            known_attack_mode = true;
+            std::cout << "Known attack mode (embed with NONE, extract with known attack type)" << std::endl;
+        } else if (arg == "--known-attack-1024") {
+            known_attack_1024_mode = true;
+            std::cout << "Known attack 1024x1024 mode (embed all quadrants with NONE, extract with voting)" << std::endl;
         } else if (arg == "--tau-max") {
             if (i + 1 < argc) {
                 tau_max = std::stod(argv[++i]);
@@ -60,7 +80,12 @@ int main(int argc, char* argv[])
             std::cout << "  --classifier, -c        Metrics evaluation WITH classifier integration" << std::endl;
             std::cout << "  --dataset-classifier    Full experiment: dataset generation WITH classifier" << std::endl;
             std::cout << "  --example, -e           Run classifier integration example" << std::endl;
-            std::cout << "  --quadrant-dataset, -q  Generate quadrant-based dataset (4 objectives)" << std::endl;
+            std::cout << "  --quadrant-dataset, -q  Generate quadrant-based dataset (1024x1024, 16 quadrants, random WM)" << std::endl;
+            std::cout << "  --quadrant-classifier   Quadrant classifier experiment (best_model_ultrahighres.pt, 1024x1024 images)" << std::endl;
+            std::cout << "  --attack-dataset        Generate dataset for 4 attacks (NoAttack, JPEG70, JPEG80, ContrastIncrease)" << std::endl;
+            std::cout << "  --attack-classifier     Attack type classifier experiment (model_torchscript.pt, 1024x1024 images)" << std::endl;
+            std::cout << "  --known-attack          Known attack mode (embed: NONE, extract: attack-aware)" << std::endl;
+            std::cout << "  --known-attack-1024     Known attack 1024x1024 mode with voting among quadrants" << std::endl;
             std::cout << "  --tau-max VALUE         Maximum error threshold for dataset (default: 10.0)" << std::endl;
             std::cout << "  --scheme, -s ID         Use embedding scheme (scheme1, scheme2, scheme3)" << std::endl;
             std::cout << "  --help, -h              Show this help" << std::endl;
@@ -84,10 +109,20 @@ int main(int argc, char* argv[])
     auto start = std::chrono::high_resolution_clock::now();
 
     if (quadrant_dataset_mode) {
-        std::cout << "🎯 Quadrant dataset generation mode" << std::endl;
-        std::string input_dir = "images";
-        std::string output_dir = "dataset_quadrant";
-        generate_quadrant_dataset(input_dir, output_dir);
+#ifdef TORCH_AVAILABLE
+        std::cout << "🎯 Quadrant dataset generation mode (1024x1024, 16 quadrants, random WM)" << std::endl;
+        std::string input_dir = "images_1024";
+        std::string output_dir = "dataset_quadrant_1024_extended";
+        generate_quadrant_dataset_1024(input_dir, output_dir);
+#else
+        std::cerr << "❌ Quadrant dataset mode requires PyTorch installation" << std::endl;
+        return 1;
+#endif
+    } else if (attack_dataset_mode) {
+        std::cout << "🎯 Attack dataset generation mode (1024x1024)" << std::endl;
+        std::string input_dir = "images_1024";
+        std::string output_dir = "dataset_attack_1024";
+        generate_attack_dataset_1024(input_dir, output_dir);
     } else if (dataset_mode) {
         std::cout << "Dataset generation mode: comparing scheme2 vs scheme3" << std::endl;
         generate_dataset(tau_max);
@@ -99,10 +134,68 @@ int main(int argc, char* argv[])
         std::cerr << "❌ Dataset classifier mode requires PyTorch installation" << std::endl;
         return -1;
 #endif
+    } else if (quadrant_classifier_mode) {
+#ifdef TORCH_AVAILABLE
+        std::cout << "🎯 Quadrant classifier experiment mode" << std::endl;
+
+        if (!test_mode) {
+            std::cout << "Quadrant classifier mode: 10 iterations per image (1024x1024, 16 quadrants)" << std::endl;
+        }
+
+        std::vector<std::string> names = { "airplane", "baboon", "boat", "bridge",
+                                          "earth_from_space", "lake", "lenna", "pepper" };
+
+        for (std::string name : names) {
+            std::cout << name << " is started (with quadrant classifier)" << std::endl;
+
+            const std::string image = "test_images_1024/" + name + ".png";
+            const std::string cvz = "images/watermark_32x32.png";
+            const std::string new_image = "test_images_1024/new_" + name + ".png";
+            const std::string extracted_cvz = "test_images_1024/" + name + "_wm.png";
+
+            int iterations = test_mode ? 1 : 10;
+            launch_with_quadrant_classifier(image, new_image, cvz, extracted_cvz, iterations);
+
+            std::cout << name << " is finished (with quadrant classifier)" << std::endl;
+        }
+#else
+        std::cerr << "❌ Quadrant classifier mode requires PyTorch (libtorch) installation" << std::endl;
+        std::cerr << "    Please install PyTorch C++ and recompile" << std::endl;
+        return -1;
+#endif
+    } else if (attack_classifier_mode) {
+#ifdef TORCH_AVAILABLE
+        std::cout << "🎯 Attack type classifier experiment mode (model_torchscript.pt)" << std::endl;
+
+        if (!test_mode) {
+            std::cout << "Attack classifier mode: 10 iterations per image (1024x1024, attack type prediction)" << std::endl;
+        }
+
+        std::vector<std::string> names = { "airplane", "baboon", "boat", "bridge",
+                                          "earth_from_space", "lake", "lenna", "pepper" };
+
+        for (std::string name : names) {
+            std::cout << name << " is started (with attack type classifier)" << std::endl;
+
+            const std::string image = "test_images_1024/" + name + ".png";
+            const std::string cvz = "test_images_1024/watermark.png";
+            const std::string new_image = "test_images_1024/new_" + name + ".png";
+            const std::string extracted_cvz = "test_images_1024/" + name + "_wm.png";
+
+            int iterations = test_mode ? 1 : 10;
+            launch_with_attack_classifier(image, new_image, cvz, extracted_cvz, iterations);
+
+            std::cout << name << " is finished (with attack type classifier)" << std::endl;
+        }
+#else
+        std::cerr << "❌ Attack classifier mode requires PyTorch (libtorch) installation" << std::endl;
+        std::cerr << "    Please install PyTorch C++ and recompile" << std::endl;
+        return -1;
+#endif
     } else if (classifier_mode) {
 #ifdef TORCH_AVAILABLE
         std::cout << "🤖 Metrics evaluation WITH classifier integration" << std::endl;
-        
+
         if (!test_mode) {
             std::cout << "Classifier mode: 10 iterations per image" << std::endl;
         }
@@ -114,7 +207,7 @@ int main(int argc, char* argv[])
             std::cout << name << " is started (with classifier)" << std::endl;
 
             const std::string image = "images/" + name + ".png";
-            const std::string cvz = "images/watermark.png";
+            const std::string cvz = "images/watermark_32x32.png";
             const std::string new_image = "images/new_" + name + ".png";
             const std::string extracted_cvz = "images/" + name + "_wm.png";
 
@@ -176,6 +269,48 @@ int main(int argc, char* argv[])
         std::cerr << "    Please install PyTorch C++ and recompile" << std::endl;
         return -1;
 #endif
+    } else if (known_attack_mode) {
+        if (!test_mode) {
+            std::cout << "Known Attack mode: 10 iterations per image" << std::endl;
+        }
+
+        std::vector<std::string> names = { "airplane", "baboon", "boat", "bridge",
+                                          "earth_from_space", "lake", "lenna", "pepper" };
+
+        for (std::string name : names) {
+            std::cout << name << " is started (known attack mode)" << std::endl;
+
+            const std::string image = "images/" + name + ".png";
+            const std::string cvz = "images/watermark_32x32.png";
+            const std::string new_image = "images/new_" + name + ".png";
+            const std::string extracted_cvz = "images/" + name + "_wm.png";
+
+            int iterations = test_mode ? 1 : 10;
+            launch_with_known_attack(image, new_image, cvz, extracted_cvz, iterations);
+
+            std::cout << name << " is finished" << std::endl;
+        }
+    } else if (known_attack_1024_mode) {
+        if (!test_mode) {
+            std::cout << "Known Attack 1024x1024 mode: 10 iterations per image" << std::endl;
+        }
+
+        std::vector<std::string> names = { "airplane", "baboon", "boat", "bridge",
+                                          "earth_from_space", "lake", "lenna", "pepper" };
+
+        for (std::string name : names) {
+            std::cout << name << " is started (known attack 1024x1024 mode)" << std::endl;
+
+            const std::string image = "test_images_1024/" + name + ".png";
+            const std::string cvz = "test_images_1024/watermark.png";
+            const std::string new_image = "test_images_1024/new_" + name + ".png";
+            const std::string extracted_cvz = "test_images_1024/" + name + "_wm.png";
+
+            int iterations = test_mode ? 1 : 10;
+            launch_with_known_attack_1024(image, new_image, cvz, extracted_cvz, iterations);
+
+            std::cout << name << " is finished" << std::endl;
+        }
     } else {
         if (!test_mode) {
             std::cout << "Main mode: 10 iterations per image" << std::endl;
@@ -188,7 +323,7 @@ int main(int argc, char* argv[])
             std::cout << name << " is started" << std::endl;
 
             const std::string image = "images/" + name + ".png";
-            const std::string cvz = "images/watermark.png";
+            const std::string cvz = "images/watermark_32x32.png";
             const std::string new_image = "images/new_" + name + ".png";
             const std::string extracted_cvz = "images/" + name + "_wm.png";
 

@@ -1,65 +1,32 @@
 #!/bin/bash
+#
+# Build script for gradient_based_optimizer.
+# Auto-detects libtorch at $HOME/libtorch or /tmp/libtorch
+# (builds with optional PyTorch classifier integration if found).
+#
+set -e
 
-# 🔧 Скрипт автоматической сборки проекта
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
-echo "🚀 Автоматическая сборка GRADIENT_BASED_OPTIMIZER"
-echo
+CMAKE_ARGS=""
+for CANDIDATE in "$HOME/libtorch" "/tmp/libtorch"; do
+    if [ -d "$CANDIDATE" ]; then
+        echo "libtorch found at: $CANDIDATE"
+        CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$CANDIDATE"
+        break
+    fi
+done
 
-# Проверяем наличие PyTorch
-LIBTORCH_PATH="$HOME/libtorch"
-if [ -d "$LIBTORCH_PATH" ]; then
-    echo "✅ PyTorch найден в $LIBTORCH_PATH"
-    CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$LIBTORCH_PATH"
-    BUILD_TYPE="ПОЛНАЯ (с классификатором)"
-else
-    echo "⚠️  PyTorch не найден, базовая сборка"
-    CMAKE_ARGS=""
-    BUILD_TYPE="БАЗОВАЯ (без классификатора)"
+if [ -z "$CMAKE_ARGS" ]; then
+    echo "libtorch not found - building without classifier integration"
 fi
 
-echo "📦 Тип сборки: $BUILD_TYPE"
-echo
-
-# Создаем папку сборки
-echo "📁 Создание папки build..."
 mkdir -p build
 cd build
-
-# Очищаем предыдущую сборку
-echo "🧹 Очистка предыдущей сборки..."
-rm -rf *
-
-# Конфигурируем проект
-echo "⚙️  Конфигурация проекта..."
-if cmake $CMAKE_ARGS ..; then
-    echo "✅ Конфигурация успешна"
-else
-    echo "❌ Ошибка конфигурации"
-    exit 1
-fi
+cmake $CMAKE_ARGS ..
+make -j"$(nproc)"
 
 echo
-
-# Собираем проект
-echo "🔨 Сборка проекта..."
-if make -j4; then
-    echo
-    echo "🎉 СБОРКА УСПЕШНА!"
-    echo
-    
-    # Показываем что собрали
-    echo "📦 Собранные файлы:"
-    ls -la gradient_based_optimizer classifier_example 2>/dev/null || ls -la gradient_based_optimizer
-    echo
-    
-    # Тестируем сборку
-    echo "🧪 Тестирование сборки..."
-    cd ..
-    echo "Справка проекта:"
-    ./build/gradient_based_optimizer --help
-    
-else
-    echo
-    echo "❌ ОШИБКА СБОРКИ"
-    exit 1
-fi
+echo "Build finished. Executables:"
+ls -1 gradient_based_optimizer classifier_example single_classifier_example 2>/dev/null || true

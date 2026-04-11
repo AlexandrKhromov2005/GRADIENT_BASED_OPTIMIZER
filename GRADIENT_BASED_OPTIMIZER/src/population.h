@@ -15,8 +15,8 @@ using VecOf = std::pair<std::vector<double>, double>;
 enum class AttackType {
 	NONE,           // No attack (original objective function)
 	JPEG70,         // JPEG compression quality 70
-	CONTRAST,       // Contrast increase
-	SALT_PEPPER     // Salt-pepper noise
+	JPEG80,         // JPEG compression quality 80
+	CONTRAST        // Contrast increase
 };
 
 class Population {

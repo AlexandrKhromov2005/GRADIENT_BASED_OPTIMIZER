@@ -131,7 +131,7 @@ void generate_dataset(double tau_max) {
                     
                     // Apply attacks to standard_scheme result
                     cv::Mat standard_jpeg = jpeg_attack(embedded_standard, 70);
-                    cv::Mat standard_contrast = contrast_increase_attack(embedded_standard, 1.2);
+                    cv::Mat standard_contrast = contrast_increase_attack(embedded_standard, 1.1);
                     
                     // Test extraction for standard_scheme
                     if (extract_bit_from_block(embedded_standard) != test_bit) total_error_standard++;
@@ -148,7 +148,7 @@ void generate_dataset(double tau_max) {
                     
                     // Apply attacks to extended_scheme result
                     cv::Mat extended_jpeg = jpeg_attack(embedded_extended, 70);
-                    cv::Mat extended_contrast = contrast_increase_attack(embedded_extended, 1.2);
+                    cv::Mat extended_contrast = contrast_increase_attack(embedded_extended, 1.1);
                     
                     // Test extraction for extended_scheme
                     if (extract_bit_from_block(embedded_extended) != test_bit) total_error_extended++;
