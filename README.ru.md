@@ -20,41 +20,25 @@
 
 ```text
 .
-├── CMakeLists.txt                     # основной файл сборки (OpenCV обязателен, libtorch опционален)
-├── build.sh                           # обёртка-скрипт cmake + make
+├── CMakeLists.txt                     # сборка с настраиваемыми целями
+├── build.sh                           # обёртка cmake + make
 ├── embedding_schemes.json             # JSON-описания наборов DCT-коэффициентов
-├── images/                            # эталонные тестовые изображения и ЦВЗ
-│   ├── airplane.png  baboon.png  boat.png  bridge.png
-│   ├── earth_from_space.png  lake.png  lenna.png  pepper.png
-│   ├── watermark.png                  # основной бинарный ЦВЗ 32×32
-│   └── watermark_32x32.png            # альтернативное имя того же ЦВЗ
+├── images/                            # эталонные изображения и ЦВЗ
 └── GRADIENT_BASED_OPTIMIZER/
-    ├── GRADIENT_BASED_OPTIMIZER.cpp   # точка входа CLI
+    ├── gbo_app.cpp                    # точка входа CLI-приложения
+    ├── GRADIENT_BASED_OPTIMIZER.cpp   # точка входа тестового стенда
     └── src/
+        ├── gbo_api.{h,cpp}            # ПУБЛИЧНЫЙ API БИБЛИОТЕКИ (namespace gbo)
         ├── gbo.{h,cpp}                # ядро градиентного оптимизатора
         ├── population.{h,cpp}         # популяция, целевая функция (с учётом атак)
-        ├── launch.{h,cpp}             # оркестрация экспериментов
+        ├── launch.{h,cpp}             # оркестрация экспериментов (только bench)
         ├── embedding_schemes.{h,cpp}  # менеджер схем / загрузка JSON
-        ├── dataset_generation.{h,cpp} # генерация датасетов для обучения классификаторов
-        ├── image_processing_custom.*  # разбиение на 8×8 / DCT / сборка
-        ├── image_metrics.*            # PSNR / SSIM / NCC / BER
-        ├── block_metrics.*            # метрики на уровне блоков
         ├── attacks.{h,cpp}            # JPEG, контраст, шум, кроп и т.д.
+        ├── image_metrics.*            # PSNR / SSIM / NCC / BER
+        ├── image_processing_custom.*  # разбиение на 8×8 / DCT / сборка
         ├── jpeg/                      # поблочное JPEG-сжатие, таблицы квантования
-        ├── random_utils.*             # seed-ed генератор случайных чисел
-        ├── ensemble_classifier.*      # опц.: ансамблевый классификатор схем
-        ├── single_classifier.*        # опц.: одномодельный классификатор схем
-        ├── embedding_with_classifier.*# опц.: связка «классификатор — встраивание»
-        ├── quadrant_classifier.*      # опц.: квадрантный классификатор
-        ├── quadrant_embedding.*       # опц.: 4-квадрантное встраивание
-        ├── attack_type_classifier.*   # опц.: классификатор типа атаки
-        ├── attack_type_embedding.*    # опц.: встраивание с учётом атаки
-        └── example_*.cpp              # отдельные демо-бинарники
+        └── ...                        # классификаторы (опционально, PyTorch)
 ```
-
-Всё, что попадает в `build/`, сгенерированные датасеты, веса моделей (`*.pt`),
-архивы и вспомогательные изображения исключены из репозитория через
-`.gitignore`.
 
 ---
 
@@ -64,14 +48,12 @@
 
 - **C++17** (g++ ≥ 9, clang ≥ 10)
 - **CMake** ≥ 3.16
-- **OpenCV** ≥ 4.0 (модули core, imgproc, imgcodecs)
+- **OpenCV** ≥ 4.0 (core, imgproc, imgcodecs)
 
 Опциональные (только для режимов с классификатором):
 
-- **PyTorch C++ (libtorch)** — сборка CPU или CUDA, протестировано с libtorch 2.x
-- веса обученных моделей в формате TorchScript (`.pt`)
-
-На Ubuntu 22.04 обязательные зависимости ставятся одной командой:
+- **PyTorch C++ (libtorch)** — CPU или CUDA, протестировано с libtorch 2.x
+- веса моделей в формате TorchScript (`.pt`)
 
 ```bash
 sudo apt-get install build-essential cmake libopencv-dev
@@ -85,14 +67,21 @@ wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-de
 unzip libtorch-cxx11-abi-shared-with-deps-2.1.0+cpu.zip
 ```
 
-Поддерживаются пути `/tmp/libtorch` и `$HOME/libtorch` — `build.sh`
-автоматически находит оба варианта.
-
 ---
 
 ## 3. Сборка
 
-### 3.1 Минимальная сборка (только OpenCV)
+Система сборки предоставляет четыре CMake-опции для выбора целей.
+Все по умолчанию `OFF`, кроме `GBO_BUILD_APP`.
+
+| CMake-опция         | По умолч. | Результат                                    |
+|---------------------|-----------|----------------------------------------------|
+| `GBO_BUILD_APP`     | **ON**    | `gbo_app` — CLI-инструмент                   |
+| `GBO_BUILD_BENCH`   | OFF       | `gbo_bench` — тестовый стенд                 |
+| `GBO_BUILD_SHARED`  | OFF       | `libgbo.so` / `.dylib` — динамическая библ.  |
+| `GBO_BUILD_STATIC`  | OFF       | `libgbo.a` — статическая библиотека          |
+
+### 3.1 Только приложение (по умолчанию)
 
 ```bash
 mkdir -p build && cd build
@@ -100,133 +89,95 @@ cmake ..
 make -j$(nproc)
 ```
 
-Собирается один исполняемый файл `build/gradient_based_optimizer`. Режимы с
-классификатором в такой сборке отсутствуют (они выдают ошибку во время
-исполнения).
-
-### 3.2 Полная сборка (с libtorch)
+### 3.2 Все цели сразу
 
 ```bash
 mkdir -p build && cd build
-cmake -DCMAKE_PREFIX_PATH=$HOME/libtorch ..
+cmake -DGBO_BUILD_APP=ON    \
+      -DGBO_BUILD_BENCH=ON  \
+      -DGBO_BUILD_SHARED=ON \
+      -DGBO_BUILD_STATIC=ON ..
 make -j$(nproc)
 ```
 
-Собираются три исполняемых файла:
-
-| Исполняемый файл             | Назначение                                          |
-|------------------------------|-----------------------------------------------------|
-| `gradient_based_optimizer`   | основной CLI со всеми режимами                      |
-| `classifier_example`         | демо ансамблевого классификатора схем               |
-| `single_classifier_example`  | демо одномодельного классификатора схем             |
-
-Макрос `TORCH_AVAILABLE` автоматически определяется CMake при обнаружении
-libtorch.
-
-### 3.3 Скрипт-обёртка
+### 3.3 С поддержкой классификатора (PyTorch)
 
 ```bash
-./build.sh
+cmake -DCMAKE_PREFIX_PATH=$HOME/libtorch \
+      -DGBO_BUILD_BENCH=ON ..
 ```
 
-Автоматически находит libtorch в `~/libtorch` или `/tmp/libtorch`, запускает
-`cmake` и затем `make`.
+### 3.4 Установка
+
+```bash
+cmake --install build --prefix /usr/local
+```
+
+Устанавливает:
+
+- `include/gbo/gbo_api.h` — публичный заголовок
+- `lib/libgbo.{so,a}` — библиотеки (если собраны)
+- `bin/gbo_app`, `bin/gbo_bench` — исполняемые файлы (если собраны)
+- `share/gbo/embedding_schemes.json` — описания схем
 
 ---
 
-## 4. Запуск экспериментов
+## 4. CLI-приложение (`gbo_app`)
 
-**Важно:** все режимы разрешают пути относительно текущей рабочей директории.
-Запускайте программу из корня репозитория, чтобы файл `embedding_schemes.json`
-и папка `images/` были найдены.
+**Важно:** запускайте из корня репозитория.
 
 ```bash
-./build/gradient_based_optimizer --help
+# Встроить ЦВЗ
+./build/gbo_app embed images/lenna.png images/watermark.png output.png --scheme scheme1
+
+# Извлечь ЦВЗ
+./build/gbo_app extract output.png extracted_wm.png
+
+# Вычислить метрики
+./build/gbo_app metrics images/lenna.png output.png
+
+# Симулировать атаку
+./build/gbo_app attack output.png attacked.png --type jpeg --param 70
+
+# Список схем
+./build/gbo_app schemes
 ```
 
-### 4.1 Основной эксперимент
+---
 
-Встраивает и извлекает ЦВЗ для 8 эталонных изображений и оценивает
-устойчивость к фиксированному набору атак (JPEG при разных качествах,
-контраст, соль-перец, кроп и т.д.).
+## 4a. Тестовый стенд (`gbo_bench`)
+
+Полный pipeline из статьи: встраивание и извлечение ЦВЗ на 8 эталонных
+изображениях, симуляция атак, отчёт min/avg/max метрик.
+
+Собирается с `-DGBO_BUILD_BENCH=ON`:
 
 ```bash
-# 10 итераций на изображение (по умолчанию)
-./build/gradient_based_optimizer
-
-# 1 итерация — быстрый smoke-тест
-./build/gradient_based_optimizer --test
-
-# Явный выбор схемы встраивания
-./build/gradient_based_optimizer --scheme scheme2
-./build/gradient_based_optimizer --scheme scheme3 --test
+./build/gbo_bench              # 10 итераций на изображение
+./build/gbo_bench --test       # 1 итерация (smoke-тест)
+./build/gbo_bench --scheme scheme2 --test
 ```
 
-Пообразные метрики (MSE / PSNR / SSIM / NCC / BER, min/avg/max) записываются
-в файлы `results_<имя>.txt` в рабочей директории.
-
-### 4.2 Генерация датасета (scheme2 vs scheme3)
-
-Систематическое сравнение двух лучших схем с разметкой каждого 8×8 блока
-по победителю. Используется для обучения классификатора схем.
-
-```bash
-./build/gradient_based_optimizer --dataset              # tau_max = 10 по умолчанию
-./build/gradient_based_optimizer --dataset --tau-max 5
-```
-
-Результаты кладутся в папку `dataset/`.
-
-### 4.3 Режимы с классификатором (требуют libtorch и веса)
-
-| Флаг                      | Требуемая модель                                 |
-|---------------------------|--------------------------------------------------|
-| `--classifier`            | `final_model_torchscript.pt`                     |
-| `--dataset-classifier`    | `final_model_torchscript.pt`                     |
-| `--example`               | `final_model_torchscript.pt`                     |
-| `--quadrant-classifier`   | `best_model_ultrahighres.pt` + изображения 1024×1024 |
-| `--quadrant-dataset`      | изображения 1024×1024                            |
-| `--attack-classifier`     | `model_torchscript.pt` + изображения 1024×1024   |
-| `--attack-dataset`        | изображения 1024×1024                            |
-
-Веса моделей нужно положить в ту же рабочую директорию, из которой
-запускается бинарник. В репозиторий они не включены из-за размера —
-свяжитесь с авторами статьи для получения файлов, использовавшихся в
-опубликованных экспериментах, либо обучите их заново на датасетах,
-генерируемых режимами `--dataset-*`.
-
-### 4.4 Режимы «known attack» (без PyTorch)
-
-```bash
-./build/gradient_based_optimizer --known-attack           # изображения 512×512
-./build/gradient_based_optimizer --known-attack-1024      # изображения 1024×1024 с голосованием
-```
-
-Эти режимы встраивают с `AttackType::NONE`, а при извлечении применяют
-стратегию, учитывающую известный тип атаки — удобно для ablation-экспериментов.
+Также поддерживает генерацию датасетов (`--dataset`), режимы с
+классификаторами и known-attack. `./build/gbo_bench --help` — полный список.
 
 ---
 
 ## 5. Схемы встраивания
 
-*Схема* — это детерминированный набор DCT-коэффициентов внутри 8×8 блока,
-разбитый на две области `REG0` и `REG1` (плюс объединённая `ZONE0`, которую
-оптимизатор использует как пространство поиска). Схемы описываются в
-[`embedding_schemes.json`](embedding_schemes.json) и подгружаются при старте —
-**пересборка не требуется для добавления новой схемы**.
+*Схема* — детерминированный набор DCT-коэффициентов внутри 8×8 блока,
+разбитый на `REG0`, `REG1` и `ZONE0`. Описываются в
+[`embedding_schemes.json`](embedding_schemes.json) — **пересборка не нужна**.
 
-| ID схемы          | Размер ZONE0 | Описание                                    |
+| ID схемы          | Размер ZONE0 | Описание                                   |
 |-------------------|--------------|---------------------------------------------|
-| `scheme1`         | 22           | исходная схема, симметричная антидиагональ  |
+| `scheme1`         | 22           | исходная, симметричная антидиагональ        |
 | `scheme2`         | 22           | альтернативная, смещённые средние частоты   |
-| `scheme3`         | 25           | 12+13, добавлены `[2,2]`, `[1,3]`, `[3,1]`  |
-| `extended_scheme` | 25           | 12+13, добавлены `[2,3]`, `[1,4]`, `[3,2]`  |
-| `standard_scheme` | 22           | непрерывная полоса 11+11 по антидиагонали   |
+| `scheme3`         | 25           | 12+13, добавлены `[2,2]`, `[1,3]`, `[3,1]` |
+| `extended_scheme` | 25           | 12+13, добавлены `[2,3]`, `[1,4]`, `[3,2]` |
+| `standard_scheme` | 22           | непрерывная полоса 11+11                    |
 
-Глобальная переменная `CURRENT_VEC_SIZE` хранит размер ZONE0 активной схемы
-и используется оптимизатором для размерности всех кандидатных векторов.
-
-### 5.1 Как добавить свою схему
+### 5.1 Добавление своей схемы
 
 Допишите объект в `embedding_schemes.json`:
 
@@ -240,88 +191,132 @@ libtorch.
 }
 ```
 
-Затем запускайте с `--scheme my_scheme`. Никакой пересборки не требуется.
+Запуск: `--scheme my_scheme`. Пересборка не требуется.
 
 ---
 
 ## 6. Алгоритм
 
-1. Загрузка изображения-контейнера и перевод в grayscale.
-2. Разбиение на 8×8 блоки, прямое DCT каждого блока.
+1. Загрузка изображения и перевод в grayscale.
+2. Разбиение на 8×8 блоки, прямое DCT.
 3. Для каждого бита 1024-битного ЦВЗ:
-   1. Выбирается блок с индексом `i mod WM_SIZE`.
-   2. (Опционально) классификатор выбирает схему для этого блока.
-   3. Инициализируется популяция из `POP_SIZE = 30` векторов возмущений
-      размерности `CURRENT_VEC_SIZE` в диапазоне `[-TH, +TH]`.
-   4. Запускается GBO на `ITERATIONS = 40` итераций с целевой функцией,
-      которая учитывает возможную атаку (см. `AttackType`).
-   5. Лучшее возмущение применяется к DCT-коэффициентам блока, затем
-      обратное DCT.
+   1. Блок с индексом `i mod WM_SIZE`.
+   2. (Опц.) классификатор выбирает схему.
+   3. Популяция `POP_SIZE = 30` векторов в `[-TH, +TH]`.
+   4. GBO за `ITERATIONS = 40` поколений оптимизирует целевую функцию.
+   5. Лучшее возмущение → DCT → обратное DCT.
 4. Сборка результирующего изображения.
-5. Опционально: симуляция атак (JPEG 10–90, контраст ±, соль-перец, кроп,
-   …) и вычисление PSNR / SSIM / NCC / BER относительно исходного ЦВЗ.
+5. Опционально: атаки + метрики (PSNR / SSIM / NCC / BER).
 
-Все настраиваемые константы лежат в
-[`GRADIENT_BASED_OPTIMIZER/src/config.h`](GRADIENT_BASED_OPTIMIZER/src/config.h):
+Константы в [`config.h`](GRADIENT_BASED_OPTIMIZER/src/config.h):
 
 ```cpp
 #define POP_SIZE   30      // размер популяции
-#define ITERATIONS 40      // количество итераций оптимизатора
-#define TH         10.0    // граница возмущения DCT-коэффициентов
+#define ITERATIONS 40      // итерации оптимизатора
+#define TH         10.0    // граница возмущений
 #define WM_SIZE    1024    // длина ЦВЗ в битах
 ```
 
 ---
 
-## 7. Квадрантное встраивание (опциональный pipeline)
+## 7. Квадрантное встраивание (опц.)
 
-Вместо встраивания одной копии ЦВЗ во всё изображение, квадрантный pipeline
-разбивает изображение 1024×1024 на 4 квадранта и встраивает в каждый свою
-копию, **оптимизированную под свой тип атаки**:
+Изображение 1024×1024 делится на 4 квадранта, в каждый встраивается копия
+ЦВЗ, оптимизированная под свой тип атаки:
 
-| Квадрант               | Тип атаки для оптимизации  |
-|------------------------|----------------------------|
-| N1 (верхний-левый)     | `AttackType::NONE`         |
-| N2 (верхний-правый)    | `AttackType::JPEG70`       |
-| N3 (нижний-левый)      | `AttackType::CONTRAST`     |
-| N4 (нижний-правый)     | `AttackType::SALT_PEPPER`  |
+| Квадрант           | Атака                      |
+|--------------------|----------------------------|
+| N1 (верх-лево)     | `AttackType::NONE`         |
+| N2 (верх-право)    | `AttackType::JPEG70`       |
+| N3 (низ-лево)      | `AttackType::CONTRAST`     |
+| N4 (низ-право)     | `AttackType::SALT_PEPPER`  |
 
-При извлечении классификатор (`best_model_ultrahighres.pt`) предсказывает,
-какой квадрант даст наиболее устойчивое извлечение для текущего (возможно,
-атакованного) изображения, и ЦВЗ восстанавливается из этого квадранта.
-Режим требует libtorch и соответствующей модели.
+При извлечении классификатор выбирает лучший квадрант.
+Требует libtorch + `best_model_ultrahighres.pt`.
 
 ---
 
-## 8. Использование алгоритма в своём коде
+## 8. API библиотеки (`libgbo`)
 
-Оптимизатор не завязан на CLI. Минимальный pipeline встраивания выглядит
-так:
+Соберите shared- или static-библиотеку и линкуйтесь.
+Публичный заголовок: [`gbo_api.h`](GRADIENT_BASED_OPTIMIZER/src/gbo_api.h).
+
+### 8.1 Пример
 
 ```cpp
-#include "launch.h"
-#include "embedding_schemes.h"
+#include <gbo/gbo_api.h>
+#include <opencv2/opencv.hpp>
 
 int main() {
-    auto& manager = EmbeddingSchemeManager::getInstance();
-    manager.loadSchemes();                 // читает embedding_schemes.json
-    manager.setCurrentScheme("scheme1");
+    gbo::init("embedding_schemes.json");
+    gbo::setScheme("scheme1");
 
-    launch("cover.png", "watermarked.png",
-           "watermark.png", "extracted.png",
-           /*iterations=*/10);
-    return 0;
+    cv::Mat cover = cv::imread("cover.png", cv::IMREAD_GRAYSCALE);
+    cv::Mat wm    = cv::imread("watermark.png", cv::IMREAD_GRAYSCALE);
+    cv::Mat watermarked = gbo::embedWatermark(cover, wm);
+    cv::imwrite("watermarked.png", watermarked);
+
+    cv::Mat attacked  = gbo::attackJPEG(watermarked, 70);
+    cv::Mat extracted = gbo::extractWatermark(attacked);
+
+    std::cout << "PSNR: " << gbo::computePSNR(cover, watermarked) << " dB\n";
+    std::cout << "BER:  " << gbo::computeBER(wm, extracted) << "\n";
 }
 ```
 
-Основные заголовки, которые обычно нужны, —
-[`GRADIENT_BASED_OPTIMIZER/src/gbo.h`](GRADIENT_BASED_OPTIMIZER/src/gbo.h)
-(запуск оптимизатора на одном 8×8 блоке с заданным битом и типом атаки) и
-[`GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.h`](GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.h)
-(переключение наборов коэффициентов во время работы).
+Компиляция и линковка:
 
----
+```bash
+g++ -std=c++17 my_app.cpp -lgbo -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -o my_app
+```
 
-## 9. Лицензия
+### 8.2 Справочник API
 
-Условия распространения уточняются — свяжитесь с авторами до перепубликации.
+Все функции в пространстве имён `gbo`.
+
+**Инициализация:**
+
+| Функция | Описание |
+|---------|----------|
+| `bool init(path)` | Загрузить схемы и таблицы квантования. Вызвать один раз. |
+| `bool setScheme(id)` | Выбрать активную схему. |
+| `vector<string> availableSchemes()` | Список доступных схем. |
+
+**Встраивание/извлечение:**
+
+| Функция | Описание |
+|---------|----------|
+| `cv::Mat embedWatermark(image, watermark)` | Встроить ЦВЗ. Возвращает изображение. |
+| `cv::Mat extractWatermark(image)` | Извлечь ЦВЗ. |
+
+**Метрики:**
+
+| Функция | Описание |
+|---------|----------|
+| `double computeMSE(a, b)` | Среднеквадратичная ошибка. |
+| `double computePSNR(a, b)` | PSNR (дБ). |
+| `double computeSSIM(a, b)` | Структурное сходство. |
+| `double computeNCC(a, b)` | Нормированная корреляция. |
+| `double computeBER(wm1, wm2)` | Вероятность битовой ошибки. |
+
+**Симуляция атак:**
+
+| Функция | Описание |
+|---------|----------|
+| `attackJPEG(image, quality)` | JPEG-сжатие. |
+| `attackBrightnessIncrease(image, value)` | Увеличение яркости. |
+| `attackBrightnessDecrease(image, value)` | Уменьшение яркости. |
+| `attackContrastIncrease(image, alpha)` | Увеличение контраста. |
+| `attackContrastDecrease(image, alpha)` | Уменьшение контраста. |
+| `attackSaltPepper(image, prob)` | Шум «соль-перец». |
+| `attackMedianFilter(image, ksize)` | Медианная фильтрация. |
+| `attackGaussianFilter(image, ksize)` | Гауссова фильтрация. |
+
+### 8.3 Линковка из CMake-проекта
+
+```cmake
+find_package(OpenCV REQUIRED)
+add_executable(my_app main.cpp)
+target_link_libraries(my_app /usr/local/lib/libgbo.so ${OpenCV_LIBS})
+target_include_directories(my_app PRIVATE /usr/local/include)
+```

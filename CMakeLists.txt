@@ -1,138 +1,185 @@
 cmake_minimum_required(VERSION 3.16)
-project(GRADIENT_BASED_OPTIMIZER)
+project(GBO VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# ---- User-facing build options ----------------------------------------------
+option(GBO_BUILD_APP       "Build the standalone CLI tool (gbo_app)"   ON)
+option(GBO_BUILD_BENCH     "Build the test-bench binary (gbo_bench)"   OFF)
+option(GBO_BUILD_SHARED    "Build a shared library (libgbo.so/.dylib)" OFF)
+option(GBO_BUILD_STATIC    "Build a static library (libgbo.a)"         OFF)
+
+# ---- Dependencies -----------------------------------------------------------
 find_package(OpenCV REQUIRED)
 
-# Add PyTorch path if exists
+# PyTorch (optional) — auto-detected in standard paths + /tmp/libtorch
 if(EXISTS "/tmp/libtorch")
     list(APPEND CMAKE_PREFIX_PATH "/tmp/libtorch/share/cmake/Torch")
-    message(STATUS "🔧 Added PyTorch path: /tmp/libtorch")
 endif()
 
-# Try to find PyTorch - optional for classifier integration
 find_package(Torch QUIET)
 if(Torch_FOUND)
-    message(STATUS "✅ PyTorch found - classifier integration enabled")
+    message(STATUS "PyTorch found - classifier integration enabled")
     set(TORCH_AVAILABLE TRUE)
     add_definitions(-DTORCH_AVAILABLE)
 else()
-    message(WARNING "⚠️  PyTorch not found - classifier integration disabled")
-    message(WARNING "    To enable classifier: install PyTorch C++ (libtorch)")
-    message(WARNING "    wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.0%2Bcpu.zip")
+    message(STATUS "PyTorch not found - classifier integration disabled (optional)")
     set(TORCH_AVAILABLE FALSE)
 endif()
 
-set(SOURCES
-    GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER.cpp
-    GRADIENT_BASED_OPTIMIZER/src/attacks.cpp
-    GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp
-    GRADIENT_BASED_OPTIMIZER/src/gbo.cpp
-    GRADIENT_BASED_OPTIMIZER/src/image_metrics.cpp
-    GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp
-    GRADIENT_BASED_OPTIMIZER/src/jpeg/compression.cpp
-    GRADIENT_BASED_OPTIMIZER/src/launch.cpp
-    GRADIENT_BASED_OPTIMIZER/src/population.cpp
-    GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp
-    GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp
-    GRADIENT_BASED_OPTIMIZER/src/dataset_generation.cpp
+# ---- Source lists -----------------------------------------------------------
+set(SRC_DIR GRADIENT_BASED_OPTIMIZER/src)
+
+set(GBO_CORE_SOURCES
+    ${SRC_DIR}/gbo.cpp
+    ${SRC_DIR}/population.cpp
+    ${SRC_DIR}/attacks.cpp
+    ${SRC_DIR}/block_metrics.cpp
+    ${SRC_DIR}/image_metrics.cpp
+    ${SRC_DIR}/image_processing_custom.cpp
+    ${SRC_DIR}/jpeg/compression.cpp
+    ${SRC_DIR}/random_utils.cpp
+    ${SRC_DIR}/embedding_schemes.cpp
+    ${SRC_DIR}/gbo_api.cpp
 )
 
-# Add classifier sources only if PyTorch is available
+set(GBO_BENCH_SOURCES
+    ${SRC_DIR}/launch.cpp
+    ${SRC_DIR}/dataset_generation.cpp
+)
+
 if(TORCH_AVAILABLE)
-    list(APPEND SOURCES
-        GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp
-        GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp
-        GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp
-        GRADIENT_BASED_OPTIMIZER/src/quadrant_classifier.cpp
-        GRADIENT_BASED_OPTIMIZER/src/quadrant_embedding.cpp
-        GRADIENT_BASED_OPTIMIZER/src/attack_type_classifier.cpp
-        GRADIENT_BASED_OPTIMIZER/src/attack_type_embedding.cpp
+    list(APPEND GBO_CORE_SOURCES
+        ${SRC_DIR}/ensemble_classifier.cpp
+        ${SRC_DIR}/single_classifier.cpp
+        ${SRC_DIR}/embedding_with_classifier.cpp
+    )
+    list(APPEND GBO_BENCH_SOURCES
+        ${SRC_DIR}/quadrant_classifier.cpp
+        ${SRC_DIR}/quadrant_embedding.cpp
+        ${SRC_DIR}/attack_type_classifier.cpp
+        ${SRC_DIR}/attack_type_embedding.cpp
     )
 endif()
 
-set(HEADERS
-    GRADIENT_BASED_OPTIMIZER/src/attacks.h
-    GRADIENT_BASED_OPTIMIZER/src/block_metrics.h
-    GRADIENT_BASED_OPTIMIZER/src/config.h
-    GRADIENT_BASED_OPTIMIZER/src/gbo.h
-    GRADIENT_BASED_OPTIMIZER/src/image_metrics.h
-    GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.h
-    GRADIENT_BASED_OPTIMIZER/src/jpeg/compression.h
-    GRADIENT_BASED_OPTIMIZER/src/jpeg/quantization_tables.h
-    GRADIENT_BASED_OPTIMIZER/src/launch.h
-    GRADIENT_BASED_OPTIMIZER/src/population.h
-    GRADIENT_BASED_OPTIMIZER/src/random_utils.h
-    GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.h
-    GRADIENT_BASED_OPTIMIZER/src/dataset_generation.h
+set(GBO_PUBLIC_HEADERS
+    ${SRC_DIR}/gbo_api.h
 )
 
-# Add classifier headers only if PyTorch is available
-if(TORCH_AVAILABLE)
-    list(APPEND HEADERS
-        GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.h
-        GRADIENT_BASED_OPTIMIZER/src/single_classifier.h
-        GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.h
-        GRADIENT_BASED_OPTIMIZER/src/quadrant_classifier.h
-        GRADIENT_BASED_OPTIMIZER/src/quadrant_embedding.h
-        GRADIENT_BASED_OPTIMIZER/src/attack_type_classifier.h
-        GRADIENT_BASED_OPTIMIZER/src/attack_type_embedding.h
-    )
-endif()
+# Collect all internal headers for IDE convenience
+file(GLOB GBO_INTERNAL_HEADERS ${SRC_DIR}/*.h ${SRC_DIR}/jpeg/*.h)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
-include_directories(GRADIENT_BASED_OPTIMIZER/src)
+include_directories(${SRC_DIR})
 
-add_executable(gradient_based_optimizer ${SOURCES} ${HEADERS})
+# ---- Helper: link the right libs to a target --------------------------------
+function(gbo_link_libs target)
+    if(TORCH_AVAILABLE)
+        target_link_libraries(${target} ${OpenCV_LIBS} ${TORCH_LIBRARIES})
+    else()
+        target_link_libraries(${target} ${OpenCV_LIBS})
+    endif()
+endfunction()
 
-# Link libraries
-if(TORCH_AVAILABLE)
-    target_link_libraries(gradient_based_optimizer ${OpenCV_LIBS} ${TORCH_LIBRARIES})
-    set_target_properties(gradient_based_optimizer PROPERTIES CXX_STANDARD 14)
-    
-    # Add example executable only if PyTorch is available
-    add_executable(classifier_example
-        GRADIENT_BASED_OPTIMIZER/src/example_classifier_integration.cpp
-        GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp
-        GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp
-        GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp
-        GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp
-        GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp
-        GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp
-        GRADIENT_BASED_OPTIMIZER/src/gbo.cpp
-        GRADIENT_BASED_OPTIMIZER/src/population.cpp
-        GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp
-        GRADIENT_BASED_OPTIMIZER/src/attacks.cpp
+# ---- Shared library ---------------------------------------------------------
+if(GBO_BUILD_SHARED)
+    add_library(gbo_shared SHARED ${GBO_CORE_SOURCES} ${GBO_INTERNAL_HEADERS})
+    set_target_properties(gbo_shared PROPERTIES
+        OUTPUT_NAME gbo
+        VERSION     ${PROJECT_VERSION}
+        SOVERSION   1
     )
-
-    target_link_libraries(classifier_example ${OpenCV_LIBS} ${TORCH_LIBRARIES})
-    set_target_properties(classifier_example PROPERTIES CXX_STANDARD 14)
-
-    # Add single classifier example executable
-    add_executable(single_classifier_example
-        GRADIENT_BASED_OPTIMIZER/src/example_single_classifier_integration.cpp
-        GRADIENT_BASED_OPTIMIZER/src/ensemble_classifier.cpp
-        GRADIENT_BASED_OPTIMIZER/src/single_classifier.cpp
-        GRADIENT_BASED_OPTIMIZER/src/embedding_with_classifier.cpp
-        GRADIENT_BASED_OPTIMIZER/src/embedding_schemes.cpp
-        GRADIENT_BASED_OPTIMIZER/src/image_processing_custom.cpp
-        GRADIENT_BASED_OPTIMIZER/src/block_metrics.cpp
-        GRADIENT_BASED_OPTIMIZER/src/gbo.cpp
-        GRADIENT_BASED_OPTIMIZER/src/population.cpp
-        GRADIENT_BASED_OPTIMIZER/src/random_utils.cpp
-        GRADIENT_BASED_OPTIMIZER/src/attacks.cpp
-    )
-
-    target_link_libraries(single_classifier_example ${OpenCV_LIBS} ${TORCH_LIBRARIES})
-    set_target_properties(single_classifier_example PROPERTIES CXX_STANDARD 14)
-    
-    message(STATUS "🎯 Classifier example executables will be built")
-else()
-    target_link_libraries(gradient_based_optimizer ${OpenCV_LIBS})
-    message(STATUS "🔧 Building without classifier integration")
+    target_compile_definitions(gbo_shared PRIVATE GBO_BUILDING_LIBRARY)
+    gbo_link_libs(gbo_shared)
+    message(STATUS "Target: libgbo.so (shared library)")
 endif()
 
-set(CMAKE_BUILD_TYPE Release)
+# ---- Static library ---------------------------------------------------------
+if(GBO_BUILD_STATIC)
+    add_library(gbo_static STATIC ${GBO_CORE_SOURCES} ${GBO_INTERNAL_HEADERS})
+    set_target_properties(gbo_static PROPERTIES
+        OUTPUT_NAME gbo
+    )
+    gbo_link_libs(gbo_static)
+    message(STATUS "Target: libgbo.a (static library)")
+endif()
+
+# ---- Standalone CLI app -----------------------------------------------------
+if(GBO_BUILD_APP)
+    add_executable(gbo_app
+        GRADIENT_BASED_OPTIMIZER/gbo_app.cpp
+        ${GBO_CORE_SOURCES}
+        ${GBO_INTERNAL_HEADERS}
+    )
+    gbo_link_libs(gbo_app)
+    message(STATUS "Target: gbo_app (standalone CLI)")
+endif()
+
+# ---- Test bench (full experiment runner) ------------------------------------
+if(GBO_BUILD_BENCH)
+    add_executable(gbo_bench
+        GRADIENT_BASED_OPTIMIZER/GRADIENT_BASED_OPTIMIZER.cpp
+        ${GBO_CORE_SOURCES}
+        ${GBO_BENCH_SOURCES}
+        ${GBO_INTERNAL_HEADERS}
+    )
+    gbo_link_libs(gbo_bench)
+    message(STATUS "Target: gbo_bench (test bench)")
+
+    # Classifier example binaries (only with PyTorch)
+    if(TORCH_AVAILABLE)
+        add_executable(classifier_example
+            ${SRC_DIR}/example_classifier_integration.cpp
+            ${GBO_CORE_SOURCES}
+        )
+        gbo_link_libs(classifier_example)
+
+        add_executable(single_classifier_example
+            ${SRC_DIR}/example_single_classifier_integration.cpp
+            ${GBO_CORE_SOURCES}
+        )
+        gbo_link_libs(single_classifier_example)
+        message(STATUS "Target: classifier_example, single_classifier_example")
+    endif()
+endif()
+
+# ---- Install ----------------------------------------------------------------
+include(GNUInstallDirs)
+
+# Always install public header
+install(FILES ${GBO_PUBLIC_HEADERS}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/gbo
+)
+
+# Install libraries
+if(GBO_BUILD_SHARED)
+    install(TARGETS gbo_shared
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+endif()
+if(GBO_BUILD_STATIC)
+    install(TARGETS gbo_static
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+endif()
+
+# Install executables
+if(GBO_BUILD_APP)
+    install(TARGETS gbo_app RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+if(GBO_BUILD_BENCH)
+    install(TARGETS gbo_bench RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+# Install scheme config
+install(FILES embedding_schemes.json
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/gbo
+)
+
+# ---- Build-type default -----------------------------------------------------
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
