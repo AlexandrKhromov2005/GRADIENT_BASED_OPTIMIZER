@@ -147,14 +147,5 @@ void GBO::main_loop() {
 		}
 	}
 
-	cv::Mat blockDouble;
-	block.convertTo(blockDouble, CV_64F);
-	cv::Mat DCTblock;
-	cv::dct(blockDouble, DCTblock);
-	cv::Mat newDCTblock = population.apply_vec(DCTblock, population.vecs[population.best_ind].first);
-	cv::Mat newblockDouble;
-	cv::idct(newDCTblock, newblockDouble);
-	cv::Mat newblock;
-	newblockDouble.convertTo(newblock, CV_8U);
-	block = newblock.clone();
+	block = population.embedVec(block, population.vecs[population.best_ind].first);
 }
