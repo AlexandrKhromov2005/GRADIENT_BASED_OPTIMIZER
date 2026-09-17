@@ -5,11 +5,11 @@
 
 
 // Gradient search rule. `gsr`, `delx` and `xs` are caller-provided work buffers (no allocations).
-static void gsr_func(std::vector<double>& gsr, std::vector<double>& delx, std::vector<double>& xs, double rho2, const std::vector<double>& best_x, const std::vector<double>& worst_x, const std::vector<double>& cur_x, const std::vector<double>& xr1, const std::vector<double>& dm, const std::vector<double>& xm, size_t flag) {
-	double a = rand_num();
-	double b = static_cast<double>(gen_random_index());
-	double c = randn();
-	double eps = rand_num() * 0.01;
+static void gsr_func(RandomState& rng, std::vector<double>& gsr, std::vector<double>& delx, std::vector<double>& xs, double rho2, const std::vector<double>& best_x, const std::vector<double>& worst_x, const std::vector<double>& cur_x, const std::vector<double>& xr1, const std::vector<double>& dm, const std::vector<double>& xm, size_t flag) {
+	double a = rng.uniform();
+	double b = static_cast<double>(rng.index());
+	double c = rng.normalClamped();
+	double eps = rng.uniform() * 0.01;
 	for (size_t i = 0; i < CURRENT_VEC_SIZE; ++i) {
 		double delta = 2.0 * a * std::fabs(xm[i] - cur_x[i]);
 		double step = 0.5 * (best_x[i] - xr1[i] + delta);
@@ -22,11 +22,11 @@ static void gsr_func(std::vector<double>& gsr, std::vector<double>& delx, std::v
 		xs[i] = xs_base[i] -  gsr[i] + dm[i];
 	}
 
-	double p1 = rand_num();
-	double p2 = rand_num();
-	double q1 = rand_num();
-	double q2 = rand_num();
-	double d = randn();
+	double p1 = rng.uniform();
+	double p2 = rng.uniform();
+	double q1 = rng.uniform();
+	double q2 = rng.uniform();
+	double d = rng.normalClamped();
 
 	for (size_t i = 0; i < CURRENT_VEC_SIZE; ++i) {
 		double yp = p1 * (0.5 * (xs[i] + cur_x[i]) + p2 * delx[i]);
@@ -44,6 +44,7 @@ size_t GBO::getVectorSize() {
 }
 
 void GBO::main_loop() {
+	RandomState& rng = threadRandomState();
 	Population population = Population(attack_type);
 	int quality = rand_int_1_to_100();
 	population.initOf(block, bit, quality);
@@ -61,11 +62,11 @@ void GBO::main_loop() {
 		double alpha = fabs(betta * sin(angle + sin(angle * betta)));
 
 		for (size_t cur_vec = 0; cur_vec < POP_SIZE; ++cur_vec) {
-			double rho1 = alpha * (2 * rand_num() - 1.0);
-			double rho2 = alpha * (2 * rand_num() - 1.0);
-			double dm_rand = rand_num();
+			double rho1 = alpha * (2 * rng.uniform() - 1.0);
+			double rho2 = alpha * (2 * rng.uniform() - 1.0);
+			double dm_rand = rng.uniform();
 			std::array<size_t, 4> indexes = {0};
-			gen_indexes(indexes, cur_vec, population.best_ind);
+			rng.indexes(indexes, cur_vec, population.best_ind);
 
 			const std::vector<double>& x_best = population.vecs[population.best_ind].first;
 			const std::vector<double>& x_cur = population.vecs[cur_vec].first;
@@ -79,28 +80,28 @@ void GBO::main_loop() {
 				dm[i] = dm_rand * rho1 * (x_best[i] - x_r1[i]);
 			}
 
-			gsr_func(gsr, delx, xs, rho2, x_best, population.worst_vec.first, x_cur, x_r1, dm, xm, 1);
-			dm_rand = rand_num();
+			gsr_func(rng, gsr, delx, xs, rho2, x_best, population.worst_vec.first, x_cur, x_r1, dm, xm, 1);
+			dm_rand = rng.uniform();
 			for (size_t i = 0; i < n; ++i) {
 				dm[i] = dm_rand * rho1 * (x_best[i] - x_r1[i]);
 				x1[i] = x_cur[i] - gsr[i] + dm[i];
 			}
 
-			dm_rand = rand_num();
+			dm_rand = rng.uniform();
 			for (size_t i = 0; i < n; ++i) {
 				dm[i] = dm_rand * rho1 * (x_r1[i] - x_r2[i]);
 			}
-			gsr_func(gsr, delx, xs, rho2, x_best, population.worst_vec.first, x_cur, x_r1, dm, xm, 2);
+			gsr_func(rng, gsr, delx, xs, rho2, x_best, population.worst_vec.first, x_cur, x_r1, dm, xm, 2);
 
-			dm_rand = rand_num();
+			dm_rand = rng.uniform();
 			for (size_t i = 0; i < n; ++i) {
 				dm[i] = dm_rand * rho1 * (x_r1[i] - x_r2[i]);
 				x2[i] = x_best[i] - gsr[i] + dm[i];
 			}
 
-			rho1 = alpha * (2 * rand_num() - 1.0);
-			double ra = rand_num();
-			double rb = rand_num();
+			rho1 = alpha * (2 * rng.uniform() - 1.0);
+			double ra = rng.uniform();
+			double rb = rng.uniform();
 
 			for (size_t i = 0; i < n; ++i) {
 				double x3 = x_cur[i] - rho1 * (x2[i] - x1[i]);
@@ -109,27 +110,27 @@ void GBO::main_loop() {
 			}
 
 
-			if (rand_num() < PR) {
-				double L1 = (rand_num() < 0.5) ? 0.0 : 1.0;
-				double u1 = L1 * 2.0 * rand_num() + (1.0 - L1);
-				double u2 = L1 * rand_num() + (1.0 - L1);
-				double u3 = L1 * rand_num() + (1.0 - L1);
+			if (rng.uniform() < PR) {
+				double L1 = (rng.uniform() < 0.5) ? 0.0 : 1.0;
+				double u1 = L1 * 2.0 * rng.uniform() + (1.0 - L1);
+				double u2 = L1 * rng.uniform() + (1.0 - L1);
+				double u3 = L1 * rng.uniform() + (1.0 - L1);
 
-				double nu2 = rand_num();
+				double nu2 = rng.uniform();
 				(void)nu2;
-				const std::vector<double>& x_p = population.vecs[gen_random_index()].first;
+				const std::vector<double>& x_p = population.vecs[rng.index()].first;
 				for (size_t i = 0; i < n; ++i) {
-					x_rand[i] = TH * (2.0 * rand_num() - 1.0);
+					x_rand[i] = TH * (2.0 * rng.uniform() - 1.0);
 				}
-				double L2 = (rand_num() < 0.5) ? 0.0 : 1.0;
+				double L2 = (rng.uniform() < 0.5) ? 0.0 : 1.0;
 
 				for (size_t i = 0; i < n; ++i) {
 					x_mk[i] = L2 * x_p[i] + (1.0 - L2) * x_rand[i];
 				}
 
-				const std::vector<double>& Y = (rand_num() < 0.5) ? x_next : x_best;
-				double f1 = rand_neg_one_to_one();
-				double f2 = rand_neg_one_to_one();
+				const std::vector<double>& Y = (rng.uniform() < 0.5) ? x_next : x_best;
+				double f1 = rng.uniformSigned();
+				double f2 = rng.uniformSigned();
 
 				for (size_t i = 0; i < n; ++i) {
 					x_next[i] = Y[i] + f1 * (u1 * x_best[i] - u2 * x_mk[i]) + f2 * rho1 * (u3 * (x2[i] - x1[i]) + u2 * (x_r1[i] - x_r2[i])) * 0.5;
