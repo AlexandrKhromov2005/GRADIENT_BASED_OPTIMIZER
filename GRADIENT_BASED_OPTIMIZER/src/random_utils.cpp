@@ -17,6 +17,15 @@ void init_random() {
     }
 }
 
+// Seeds every generator with a fixed value (reproducible runs)
+void seed_random(unsigned int seed) {
+    generator.seed(seed);
+    gen.seed(seed ^ 0x9E3779B9u);
+    distribution.reset();
+    dist.reset();
+    initialized = true;
+}
+
 // Generates a random number in the range [0.0, 1.0]
 double rand_num() {
     return distribution(generator);

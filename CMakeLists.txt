@@ -10,6 +10,7 @@ option(GBO_BUILD_APP       "Build the standalone CLI tool (gbo_app)"   ON)
 option(GBO_BUILD_BENCH     "Build the test-bench binary (gbo_bench)"   OFF)
 option(GBO_BUILD_SHARED    "Build a shared library (libgbo.so/.dylib)" OFF)
 option(GBO_BUILD_STATIC    "Build a static library (libgbo.a)"         OFF)
+option(GBO_BUILD_PERF      "Build the speed/quality benchmark (gbo_perf)" OFF)
 
 # ---- Dependencies -----------------------------------------------------------
 find_package(OpenCV REQUIRED)
@@ -37,11 +38,13 @@ set(GBO_CORE_SOURCES
     ${SRC_DIR}/population.cpp
     ${SRC_DIR}/attacks.cpp
     ${SRC_DIR}/block_metrics.cpp
+    ${SRC_DIR}/block_kernels.cpp
     ${SRC_DIR}/image_metrics.cpp
     ${SRC_DIR}/image_processing_custom.cpp
     ${SRC_DIR}/jpeg/compression.cpp
     ${SRC_DIR}/random_utils.cpp
     ${SRC_DIR}/embedding_schemes.cpp
+    ${SRC_DIR}/embedding_core.cpp
     ${SRC_DIR}/gbo_api.cpp
 )
 
@@ -143,6 +146,13 @@ if(GBO_BUILD_BENCH)
         gbo_link_libs(single_classifier_example)
         message(STATUS "Target: classifier_example, single_classifier_example")
     endif()
+endif()
+
+# ---- Speed / quality benchmark ----------------------------------------------
+if(GBO_BUILD_PERF)
+    add_executable(gbo_perf tools/perf_bench.cpp ${GBO_CORE_SOURCES} ${GBO_INTERNAL_HEADERS})
+    gbo_link_libs(gbo_perf)
+    message(STATUS "Target: gbo_perf (speed/quality benchmark)")
 endif()
 
 # ---- Install ----------------------------------------------------------------

@@ -12,6 +12,9 @@
 // Initializes the random number generator
 void init_random();
 
+// Seeds every generator with a fixed value (reproducible runs)
+void seed_random(unsigned int seed);
+
 // Generates a random number in the range [0.0, 1.0]
 double rand_num();
 
