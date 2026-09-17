@@ -24,14 +24,18 @@ namespace {
 std::atomic<unsigned> g_threads{0};
 std::atomic<bool> g_has_seed{false};
 std::atomic<uint64_t> g_seed{0};
+std::atomic<uint64_t> g_seeded_calls{0};  // embedding passes since the last setEmbeddingSeed()
 
 uint64_t nextBaseSeed() {
     if (g_has_seed.load()) {
-        // Consecutive embeddings under one fixed seed still get different streams.
-        return g_seed.fetch_add(0x9E3779B97F4A7C15ull);
+        // The n-th pass after setEmbeddingSeed(s) always gets the same streams, and
+        // different passes (e.g. the 16 quadrants of one image) get different ones.
+        return g_seed.load() + g_seeded_calls.fetch_add(1) * 0x9E3779B97F4A7C15ull;
     }
     std::random_device rd;
-    return (static_cast<uint64_t>(rd()) << 32) ^ rd();
+    const uint64_t high = rd();
+    const uint64_t low = rd();
+    return (high << 32) ^ low;
 }
 
 // Calls fn(i) for i in [0, count) on the configured number of threads. Work is handed out in
@@ -63,7 +67,11 @@ void parallelFor(size_t count, size_t chunk, const std::function<void(size_t)>& 
     };
     std::vector<std::thread> pool;
     pool.reserve(threads - 1);
-    for (size_t t = 1; t < threads; ++t) pool.emplace_back(worker);
+    try {
+        for (size_t t = 1; t < threads; ++t) pool.emplace_back(worker);
+    } catch (...) {
+        // Could not start every thread: the ones that did start (and this one) do the work.
+    }
     worker();
     for (auto& t : pool) t.join();
     if (error) std::rethrow_exception(error);
@@ -74,16 +82,21 @@ void parallelFor(size_t count, size_t chunk, const std::function<void(size_t)>& 
 void setEmbeddingThreads(unsigned threads) { g_threads.store(threads); }
 
 unsigned embeddingThreads() {
+    const unsigned hardware = std::max(std::thread::hardware_concurrency(), 1u);
     unsigned threads = g_threads.load();
     if (threads == 0) {
-        if (const char* env = std::getenv("GBO_THREADS")) threads = static_cast<unsigned>(std::atoi(env));
+        if (const char* env = std::getenv("GBO_THREADS")) {
+            const long value = std::strtol(env, nullptr, 10);
+            if (value > 0) threads = static_cast<unsigned>(std::min<long>(value, 4096));
+        }
     }
-    if (threads == 0) threads = std::thread::hardware_concurrency();
-    return std::max(threads, 1u);
+    if (threads == 0) threads = hardware;
+    return std::min(threads, 4 * hardware);  // more threads than that only cost memory
 }
 
 void setEmbeddingSeed(uint64_t seed) {
     g_seed.store(seed);
+    g_seeded_calls.store(0);
     g_has_seed.store(true);
 }
 

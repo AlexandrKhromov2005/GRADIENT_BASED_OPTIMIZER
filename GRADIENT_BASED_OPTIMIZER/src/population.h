@@ -43,6 +43,7 @@ private:
 	void modifiedPixels(const std::vector<double>& vec, uint8_t* out) const;
 
 	bool prepared = false;
+	const uchar* prepared_data = nullptr;  // block the cached data belongs to
 	uint8_t orig_pixels[64];
 	double orig_dct[64];
 	std::vector<int> zone_idx, reg0_idx, reg1_idx;  // row * 8 + col

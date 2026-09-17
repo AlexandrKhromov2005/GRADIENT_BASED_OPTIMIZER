@@ -1,6 +1,5 @@
 #include "population.h"
 #include "embedding_schemes.h"
-#include "attacks.h"
 #include "block_kernels.h"
 #include <cstring>
 #include <iostream>
@@ -73,6 +72,7 @@ void Population::prepare(const cv::Mat& block) {
     flatten(getCurrentZONE0(), zone_idx);
     flatten(getCurrentREG0(), reg0_idx);
     flatten(getCurrentREG1(), reg1_idx);
+    prepared_data = block.data;
     prepared = true;
 }
 
@@ -85,11 +85,17 @@ void Population::modifiedPixels(const std::vector<double>& vec, uint8_t* out) co
         coefs[zone_idx[i]] = SIGN(original_val) * std::fabs(std::fabs(original_val) + vec[i]);
     }
     kernels::idct8x8(coefs, pixels);
-    kernels::roundToU8(pixels, out);
+    if (!kernels::roundToU8(pixels, out)) {
+        // A pixel sits on a rounding boundary: let the reference transform decide, so the
+        // result equals cv::idct + convertTo(CV_8U) in every case, not just almost surely.
+        cv::Mat reference;
+        cv::idct(cv::Mat(8, 8, CV_64F, coefs), reference);
+        kernels::roundToU8(reference.ptr<double>(), out);
+    }
 }
 
 cv::Mat Population::embedVec(const cv::Mat& block, const std::vector<double>& vec) {
-    if (!prepared) prepare(block);
+    if (!prepared || block.data != prepared_data) prepare(block);
     uint8_t pixels[64];
     modifiedPixels(vec, pixels);
     cv::Mat result(8, 8, CV_8U);
@@ -98,7 +104,7 @@ cv::Mat Population::embedVec(const cv::Mat& block, const std::vector<double>& ve
 }
 
 double Population::calculateOf(const cv::Mat& block, const std::vector<double>& vec, uchar bit, int quality) {
-    if (!prepared) prepare(block);
+    if (!prepared || block.data != prepared_data) prepare(block);
 
     uint8_t embedded[64], attacked_buf[64];
     modifiedPixels(vec, embedded);

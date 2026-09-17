@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <cstring>
+#include <iostream>
+#include <stdexcept>
 #include <vector>
 #include <opencv2/imgcodecs.hpp>
 
@@ -179,11 +181,14 @@ void idct8x8(const double* in, double* out) {
     for (int i = 0; i < 64; ++i) out[i] *= 0.125;
 }
 
-void roundToU8(const double* in, uint8_t* out) {
+bool roundToU8(const double* in, uint8_t* out) {
+    bool unambiguous = true;
     for (int i = 0; i < 64; ++i) {
         const int r = cvRound(in[i]);  // round half to even, exactly what convertTo(CV_8U) uses
+        if (std::fabs(in[i] - r) > 0.5 - 1e-9) unambiguous = false;
         out[i] = static_cast<uint8_t>(r < 0 ? 0 : (r > 255 ? 255 : r));
     }
+    return unambiguous;
 }
 
 // ---- JPEG --------------------------------------------------------------------
@@ -240,6 +245,7 @@ constexpr int32_t FIX_2_053119869 = 16819;
 constexpr int32_t FIX_2_562915447 = 20995;
 constexpr int32_t FIX_3_072711026 = 25172;
 
+// Relies on arithmetic right shift of negative values (true for GCC, Clang, MSVC; C++20 rule).
 inline int32_t descale(int32_t x, int n) { return (x + (int32_t(1) << (n - 1))) >> n; }
 
 // One 1-D pass of jpeg_fdct_islow over 8 values spaced by `stride`.
@@ -344,8 +350,13 @@ void jpegRoundTripCodec(const uint8_t* in, uint8_t* out, int quality) {
     cv::Mat block(8, 8, CV_8U);
     std::memcpy(block.data, in, 64);
     std::vector<uchar> encoded;
-    cv::imencode(".jpg", block, encoded, {cv::IMWRITE_JPEG_QUALITY, quality});
+    if (!cv::imencode(".jpg", block, encoded, {cv::IMWRITE_JPEG_QUALITY, quality})) {
+        throw std::runtime_error("JPEG encoding failed (OpenCV built without JPEG support?)");
+    }
     cv::Mat decoded = cv::imdecode(encoded, cv::IMREAD_GRAYSCALE);
+    if (decoded.rows != 8 || decoded.cols != 8 || decoded.type() != CV_8UC1) {
+        throw std::runtime_error("JPEG decoding failed (OpenCV built without JPEG support?)");
+    }
     for (int r = 0; r < 8; ++r) std::memcpy(out + 8 * r, decoded.ptr<uchar>(r), 8);
 }
 
@@ -375,6 +386,8 @@ void jpegRoundTripEmulated(const uint8_t* in, uint8_t* out, int quality) {
     // Decoder: inverse DCT, level shift, range limit.
     for (int c = 0; c < 8; ++c) idctPass(d + c, ws + c, 8, CONST_BITS - PASS1_BITS);
     for (int r = 0; r < 8; ++r) idctPass(ws + 8 * r, px + 8 * r, 1, CONST_BITS + PASS1_BITS + 3);
+    // Plain clamping equals libjpeg's range_limit table for px in [-512, 511], which always
+    // holds for coefficients produced by the encoder above.
     for (int i = 0; i < 64; ++i) {
         const int32_t v = px[i] + 128;
         out[i] = static_cast<uint8_t>(v < 0 ? 0 : (v > 255 ? 255 : v));
@@ -392,7 +405,7 @@ bool probeJpegEmulation() {
             int v = base + static_cast<int>(next() % (2 * amp + 1)) - amp + ((n & 1) ? (i % 8) * 3 : 0);
             block[i] = static_cast<uint8_t>(v < 0 ? 0 : (v > 255 ? 255 : v));
         }
-        for (int quality : {50, 70, 80, 90}) {
+        for (int quality : {1, 10, 30, 50, 70, 80, 90, 95, 100}) {
             jpegRoundTripEmulated(block, a, quality);
             jpegRoundTripCodec(block, b, quality);
             if (std::memcmp(a, b, 64) != 0) return false;
@@ -404,7 +417,14 @@ bool probeJpegEmulation() {
 } // namespace
 
 bool jpegEmulationIsExact() {
-    static const bool exact = probeJpegEmulation();
+    static const bool exact = [] {
+        const bool ok = probeJpegEmulation();
+        if (!ok) {
+            std::cerr << "gbo: JPEG emulation differs from this OpenCV/libjpeg build; "
+                         "using the codec for the JPEG attack (much slower)" << std::endl;
+        }
+        return ok;
+    }();
     return exact;
 }
 

@@ -94,6 +94,17 @@ static int selfTest(const cv::Mat& gray, int rounds) {
             ref_idct.convertTo(ref_u8, CV_8U);
             kernels::roundToU8(ref_idct.ptr<double>(), out);
             if (std::memcmp(out, ref_u8.data, 64) != 0) ++round_bad;
+            // The composition the embedding really uses: fast IDCT, rounding, and the
+            // reference transform whenever a value is too close to a rounding boundary.
+            if (!kernels::roundToU8(back, out)) kernels::roundToU8(ref_idct.ptr<double>(), out);
+            if (std::memcmp(out, ref_u8.data, 64) != 0) ++round_bad;
+            // Same again with every pixel forced onto an exact x.5 boundary.
+            cv::Mat half = ref_u8.clone(); half.convertTo(half, CV_64F); half += 0.5;
+            cv::Mat half_dct, half_idct, half_u8; cv::dct(half, half_dct); cv::idct(half_dct, half_idct);
+            half_idct.convertTo(half_u8, CV_8U);
+            kernels::idct8x8(half_dct.ptr<double>(), back);
+            if (!kernels::roundToU8(back, out)) kernels::roundToU8(half_idct.ptr<double>(), out);
+            if (std::memcmp(out, half_u8.data, 64) != 0) ++round_bad;
         }
     }
     // Extraction: fast path against the cv::dct reference, on clean and attacked images.
@@ -126,7 +137,10 @@ int main(int argc, char** argv) {
     int repeat = 1, crop = 0, selftest = 0;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
-        auto next = [&]() { return std::string(argv[++i]); };
+        auto next = [&]() {
+            if (i + 1 >= argc) { std::cerr << "missing value for " << a << "\n"; std::exit(2); }
+            return std::string(argv[++i]);
+        };
         if (a == "--mode") mode = next();
         else if (a == "--image") image = next();
         else if (a == "--wm") wm = next();

@@ -21,7 +21,9 @@ void dct8x8Matrix(const double* in, double* out);
 void idct8x8Matrix(const double* in, double* out);
 
 // Same rounding as cv::Mat::convertTo(CV_8U): round half to even, saturate to [0, 255].
-void roundToU8(const double* in, uint8_t* out);
+// Returns false when some value lies within 1e-9 of a rounding boundary (x.5), i.e. when a
+// transform that differs from the reference by ~1e-12 could round differently.
+bool roundToU8(const double* in, uint8_t* out);
 
 // Baseline JPEG compression + decompression of one grayscale 8x8 block.
 // Bit-exact emulation of libjpeg(-turbo) with the default integer DCT (what

@@ -47,8 +47,10 @@ GBO_API std::vector<std::string> availableSchemes();
 /// The embedded result never depends on the thread count.
 GBO_API void setThreads(unsigned threads);
 
-/// Make embedding reproducible: the same seed, image and watermark always give
-/// the same watermarked image. By default every call uses a fresh random seed.
+/// Make embedding reproducible: calling setSeed(s) and then embedWatermark() with the
+/// same image and watermark always gives the same watermarked image (call setSeed again
+/// before every embedding you want to reproduce). By default every call uses a fresh
+/// random seed. Do not run embeddings concurrently while a seed is fixed.
 GBO_API void setSeed(uint64_t seed);
 
 /// Return to non-deterministic seeding (the default).
@@ -63,11 +65,13 @@ GBO_API void clearSeed();
 /// @param image       Grayscale cover image (CV_8U).
 /// @param watermark   Binary watermark image (black/white, 32x32 recommended).
 /// @return Watermarked grayscale image (CV_8U), same size as input.
+/// @throws std::invalid_argument if the watermark holds fewer than 1024 pixels (32x32).
+/// @note Do not call setScheme() while an embedding or extraction is in progress.
 GBO_API cv::Mat embedWatermark(const cv::Mat& image,
                                const cv::Mat& watermark);
 
 /// Extract a binary watermark from a (possibly attacked) watermarked image.
-/// @param image  Watermarked grayscale image (CV_8U).
+/// @param image  Watermarked image, 8 bits per channel (CV_8UC1 or CV_8UC3).
 /// @return Extracted binary watermark image.
 GBO_API cv::Mat extractWatermark(const cv::Mat& image);
 

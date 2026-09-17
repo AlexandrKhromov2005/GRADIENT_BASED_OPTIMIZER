@@ -93,3 +93,4 @@ images_backup_temp/
 # ---- Local / user config ----
 telegram_config.sh
 perf_results/gbo_perf_*
+.omc/

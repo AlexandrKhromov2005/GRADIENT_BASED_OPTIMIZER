@@ -5,12 +5,12 @@
 
 
 // Gradient search rule. `gsr`, `delx` and `xs` are caller-provided work buffers (no allocations).
-static void gsr_func(RandomState& rng, std::vector<double>& gsr, std::vector<double>& delx, std::vector<double>& xs, double rho2, const std::vector<double>& best_x, const std::vector<double>& worst_x, const std::vector<double>& cur_x, const std::vector<double>& xr1, const std::vector<double>& dm, const std::vector<double>& xm, size_t flag) {
+static void gsr_func(RandomState& rng, size_t n, std::vector<double>& gsr, std::vector<double>& delx, std::vector<double>& xs, double rho2, const std::vector<double>& best_x, const std::vector<double>& worst_x, const std::vector<double>& cur_x, const std::vector<double>& xr1, const std::vector<double>& dm, const std::vector<double>& xm, size_t flag) {
 	double a = rng.uniform();
 	double b = static_cast<double>(rng.index());
 	double c = rng.normalClamped();
 	double eps = rng.uniform() * 0.01;
-	for (size_t i = 0; i < CURRENT_VEC_SIZE; ++i) {
+	for (size_t i = 0; i < n; ++i) {
 		double delta = 2.0 * a * std::fabs(xm[i] - cur_x[i]);
 		double step = 0.5 * (best_x[i] - xr1[i] + delta);
 		delx[i] = b * std::fabs(step);
@@ -18,7 +18,7 @@ static void gsr_func(RandomState& rng, std::vector<double>& gsr, std::vector<dou
 	}
 
 	const std::vector<double>& xs_base = (flag == 1) ? cur_x : best_x;
-	for (size_t i = 0; i < CURRENT_VEC_SIZE; ++i) {
+	for (size_t i = 0; i < n; ++i) {
 		xs[i] = xs_base[i] -  gsr[i] + dm[i];
 	}
 
@@ -28,7 +28,7 @@ static void gsr_func(RandomState& rng, std::vector<double>& gsr, std::vector<dou
 	double q2 = rng.uniform();
 	double d = rng.normalClamped();
 
-	for (size_t i = 0; i < CURRENT_VEC_SIZE; ++i) {
+	for (size_t i = 0; i < n; ++i) {
 		double yp = p1 * (0.5 * (xs[i] + cur_x[i]) + p2 * delx[i]);
 		double yq = q1 * (0.5 * (xs[i] + cur_x[i]) - q2 * delx[i]);
 		gsr[i] = (d * rho2 * 2.0 * delx[i] * cur_x[i]) / (yp - yq + eps);
@@ -46,6 +46,7 @@ size_t GBO::getVectorSize() {
 void GBO::main_loop() {
 	RandomState& rng = threadRandomState();
 	Population population = Population(attack_type);
+	// Unused by the objective function; drawn to keep the random stream as it has always been.
 	int quality = rand_int_1_to_100();
 	population.initOf(block, bit, quality);
 	
@@ -80,7 +81,7 @@ void GBO::main_loop() {
 				dm[i] = dm_rand * rho1 * (x_best[i] - x_r1[i]);
 			}
 
-			gsr_func(rng, gsr, delx, xs, rho2, x_best, population.worst_vec.first, x_cur, x_r1, dm, xm, 1);
+			gsr_func(rng, n, gsr, delx, xs, rho2, x_best, population.worst_vec.first, x_cur, x_r1, dm, xm, 1);
 			dm_rand = rng.uniform();
 			for (size_t i = 0; i < n; ++i) {
 				dm[i] = dm_rand * rho1 * (x_best[i] - x_r1[i]);
@@ -91,7 +92,7 @@ void GBO::main_loop() {
 			for (size_t i = 0; i < n; ++i) {
 				dm[i] = dm_rand * rho1 * (x_r1[i] - x_r2[i]);
 			}
-			gsr_func(rng, gsr, delx, xs, rho2, x_best, population.worst_vec.first, x_cur, x_r1, dm, xm, 2);
+			gsr_func(rng, n, gsr, delx, xs, rho2, x_best, population.worst_vec.first, x_cur, x_r1, dm, xm, 2);
 
 			dm_rand = rng.uniform();
 			for (size_t i = 0; i < n; ++i) {

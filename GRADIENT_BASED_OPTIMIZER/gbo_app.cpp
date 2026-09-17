@@ -21,7 +21,18 @@ static void printUsage(const char* prog) {
               << "              salt-pepper, median, gaussian\n";
 }
 
+static int run(int argc, char* argv[]);
+
 int main(int argc, char* argv[]) {
+    try {
+        return run(argc, argv);
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+        return 1;
+    }
+}
+
+static int run(int argc, char* argv[]) {
     if (argc < 2) { printUsage(argv[0]); return 1; }
 
     std::string cmd = argv[1];

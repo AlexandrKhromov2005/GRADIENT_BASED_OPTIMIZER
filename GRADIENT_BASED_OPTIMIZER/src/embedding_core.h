@@ -13,9 +13,15 @@
 void setEmbeddingThreads(unsigned threads);
 unsigned embeddingThreads();
 
-// Fixes the seed of all following embeddings, which makes them reproducible: the result
-// depends on the seed only, never on the number of threads. Without a fixed seed every
-// embedding draws a fresh one from std::random_device.
+// Fixes the seed of all following embeddings, which makes them reproducible: the same
+// sequence of embedding calls after setEmbeddingSeed(s) always gives the same images, and
+// the result never depends on the number of threads. Call it again before an embedding to
+// reproduce that embedding. Without a fixed seed every embedding draws a fresh seed from
+// std::random_device.
+//
+// Threading contract: embedding calls may not run concurrently with each other under a fixed
+// seed (which call gets which stream would be undefined), and the active scheme must not be
+// changed (setCurrentScheme / loadSchemes) while an embedding or extraction is running.
 void setEmbeddingSeed(uint64_t seed);
 void clearEmbeddingSeed();
 
@@ -33,6 +39,7 @@ struct EmbedJob {
 void runEmbedJobs(std::vector<EmbedJob>& jobs);
 
 // Embeds wm_bits[i % WM_SIZE] into blocks[i] (in place) for the first `max_blocks` blocks.
+// Blocks must be 8x8 CV_8UC1. Throws std::invalid_argument if wm_bits has fewer than WM_SIZE bits.
 void embedBlocks(std::vector<cv::Mat>& blocks, const std::vector<int>& wm_bits,
                  AttackType attack = AttackType::NONE, size_t max_blocks = static_cast<size_t>(-1));
 
