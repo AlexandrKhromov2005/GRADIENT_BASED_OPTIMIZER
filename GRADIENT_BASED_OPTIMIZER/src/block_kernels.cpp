@@ -31,7 +31,8 @@ const DctTable& dctTable() {
 
 } // namespace
 
-void dct8x8(const double* in, double* out) {
+// Matrix form, straight from the definition. Used to cross-check the fast transforms.
+void dct8x8Matrix(const double* in, double* out) {
     const auto& c = dctTable().c;
     double tmp[64];
     for (int r = 0; r < 8; ++r) {          // rows: tmp = in * C^T
@@ -51,7 +52,7 @@ void dct8x8(const double* in, double* out) {
     }
 }
 
-void idct8x8(const double* in, double* out) {
+void idct8x8Matrix(const double* in, double* out) {
     const auto& c = dctTable().c;
     double tmp[64];
     for (int u = 0; u < 8; ++u) {          // rows: tmp = in * C
@@ -71,10 +72,117 @@ void idct8x8(const double* in, double* out) {
     }
 }
 
+namespace {
+
+// Loeffler-Ligtenberg-Moschytz factorization (12 multiplications per 1-D transform), in
+// double precision. Each 1-D pass is scaled by sqrt(8), so a 2-D transform is scaled by 8.
+struct LlmConstants {
+    double k0_298631336, k0_390180644, k0_541196100, k0_765366865, k0_899976223, k1_175875602,
+           k1_501321110, k1_847759065, k1_961570560, k2_053119869, k2_562915447, k3_072711026;
+    LlmConstants() {
+        const double pi = 3.14159265358979323846, r2 = std::sqrt(2.0);
+        const double c1 = std::cos(pi / 16), c2 = std::cos(2 * pi / 16), c3 = std::cos(3 * pi / 16),
+                     c5 = std::cos(5 * pi / 16), c6 = std::cos(6 * pi / 16), c7 = std::cos(7 * pi / 16);
+        k0_298631336 = r2 * (-c1 + c3 + c5 - c7);
+        k2_053119869 = r2 * (c1 + c3 - c5 + c7);
+        k3_072711026 = r2 * (c1 + c3 + c5 - c7);
+        k1_501321110 = r2 * (c1 + c3 - c5 - c7);
+        k0_899976223 = r2 * (c3 - c7);
+        k2_562915447 = r2 * (c1 + c3);
+        k1_961570560 = r2 * (c3 + c5);
+        k0_390180644 = r2 * (c3 - c5);
+        k1_175875602 = r2 * c3;
+        k0_541196100 = r2 * c6;
+        k0_765366865 = r2 * (c2 - c6);
+        k1_847759065 = r2 * (c2 + c6);
+    }
+};
+
+const LlmConstants& llm() {
+    static const LlmConstants constants;
+    return constants;
+}
+
+inline void llmForward(const LlmConstants& k, const double* in, double* out, int stride) {
+    const double tmp0 = in[0] + in[7 * stride], tmp7 = in[0] - in[7 * stride];
+    const double tmp1 = in[stride] + in[6 * stride], tmp6 = in[stride] - in[6 * stride];
+    const double tmp2 = in[2 * stride] + in[5 * stride], tmp5 = in[2 * stride] - in[5 * stride];
+    const double tmp3 = in[3 * stride] + in[4 * stride], tmp4 = in[3 * stride] - in[4 * stride];
+
+    const double tmp10 = tmp0 + tmp3, tmp13 = tmp0 - tmp3;
+    const double tmp11 = tmp1 + tmp2, tmp12 = tmp1 - tmp2;
+
+    out[0] = tmp10 + tmp11;
+    out[4 * stride] = tmp10 - tmp11;
+    const double e = (tmp12 + tmp13) * k.k0_541196100;
+    out[2 * stride] = e + tmp13 * k.k0_765366865;
+    out[6 * stride] = e - tmp12 * k.k1_847759065;
+
+    const double z5 = (tmp4 + tmp5 + tmp6 + tmp7) * k.k1_175875602;
+    const double z1 = (tmp4 + tmp7) * -k.k0_899976223;
+    const double z2 = (tmp5 + tmp6) * -k.k2_562915447;
+    const double z3 = (tmp4 + tmp6) * -k.k1_961570560 + z5;
+    const double z4 = (tmp5 + tmp7) * -k.k0_390180644 + z5;
+
+    out[7 * stride] = tmp4 * k.k0_298631336 + z1 + z3;
+    out[5 * stride] = tmp5 * k.k2_053119869 + z2 + z4;
+    out[3 * stride] = tmp6 * k.k3_072711026 + z2 + z3;
+    out[stride] = tmp7 * k.k1_501321110 + z1 + z4;
+}
+
+inline void llmInverse(const LlmConstants& k, const double* in, double* out, int stride) {
+    const double e = (in[2 * stride] + in[6 * stride]) * k.k0_541196100;
+    const double even2 = e - in[6 * stride] * k.k1_847759065;
+    const double even3 = e + in[2 * stride] * k.k0_765366865;
+    const double even0 = in[0] + in[4 * stride], even1 = in[0] - in[4 * stride];
+
+    const double tmp10 = even0 + even3, tmp13 = even0 - even3;
+    const double tmp11 = even1 + even2, tmp12 = even1 - even2;
+
+    const double i7 = in[7 * stride], i5 = in[5 * stride], i3 = in[3 * stride], i1 = in[stride];
+    const double z5 = (i7 + i5 + i3 + i1) * k.k1_175875602;
+    const double z1 = (i7 + i1) * -k.k0_899976223;
+    const double z2 = (i5 + i3) * -k.k2_562915447;
+    const double z3 = (i7 + i3) * -k.k1_961570560 + z5;
+    const double z4 = (i5 + i1) * -k.k0_390180644 + z5;
+
+    const double odd0 = i7 * k.k0_298631336 + z1 + z3;
+    const double odd1 = i5 * k.k2_053119869 + z2 + z4;
+    const double odd2 = i3 * k.k3_072711026 + z2 + z3;
+    const double odd3 = i1 * k.k1_501321110 + z1 + z4;
+
+    out[0] = tmp10 + odd3;
+    out[7 * stride] = tmp10 - odd3;
+    out[stride] = tmp11 + odd2;
+    out[6 * stride] = tmp11 - odd2;
+    out[2 * stride] = tmp12 + odd1;
+    out[5 * stride] = tmp12 - odd1;
+    out[3 * stride] = tmp13 + odd0;
+    out[4 * stride] = tmp13 - odd0;
+}
+
+} // namespace
+
+void dct8x8(const double* in, double* out) {
+    const LlmConstants& k = llm();
+    double tmp[64];
+    for (int r = 0; r < 8; ++r) llmForward(k, in + 8 * r, tmp + 8 * r, 1);
+    for (int c = 0; c < 8; ++c) llmForward(k, tmp + c, out + c, 8);
+    for (int i = 0; i < 64; ++i) out[i] *= 0.125;
+}
+
+void idct8x8(const double* in, double* out) {
+    const LlmConstants& k = llm();
+    double tmp[64];
+    for (int c = 0; c < 8; ++c) llmInverse(k, in + c, tmp + c, 8);
+    for (int r = 0; r < 8; ++r) llmInverse(k, tmp + 8 * r, out + 8 * r, 1);
+    for (int i = 0; i < 64; ++i) out[i] *= 0.125;
+}
+
 void roundToU8(const double* in, uint8_t* out) {
     for (int i = 0; i < 64; ++i) {
-        const double r = std::nearbyint(in[i]);  // default FP mode: half to even, as cvRound
-        out[i] = static_cast<uint8_t>(r < 0.0 ? 0.0 : (r > 255.0 ? 255.0 : r));
+        const int r = cvRound(in[i]);  // round half to even, exactly what convertTo(CV_8U) uses
+        out[i] = static_cast<uint8_t>(r < 0 ? 0 : (r > 255 ? 255 : r));
     }
 }
 

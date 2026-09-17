@@ -82,10 +82,14 @@ static int selfTest(const cv::Mat& gray, int rounds) {
             double mine[64], back[64];
             kernels::dct8x8(dbl.ptr<double>(), mine);
             for (int i = 0; i < 64; ++i) max_dct_err = std::max(max_dct_err, std::fabs(mine[i] - ref_dct.ptr<double>()[i]));
+            kernels::dct8x8Matrix(dbl.ptr<double>(), back);
+            for (int i = 0; i < 64; ++i) max_dct_err = std::max(max_dct_err, std::fabs(mine[i] - back[i]));
             for (int i = 0; i < 64; ++i) ref_dct.ptr<double>()[i] += (i > 20 && i < 43) ? (rng() % 2000) / 100.0 - 10.0 : 0.0;
             cv::idct(ref_dct, ref_idct);
             kernels::idct8x8(ref_dct.ptr<double>(), back);
             for (int i = 0; i < 64; ++i) max_idct_err = std::max(max_idct_err, std::fabs(back[i] - ref_idct.ptr<double>()[i]));
+            kernels::idct8x8Matrix(ref_dct.ptr<double>(), mine);
+            for (int i = 0; i < 64; ++i) max_idct_err = std::max(max_idct_err, std::fabs(back[i] - mine[i]));
             ref_idct.convertTo(ref_u8, CV_8U);
             kernels::roundToU8(ref_idct.ptr<double>(), out);
             if (std::memcmp(out, ref_u8.data, 64) != 0) ++round_bad;

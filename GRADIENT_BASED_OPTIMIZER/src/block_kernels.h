@@ -16,6 +16,10 @@ void dct8x8(const double* in, double* out);
 // Orthonormal 2D inverse DCT of an 8x8 block, row-major (same transform as cv::idct).
 void idct8x8(const double* in, double* out);
 
+// The same transforms computed straight from the definition (slow; for cross-checks).
+void dct8x8Matrix(const double* in, double* out);
+void idct8x8Matrix(const double* in, double* out);
+
 // Same rounding as cv::Mat::convertTo(CV_8U): round half to even, saturate to [0, 255].
 void roundToU8(const double* in, uint8_t* out);
 
