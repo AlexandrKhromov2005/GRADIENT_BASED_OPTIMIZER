@@ -1,0 +1,79 @@
+mode=quad image=test_images_1024/bridge.png size=1024x1024 scheme=scheme1 blocks=16384 threads=8
+run seed=100 embed_s=6.1994 hash=880565e6032340a5 psnr=43.3713110003 ssim=0.9539871193
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.004883 ties=10
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.247559 ties=249
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.002441 ties=5
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.233887 ties=239
+  Median Filtering         ber=0.419922 ties=368
+run seed=101 embed_s=6.1827 hash=2ec6d4c7e62273db psnr=43.3385710643 ssim=0.9535973321
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.003906 ties=8
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.239258 ties=272
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.001953 ties=4
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000488 ties=1
+  Gaussian Filtering       ber=0.234375 ties=234
+  Median Filtering         ber=0.435547 ties=378
+run seed=102 embed_s=6.3106 hash=71252ec7224df706 psnr=43.3601101925 ssim=0.9539946588
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.004395 ties=9
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.246094 ties=266
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.004883 ties=10
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.240723 ties=237
+  Median Filtering         ber=0.408691 ties=357
+run seed=103 embed_s=6.4593 hash=585c0410552b24ed psnr=43.3544826812 ssim=0.9537497611
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.004395 ties=9
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.252930 ties=264
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.003418 ties=7
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.241699 ties=285
+  Median Filtering         ber=0.402344 ties=360
+run seed=104 embed_s=6.4254 hash=acc3ba5ce50c49bc psnr=43.3588750571 ssim=0.9538888099
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.003906 ties=8
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.252441 ties=269
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000488 ties=1
+  JPEG90                   ber=0.003418 ties=7
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.234375 ties=244
+  Median Filtering         ber=0.435059 ties=383
+MEAN over 5 run(s): embed_s=6.3155 extract_s=0.000532 psnr=43.356670 ssim=0.953844
+  MEAN No attack                ber=0.000000
+  MEAN Brightness increase      ber=0.004297
+  MEAN Contrast increase        ber=0.000000
+  MEAN Contrast decrease        ber=0.000000
+  MEAN Salt Pepper Noise        ber=0.247656
+  MEAN Histogram Equalization   ber=0.000000
+  MEAN Sharpening               ber=0.000098
+  MEAN JPEG90                   ber=0.003223
+  MEAN JPEG80                   ber=0.000000
+  MEAN JPEG70                   ber=0.000098
+  MEAN Gaussian Filtering       ber=0.237012
+  MEAN Median Filtering         ber=0.420312

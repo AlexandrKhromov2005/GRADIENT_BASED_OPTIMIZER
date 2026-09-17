@@ -10,7 +10,10 @@
 #include <atomic>
 #include <cmath>
 #include <cstdlib>
+#include <exception>
 #include <functional>
+#include <mutex>
+#include <stdexcept>
 #include <random>
 #include <thread>
 
@@ -41,12 +44,21 @@ void parallelFor(size_t count, size_t chunk, const std::function<void(size_t)>& 
         return;
     }
     std::atomic<size_t> next{0};
+    std::atomic<bool> failed{false};
+    std::exception_ptr error;
+    std::mutex error_mutex;
     auto worker = [&]() {
-        for (;;) {
-            const size_t begin = next.fetch_add(chunk);
-            if (begin >= count) return;
-            const size_t end = std::min(begin + chunk, count);
-            for (size_t i = begin; i < end; ++i) fn(i);
+        try {
+            for (;;) {
+                const size_t begin = next.fetch_add(chunk);
+                if (begin >= count || failed.load()) return;
+                const size_t end = std::min(begin + chunk, count);
+                for (size_t i = begin; i < end; ++i) fn(i);
+            }
+        } catch (...) {  // an exception must not escape a std::thread: hand it to the caller
+            std::lock_guard<std::mutex> lock(error_mutex);
+            if (!error) error = std::current_exception();
+            failed.store(true);
         }
     };
     std::vector<std::thread> pool;
@@ -54,6 +66,7 @@ void parallelFor(size_t count, size_t chunk, const std::function<void(size_t)>& 
     for (size_t t = 1; t < threads; ++t) pool.emplace_back(worker);
     worker();
     for (auto& t : pool) t.join();
+    if (error) std::rethrow_exception(error);
 }
 
 } // namespace
@@ -150,6 +163,9 @@ std::vector<int> extractBlockBits(const cv::Mat& region, size_t max_blocks, bool
 }
 
 void embedBlocks(std::vector<cv::Mat>& blocks, const std::vector<int>& wm_bits, AttackType attack, size_t max_blocks) {
+    if (wm_bits.size() < WM_SIZE) {
+        throw std::invalid_argument("watermark must provide at least WM_SIZE bits");
+    }
     std::vector<EmbedJob> jobs;
     const size_t count = std::min(blocks.size(), max_blocks);
     jobs.reserve(count);
@@ -183,6 +199,9 @@ std::vector<int> extractVotes(const cv::Mat& gray) {
 }
 
 cv::Mat embedBitsQuadrants(const cv::Mat& gray_1024, const std::vector<int>& wm_bits) {
+    if (wm_bits.size() < WM_SIZE) {
+        throw std::invalid_argument("watermark must provide at least WM_SIZE bits");
+    }
     const int qh = gray_1024.rows / 4, qw = gray_1024.cols / 4;
     std::vector<std::vector<cv::Mat>> quadrant_blocks(16);
     std::vector<EmbedJob> jobs;

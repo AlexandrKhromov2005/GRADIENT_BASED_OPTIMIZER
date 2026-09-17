@@ -1,0 +1,144 @@
+mode=base image=test_images/lenna.png size=512x512 scheme=scheme1 blocks=4096
+run seed=100 embed_s=5.6841 hash=c329a90423a7c429 psnr=44.1722905617 ssim=0.9585833185
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.171875 ties=226
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.000000 ties=0
+  JPEG80                   ber=0.040039 ties=66
+  JPEG70                   ber=0.197266 ties=240
+  Gaussian Filtering       ber=0.113770 ties=165
+  Median Filtering         ber=0.279785 ties=333
+run seed=101 embed_s=5.6798 hash=dbec50f4d02c6407 psnr=44.1846267639 ssim=0.9585876754
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.172852 ties=238
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.000000 ties=0
+  JPEG80                   ber=0.054199 ties=95
+  JPEG70                   ber=0.203613 ties=239
+  Gaussian Filtering       ber=0.104004 ties=163
+  Median Filtering         ber=0.260742 ties=280
+run seed=102 embed_s=5.5729 hash=0115a9f1a746febd psnr=44.1239297122 ssim=0.9584270193
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.169434 ties=229
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.000000 ties=0
+  JPEG80                   ber=0.057129 ties=99
+  JPEG70                   ber=0.202148 ties=244
+  Gaussian Filtering       ber=0.104980 ties=147
+  Median Filtering         ber=0.287109 ties=298
+run seed=103 embed_s=5.7676 hash=2471eb09545a5742 psnr=44.1693284258 ssim=0.9585729195
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.170410 ties=235
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.000488 ties=1
+  JPEG80                   ber=0.047852 ties=80
+  JPEG70                   ber=0.202637 ties=235
+  Gaussian Filtering       ber=0.100586 ties=148
+  Median Filtering         ber=0.265625 ties=284
+run seed=104 embed_s=5.9661 hash=2050f1a09faf22ab psnr=44.1885372025 ssim=0.9588712144
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.173340 ties=235
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.000000 ties=0
+  JPEG80                   ber=0.049805 ties=90
+  JPEG70                   ber=0.205566 ties=243
+  Gaussian Filtering       ber=0.110840 ties=149
+  Median Filtering         ber=0.278320 ties=324
+run seed=105 embed_s=5.5532 hash=1483dea03fe386f5 psnr=44.1164161243 ssim=0.9581113890
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.176270 ties=241
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.000488 ties=1
+  JPEG80                   ber=0.046875 ties=74
+  JPEG70                   ber=0.192383 ties=238
+  Gaussian Filtering       ber=0.102051 ties=153
+  Median Filtering         ber=0.266113 ties=317
+run seed=106 embed_s=5.9082 hash=6f4e94984a2f0d4b psnr=44.1484820825 ssim=0.9584852350
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.173340 ties=227
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.000000 ties=0
+  JPEG80                   ber=0.039062 ties=70
+  JPEG70                   ber=0.193848 ties=241
+  Gaussian Filtering       ber=0.097656 ties=140
+  Median Filtering         ber=0.263672 ties=316
+run seed=107 embed_s=5.6082 hash=9fc65de7dbe20864 psnr=44.1600623413 ssim=0.9587214632
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.171387 ties=233
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.000000 ties=0
+  JPEG80                   ber=0.045898 ties=84
+  JPEG70                   ber=0.213379 ties=257
+  Gaussian Filtering       ber=0.106934 ties=159
+  Median Filtering         ber=0.274414 ties=288
+run seed=108 embed_s=5.6513 hash=10f2e8c82ed9d4fd psnr=44.1565688758 ssim=0.9586528821
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.174316 ties=233
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.000488 ties=1
+  JPEG80                   ber=0.046387 ties=73
+  JPEG70                   ber=0.181152 ties=219
+  Gaussian Filtering       ber=0.102539 ties=136
+  Median Filtering         ber=0.283691 ties=333
+run seed=109 embed_s=5.6990 hash=3cb12cd3c274d2d9 psnr=44.1317333810 ssim=0.9583385006
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.175781 ties=238
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.000488 ties=1
+  JPEG80                   ber=0.049316 ties=83
+  JPEG70                   ber=0.194336 ties=230
+  Gaussian Filtering       ber=0.096680 ties=132
+  Median Filtering         ber=0.297363 ties=351
+MEAN over 10 run(s): embed_s=5.7091 extract_s=0.006547 psnr=44.155198 ssim=0.958535
+  MEAN No attack                ber=0.000000
+  MEAN Brightness increase      ber=0.000000
+  MEAN Contrast increase        ber=0.000000
+  MEAN Contrast decrease        ber=0.000000
+  MEAN Salt Pepper Noise        ber=0.172900
+  MEAN Histogram Equalization   ber=0.000000
+  MEAN Sharpening               ber=0.000000
+  MEAN JPEG90                   ber=0.000195
+  MEAN JPEG80                   ber=0.047656
+  MEAN JPEG70                   ber=0.198633
+  MEAN Gaussian Filtering       ber=0.104004
+  MEAN Median Filtering         ber=0.275684

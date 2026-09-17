@@ -56,6 +56,7 @@ cv::Mat Population::apply_vec(const cv::Mat& block, const std::vector<double>& v
 
 
 void Population::prepare(const cv::Mat& block) {
+    CV_Assert(block.type() == CV_8UC1 && block.rows == 8 && block.cols == 8);
     kernels::loadBlock(block, orig_pixels);
     // Once per block, so cv::dct costs nothing here. It is kept on purpose: coefficients that
     // are zero in exact arithmetic come out as +-1e-13 noise, and SIGN() of that noise decides

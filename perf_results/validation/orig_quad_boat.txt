@@ -1,0 +1,79 @@
+mode=quad image=test_images_1024/boat.png size=1024x1024 scheme=scheme1 blocks=16384
+run seed=100 embed_s=26.4026 hash=b91638955a68ccd5 psnr=43.2471405616 ssim=0.9271487091
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000488 ties=1
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.298340 ties=305
+  Histogram Equalization   ber=0.000977 ties=2
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.040039 ties=70
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.001953 ties=2
+  Gaussian Filtering       ber=0.237305 ties=264
+  Median Filtering         ber=0.335938 ties=346
+run seed=101 embed_s=26.3358 hash=1f77ad5637b8f6bf psnr=43.2917529471 ssim=0.9278936091
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.300781 ties=304
+  Histogram Equalization   ber=0.000977 ties=2
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.038574 ties=61
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.001953 ties=4
+  Gaussian Filtering       ber=0.227051 ties=259
+  Median Filtering         ber=0.331055 ties=356
+run seed=102 embed_s=26.1566 hash=3bae35a179d1ef80 psnr=43.2711427342 ssim=0.9275837199
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000488 ties=1
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.294434 ties=305
+  Histogram Equalization   ber=0.001465 ties=3
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.045898 ties=70
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000977 ties=2
+  Gaussian Filtering       ber=0.225098 ties=275
+  Median Filtering         ber=0.337891 ties=372
+run seed=103 embed_s=26.9846 hash=26bf9c6ad3e1b665 psnr=43.2662994259 ssim=0.9275568812
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000488 ties=1
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.291016 ties=296
+  Histogram Equalization   ber=0.000977 ties=2
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.040527 ties=67
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000977 ties=2
+  Gaussian Filtering       ber=0.210938 ties=226
+  Median Filtering         ber=0.349609 ties=354
+run seed=104 embed_s=26.9148 hash=6c572e366f89977b psnr=43.2389169301 ssim=0.9272064961
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000488 ties=1
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.289062 ties=326
+  Histogram Equalization   ber=0.000488 ties=1
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.040039 ties=68
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.001465 ties=3
+  Gaussian Filtering       ber=0.221680 ties=242
+  Median Filtering         ber=0.335938 ties=320
+MEAN over 5 run(s): embed_s=26.5589 extract_s=0.006134 psnr=43.263051 ssim=0.927478
+  MEAN No attack                ber=0.000000
+  MEAN Brightness increase      ber=0.000391
+  MEAN Contrast increase        ber=0.000000
+  MEAN Contrast decrease        ber=0.000000
+  MEAN Salt Pepper Noise        ber=0.294727
+  MEAN Histogram Equalization   ber=0.000977
+  MEAN Sharpening               ber=0.000000
+  MEAN JPEG90                   ber=0.041016
+  MEAN JPEG80                   ber=0.000000
+  MEAN JPEG70                   ber=0.001465
+  MEAN Gaussian Filtering       ber=0.224414
+  MEAN Median Filtering         ber=0.338086

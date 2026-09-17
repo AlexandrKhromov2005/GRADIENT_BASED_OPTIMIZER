@@ -1,0 +1,79 @@
+mode=quad image=test_images_1024/baboon.png size=1024x1024 scheme=scheme1 blocks=16384
+run seed=100 embed_s=25.5320 hash=b6f73b08b3087d0d psnr=43.0733237989 ssim=0.9559203906
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.233887 ties=289
+  Histogram Equalization   ber=0.000977 ties=2
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.006836 ties=14
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.233887 ties=271
+  Median Filtering         ber=0.448730 ties=371
+run seed=101 embed_s=28.1752 hash=9ac5a30dc7c57dff psnr=43.0548517039 ssim=0.9557584990
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.230469 ties=262
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.005859 ties=12
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.229492 ties=266
+  Median Filtering         ber=0.442871 ties=385
+run seed=102 embed_s=27.2101 hash=0b733c15388e3e1f psnr=43.0788213378 ssim=0.9560726161
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.231445 ties=286
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.005859 ties=12
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.238770 ties=277
+  Median Filtering         ber=0.435059 ties=369
+run seed=103 embed_s=26.1427 hash=438bc647430fd66d psnr=43.0731954107 ssim=0.9558696175
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.232910 ties=279
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.005371 ties=11
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.234863 ties=275
+  Median Filtering         ber=0.442383 ties=392
+run seed=104 embed_s=26.5738 hash=b2306bab9d30f709 psnr=43.0304308561 ssim=0.9555306287
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.229492 ties=262
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.006348 ties=13
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.230957 ties=277
+  Median Filtering         ber=0.444336 ties=384
+MEAN over 5 run(s): embed_s=26.7268 extract_s=0.006356 psnr=43.062125 ssim=0.955830
+  MEAN No attack                ber=0.000000
+  MEAN Brightness increase      ber=0.000000
+  MEAN Contrast increase        ber=0.000000
+  MEAN Contrast decrease        ber=0.000000
+  MEAN Salt Pepper Noise        ber=0.231641
+  MEAN Histogram Equalization   ber=0.000195
+  MEAN Sharpening               ber=0.000000
+  MEAN JPEG90                   ber=0.006055
+  MEAN JPEG80                   ber=0.000000
+  MEAN JPEG70                   ber=0.000000
+  MEAN Gaussian Filtering       ber=0.233594
+  MEAN Median Filtering         ber=0.442676

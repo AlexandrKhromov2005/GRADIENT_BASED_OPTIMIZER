@@ -120,7 +120,7 @@ static int selfTest(const cv::Mat& gray, int rounds) {
 }
 
 int main(int argc, char** argv) {
-    std::string mode = "base", image = "test_images/lenna.png", wm = "images/watermark_32x32.png";
+    std::string mode = "base", image = "images/lenna.png", wm = "images/watermark_32x32.png";
     std::string scheme = "scheme1", out;
     unsigned seed = 1;
     int repeat = 1, crop = 0, selftest = 0;

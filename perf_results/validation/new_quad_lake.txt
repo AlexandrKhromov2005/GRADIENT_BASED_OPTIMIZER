@@ -1,0 +1,79 @@
+mode=quad image=test_images_1024/lake.png size=1024x1024 scheme=scheme1 blocks=16384 threads=8
+run seed=100 embed_s=6.5181 hash=676b23c7e06fada4 psnr=43.3836021811 ssim=0.9320270565
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000488 ties=1
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.275879 ties=313
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.008301 ties=17
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.186035 ties=209
+  Median Filtering         ber=0.380859 ties=366
+run seed=101 embed_s=6.2622 hash=57f65ad2db122610 psnr=43.3819171858 ssim=0.9320458574
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000977 ties=2
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.276855 ties=311
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.006348 ties=13
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.199219 ties=246
+  Median Filtering         ber=0.389160 ties=377
+run seed=102 embed_s=6.4620 hash=2679374671e239f2 psnr=43.3998146443 ssim=0.9321936630
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000488 ties=1
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.273438 ties=304
+  Histogram Equalization   ber=0.000488 ties=1
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.007812 ties=16
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.175781 ties=236
+  Median Filtering         ber=0.391113 ties=333
+run seed=103 embed_s=6.1735 hash=68d15bc6982de1aa psnr=43.3876577321 ssim=0.9320936892
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000488 ties=1
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.284180 ties=324
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.008301 ties=17
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.184570 ties=210
+  Median Filtering         ber=0.398926 ties=327
+run seed=104 embed_s=6.2616 hash=d894b4211661c186 psnr=43.3888658701 ssim=0.9321114873
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000977 ties=2
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.274902 ties=313
+  Histogram Equalization   ber=0.000488 ties=1
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.008301 ties=15
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.182129 ties=217
+  Median Filtering         ber=0.376465 ties=351
+MEAN over 5 run(s): embed_s=6.3355 extract_s=0.000563 psnr=43.388372 ssim=0.932094
+  MEAN No attack                ber=0.000000
+  MEAN Brightness increase      ber=0.000684
+  MEAN Contrast increase        ber=0.000000
+  MEAN Contrast decrease        ber=0.000000
+  MEAN Salt Pepper Noise        ber=0.277051
+  MEAN Histogram Equalization   ber=0.000195
+  MEAN Sharpening               ber=0.000000
+  MEAN JPEG90                   ber=0.007812
+  MEAN JPEG80                   ber=0.000000
+  MEAN JPEG70                   ber=0.000000
+  MEAN Gaussian Filtering       ber=0.185547
+  MEAN Median Filtering         ber=0.387305

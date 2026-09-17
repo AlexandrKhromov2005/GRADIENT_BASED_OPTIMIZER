@@ -1,0 +1,79 @@
+mode=quad image=test_images_1024/earth_from_space.png size=1024x1024 scheme=scheme1 blocks=16384 threads=8
+run seed=100 embed_s=6.2138 hash=2947cc14c421ce36 psnr=43.2233942957 ssim=0.9325990480
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.297852 ties=308
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.040527 ties=67
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.215332 ties=237
+  Median Filtering         ber=0.361328 ties=352
+run seed=101 embed_s=6.1935 hash=b2506ac74a1b67a3 psnr=43.2461998526 ssim=0.9328324596
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.300293 ties=311
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.042480 ties=69
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.218750 ties=228
+  Median Filtering         ber=0.365234 ties=334
+run seed=102 embed_s=6.2734 hash=beaabbf75c0e722f psnr=43.2374365748 ssim=0.9327169108
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.300293 ties=295
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.034668 ties=65
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000977 ties=2
+  Gaussian Filtering       ber=0.188477 ties=234
+  Median Filtering         ber=0.366699 ties=363
+run seed=103 embed_s=6.2916 hash=393cb4c9b771a1d2 psnr=43.2417013469 ssim=0.9326548108
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.295898 ties=310
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.040039 ties=64
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000488 ties=1
+  Gaussian Filtering       ber=0.215332 ties=245
+  Median Filtering         ber=0.394043 ties=365
+run seed=104 embed_s=6.2018 hash=1374bf598b3d61da psnr=43.2644400610 ssim=0.9329985564
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.301270 ties=323
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.049316 ties=85
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000488 ties=1
+  Gaussian Filtering       ber=0.214844 ties=248
+  Median Filtering         ber=0.359863 ties=363
+MEAN over 5 run(s): embed_s=6.2348 extract_s=0.000519 psnr=43.242634 ssim=0.932760
+  MEAN No attack                ber=0.000000
+  MEAN Brightness increase      ber=0.000000
+  MEAN Contrast increase        ber=0.000000
+  MEAN Contrast decrease        ber=0.000000
+  MEAN Salt Pepper Noise        ber=0.299121
+  MEAN Histogram Equalization   ber=0.000000
+  MEAN Sharpening               ber=0.000000
+  MEAN JPEG90                   ber=0.041406
+  MEAN JPEG80                   ber=0.000000
+  MEAN JPEG70                   ber=0.000391
+  MEAN Gaussian Filtering       ber=0.210547
+  MEAN Median Filtering         ber=0.369434

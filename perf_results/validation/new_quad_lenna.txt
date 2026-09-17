@@ -1,0 +1,79 @@
+mode=quad image=test_images_1024/lenna.png size=1024x1024 scheme=scheme1 blocks=16384 threads=8
+run seed=100 embed_s=6.2444 hash=e3ad3b19bba20525 psnr=43.3676501059 ssim=0.9159010267
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.297852 ties=306
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.069336 ties=110
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.003418 ties=7
+  Gaussian Filtering       ber=0.181152 ties=251
+  Median Filtering         ber=0.327148 ties=342
+run seed=101 embed_s=6.2133 hash=191cdf602cd39662 psnr=43.3690164112 ssim=0.9160109499
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.303711 ties=292
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.077637 ties=115
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.003418 ties=7
+  Gaussian Filtering       ber=0.222656 ties=280
+  Median Filtering         ber=0.306641 ties=372
+run seed=102 embed_s=6.1960 hash=a0b9c2612518c44e psnr=43.3758733317 ssim=0.9162160227
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.316406 ties=308
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.077148 ties=118
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.002441 ties=5
+  Gaussian Filtering       ber=0.204590 ties=239
+  Median Filtering         ber=0.307617 ties=364
+run seed=103 embed_s=6.2247 hash=50fdeede740ff366 psnr=43.3431275374 ssim=0.9157235799
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.321289 ties=314
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.077637 ties=129
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.003906 ties=8
+  Gaussian Filtering       ber=0.208496 ties=263
+  Median Filtering         ber=0.339355 ties=365
+run seed=104 embed_s=6.2845 hash=1945d748562bdf38 psnr=43.3381002935 ssim=0.9156791053
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.317871 ties=303
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.075195 ties=132
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.001953 ties=4
+  Gaussian Filtering       ber=0.201172 ties=258
+  Median Filtering         ber=0.307129 ties=333
+MEAN over 5 run(s): embed_s=6.2326 extract_s=0.000544 psnr=43.358754 ssim=0.915906
+  MEAN No attack                ber=0.000000
+  MEAN Brightness increase      ber=0.000000
+  MEAN Contrast increase        ber=0.000000
+  MEAN Contrast decrease        ber=0.000000
+  MEAN Salt Pepper Noise        ber=0.311426
+  MEAN Histogram Equalization   ber=0.000000
+  MEAN Sharpening               ber=0.000000
+  MEAN JPEG90                   ber=0.075391
+  MEAN JPEG80                   ber=0.000000
+  MEAN JPEG70                   ber=0.003027
+  MEAN Gaussian Filtering       ber=0.203613
+  MEAN Median Filtering         ber=0.317578

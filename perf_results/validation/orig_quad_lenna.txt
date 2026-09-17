@@ -1,0 +1,79 @@
+mode=quad image=test_images_1024/lenna.png size=1024x1024 scheme=scheme1 blocks=16384
+run seed=100 embed_s=26.9287 hash=5a417fd7be35f6b8 psnr=43.3480238318 ssim=0.9157176499
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.306152 ties=303
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.087402 ties=137
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.004883 ties=10
+  Gaussian Filtering       ber=0.203125 ties=262
+  Median Filtering         ber=0.311035 ties=349
+run seed=101 embed_s=27.4845 hash=d0e4737d26888640 psnr=43.3418853053 ssim=0.9154969290
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.323730 ties=301
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000488 ties=1
+  JPEG90                   ber=0.073730 ties=125
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.003418 ties=7
+  Gaussian Filtering       ber=0.221191 ties=257
+  Median Filtering         ber=0.338867 ties=336
+run seed=102 embed_s=26.0173 hash=1d9bc28aa4a05e60 psnr=43.3625414531 ssim=0.9158367523
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.315918 ties=313
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.074219 ties=112
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.004395 ties=9
+  Gaussian Filtering       ber=0.220703 ties=240
+  Median Filtering         ber=0.340332 ties=361
+run seed=103 embed_s=24.8120 hash=7f5b544185c12750 psnr=43.3553340439 ssim=0.9157367972
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.312988 ties=299
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.075195 ties=116
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.002930 ties=6
+  Gaussian Filtering       ber=0.219727 ties=256
+  Median Filtering         ber=0.331543 ties=349
+run seed=104 embed_s=23.5577 hash=d7c96c5d84d95b33 psnr=43.3509424904 ssim=0.9157853870
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.309082 ties=297
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.074219 ties=112
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.002930 ties=6
+  Gaussian Filtering       ber=0.212402 ties=259
+  Median Filtering         ber=0.320801 ties=361
+MEAN over 5 run(s): embed_s=25.7600 extract_s=0.007143 psnr=43.351745 ssim=0.915715
+  MEAN No attack                ber=0.000000
+  MEAN Brightness increase      ber=0.000000
+  MEAN Contrast increase        ber=0.000000
+  MEAN Contrast decrease        ber=0.000000
+  MEAN Salt Pepper Noise        ber=0.313574
+  MEAN Histogram Equalization   ber=0.000000
+  MEAN Sharpening               ber=0.000098
+  MEAN JPEG90                   ber=0.076953
+  MEAN JPEG80                   ber=0.000000
+  MEAN JPEG70                   ber=0.003711
+  MEAN Gaussian Filtering       ber=0.215430
+  MEAN Median Filtering         ber=0.328516

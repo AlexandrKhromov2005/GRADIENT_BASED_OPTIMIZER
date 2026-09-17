@@ -1,0 +1,79 @@
+mode=quad image=test_images_1024/lake.png size=1024x1024 scheme=scheme1 blocks=16384
+run seed=100 embed_s=25.9947 hash=5e96f7f7f52a559d psnr=43.3984479035 ssim=0.9323058183
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000977 ties=2
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.273438 ties=320
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.010254 ties=21
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.201172 ties=240
+  Median Filtering         ber=0.388672 ties=352
+run seed=101 embed_s=26.1044 hash=ed366b0b5134b4d1 psnr=43.3950085738 ssim=0.9323789491
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000977 ties=2
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.281738 ties=309
+  Histogram Equalization   ber=0.000488 ties=1
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.010742 ties=22
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.180664 ties=230
+  Median Filtering         ber=0.395020 ties=339
+run seed=102 embed_s=26.2914 hash=7dfe08171f6ac791 psnr=43.3644843093 ssim=0.9320283107
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000488 ties=1
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.278320 ties=296
+  Histogram Equalization   ber=0.000488 ties=1
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.005859 ties=12
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000488 ties=1
+  Gaussian Filtering       ber=0.192383 ties=220
+  Median Filtering         ber=0.387695 ties=350
+run seed=103 embed_s=26.9539 hash=fcdeb482f04d28f0 psnr=43.3905656147 ssim=0.9322367789
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000488 ties=1
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.270020 ties=309
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.008301 ties=15
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.200195 ties=232
+  Median Filtering         ber=0.389160 ties=323
+run seed=104 embed_s=27.4464 hash=d68c9477558bd26c psnr=43.3988672145 ssim=0.9324007631
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000977 ties=2
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.275391 ties=304
+  Histogram Equalization   ber=0.000977 ties=2
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.009766 ties=18
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.000000 ties=0
+  Gaussian Filtering       ber=0.187012 ties=219
+  Median Filtering         ber=0.389648 ties=342
+MEAN over 5 run(s): embed_s=26.5582 extract_s=0.006102 psnr=43.389475 ssim=0.932270
+  MEAN No attack                ber=0.000000
+  MEAN Brightness increase      ber=0.000781
+  MEAN Contrast increase        ber=0.000000
+  MEAN Contrast decrease        ber=0.000000
+  MEAN Salt Pepper Noise        ber=0.275781
+  MEAN Histogram Equalization   ber=0.000391
+  MEAN Sharpening               ber=0.000000
+  MEAN JPEG90                   ber=0.008984
+  MEAN JPEG80                   ber=0.000000
+  MEAN JPEG70                   ber=0.000098
+  MEAN Gaussian Filtering       ber=0.192285
+  MEAN Median Filtering         ber=0.390039

@@ -1,0 +1,53 @@
+mode=quad image=test_images_1024/lenna.png size=1024x1024 scheme=scheme1 blocks=16384
+run seed=1 embed_s=22.3137 hash=78cfce2dec82f8c2 psnr=43.3403648570 ssim=0.9156892698
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.300781 ties=302
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.071289 ties=116
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.001953 ties=4
+  Gaussian Filtering       ber=0.204102 ties=252
+  Median Filtering         ber=0.315430 ties=332
+run seed=2 embed_s=22.2161 hash=ece4da6165f77878 psnr=43.3514500239 ssim=0.9158391155
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.311035 ties=315
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.072266 ties=122
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.002441 ties=5
+  Gaussian Filtering       ber=0.219727 ties=262
+  Median Filtering         ber=0.307129 ties=311
+run seed=3 embed_s=22.2658 hash=527815afaf885936 psnr=43.3302741121 ssim=0.9153898069
+  No attack                ber=0.000000 ties=0
+  Brightness increase      ber=0.000000 ties=0
+  Contrast increase        ber=0.000000 ties=0
+  Contrast decrease        ber=0.000000 ties=0
+  Salt Pepper Noise        ber=0.315918 ties=321
+  Histogram Equalization   ber=0.000000 ties=0
+  Sharpening               ber=0.000000 ties=0
+  JPEG90                   ber=0.085938 ties=132
+  JPEG80                   ber=0.000000 ties=0
+  JPEG70                   ber=0.002441 ties=5
+  Gaussian Filtering       ber=0.214844 ties=246
+  Median Filtering         ber=0.327148 ties=342
+MEAN over 3 run(s): embed_s=22.2652 extract_s=0.005427 psnr=43.340696 ssim=0.915639
+  MEAN No attack                ber=0.000000
+  MEAN Brightness increase      ber=0.000000
+  MEAN Contrast increase        ber=0.000000
+  MEAN Contrast decrease        ber=0.000000
+  MEAN Salt Pepper Noise        ber=0.309245
+  MEAN Histogram Equalization   ber=0.000000
+  MEAN Sharpening               ber=0.000000
+  MEAN JPEG90                   ber=0.076497
+  MEAN JPEG80                   ber=0.000000
+  MEAN JPEG70                   ber=0.002279
+  MEAN Gaussian Filtering       ber=0.212891
+  MEAN Median Filtering         ber=0.316569

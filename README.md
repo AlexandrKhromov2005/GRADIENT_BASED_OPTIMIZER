@@ -74,7 +74,7 @@ Use either `/tmp/libtorch` or `$HOME/libtorch` — `build.sh` auto-detects both.
 
 ## 3. Building
 
-The build system exposes four CMake options that let you choose exactly what
+The build system exposes five CMake options that let you choose exactly what
 to produce.  All options default to `OFF` except `GBO_BUILD_APP`.
 
 | CMake option        | Default | Product                                     |
@@ -83,6 +83,7 @@ to produce.  All options default to `OFF` except `GBO_BUILD_APP`.
 | `GBO_BUILD_BENCH`   | OFF     | `gbo_bench` — test bench (full experiments) |
 | `GBO_BUILD_SHARED`  | OFF     | `libgbo.so` / `.dylib` — shared library     |
 | `GBO_BUILD_STATIC`  | OFF     | `libgbo.a` — static library                 |
+| `GBO_BUILD_PERF`    | OFF     | `gbo_perf` — speed / quality benchmark      |
 
 ### 3.1 Standalone app only (default)
 
@@ -324,6 +325,8 @@ All functions live in the `gbo` namespace.
 | `bool init(path)` | Load schemes from JSON, initialize quantization tables. Call once before any other function. |
 | `bool setScheme(id)` | Select the active embedding scheme by name. |
 | `vector<string> availableSchemes()` | Return all scheme identifiers. |
+| `void setThreads(n)` | Worker threads for embedding (0 = all hardware threads). |
+| `void setSeed(seed)` / `void clearSeed()` | Reproducible embedding / back to random seeding. |
 
 **Watermarking:**
 
@@ -363,3 +366,69 @@ add_executable(my_app main.cpp)
 target_link_libraries(my_app /usr/local/lib/libgbo.so ${OpenCV_LIBS})
 target_include_directories(my_app PRIVATE /usr/local/include)
 ```
+
+---
+
+## 9. Performance
+
+Embedding runs the optimizer `POP_SIZE x (ITERATIONS + 1) = 1230` times per 8x8 block, so
+the objective function is the hot path. It is implemented without per-call `cv::Mat`
+objects, DCT plans or a JPEG codec:
+
+- **8x8 DCT / IDCT** - Loeffler-Ligtenberg-Moschytz factorization in double precision
+  (equals `cv::dct` / `cv::idct` to ~1e-12).
+- **JPEG attack inside the objective function** - an integer emulation of libjpeg's
+  baseline pipeline for a single 8x8 block (quality-scaled luminance table, `islow`
+  forward DCT, quantization, dequantization, `islow` inverse DCT). It is bit-exact with
+  `cv::imencode` + `cv::imdecode`; this is probed at start-up and the codec is used as a
+  fallback if the probe ever fails.
+- **Contrast attack** - a 256-entry table produced by the very same `convertTo` call.
+- **Blocks are independent**, so they are embedded on all hardware threads. Every block
+  draws from its own random stream derived from `(seed, block index)`: the result depends
+  on the seed only, never on the number of threads.
+- **Extraction** reads blocks in place and only falls back to `cv::dct` when `S0` and `S1`
+  are equal in exact arithmetic, so every extracted bit is the same as before.
+
+Nothing in the algorithm was simplified: population size, number of iterations, the
+objective function and every random draw are unchanged. With a fixed seed and a single
+random stream the optimized code produces **bit-identical** watermarked images
+(verified by image hash on full-size images, base and quadrant mode). With per-block
+streams the results are statistically indistinguishable (8 images x 10 seeds, all quality
+and robustness metrics within run-to-run noise, see `perf_results/`).
+
+Measured on Intel Core i5-11300H (4 cores / 8 threads), `lenna`, `scheme1`:
+
+| Operation                                   | Before   | After, 1 thread | After, 8 threads |
+|---------------------------------------------|----------|-----------------|------------------|
+| Base algorithm, embed 512x512 (4096 blocks) | 24.7 s   | 4.7 s           | **1.3 s** (x18)  |
+| Quadrant algorithm, embed 1024x1024 (16384) | 158.8 s  | 22.3 s          | **6.2 s** (x26)  |
+| Extraction of one watermark (4096 blocks)   | 5.2 ms   | **0.5 ms** (x11)| -                |
+
+In the quadrant pipeline the extraction time is dominated by the attack-type classifier
+(ResNet-50 at 1024x1024 with flip TTA, about 2 s per image on this CPU); the bit
+extraction itself is the 0.5 ms above.
+
+### 9.1 Threads and reproducibility
+
+```cpp
+gbo::setThreads(4);   // default 0 = all hardware threads (or the GBO_THREADS env variable)
+gbo::setSeed(42);     // reproducible embedding; gbo::clearSeed() restores random seeding
+```
+
+```bash
+./build/gbo_app embed cover.png wm.png out.png --threads 4 --seed 42
+```
+
+### 9.2 Benchmark and self-test (`gbo_perf`)
+
+```bash
+cmake -DGBO_BUILD_PERF=ON .. && make gbo_perf
+./build/gbo_perf --mode base --image images/lenna.png --crop 512 --seed 1 --repeat 5
+./build/gbo_perf --mode quad --image images/lenna.png --threads 1
+./build/gbo_perf --selftest 3 --image images/baboon.png
+```
+
+It prints embedding/extraction time, a hash of the watermarked image, PSNR/SSIM and the
+BER after a set of attacks. Same seed + same hash = same computation, which is how every
+optimization step was checked. `--selftest` compares the fast kernels with the OpenCV
+reference (JPEG round trip, contrast, rounding, extracted bits must match exactly).
