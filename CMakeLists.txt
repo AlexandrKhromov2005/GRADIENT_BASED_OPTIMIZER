@@ -11,6 +11,7 @@ option(GBO_BUILD_BENCH     "Build the test-bench binary (gbo_bench)"   OFF)
 option(GBO_BUILD_SHARED    "Build a shared library (libgbo.so/.dylib)" OFF)
 option(GBO_BUILD_STATIC    "Build a static library (libgbo.a)"         OFF)
 option(GBO_BUILD_PERF      "Build the speed/quality benchmark (gbo_perf)" OFF)
+option(GBO_BUILD_FUZZ      "Build the libFuzzer targets (needs clang)"  OFF)
 
 # ---- Dependencies -----------------------------------------------------------
 find_package(OpenCV REQUIRED)
@@ -154,6 +155,22 @@ if(GBO_BUILD_PERF)
     add_executable(gbo_perf tools/perf_bench.cpp ${GBO_CORE_SOURCES} ${GBO_INTERNAL_HEADERS})
     gbo_link_libs(gbo_perf)
     message(STATUS "Target: gbo_perf (speed/quality benchmark)")
+endif()
+
+# ---- Fuzzing ----------------------------------------------------------------
+if(GBO_BUILD_FUZZ)
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        message(FATAL_ERROR "GBO_BUILD_FUZZ needs clang: cmake -DCMAKE_CXX_COMPILER=clang++ ...")
+    endif()
+    set(GBO_FUZZ_SANITIZERS "address,undefined" CACHE STRING "Sanitizers for the fuzz targets")
+    foreach(target extract embed block kernels metrics_attacks)
+        add_executable(fuzz_${target} fuzz/fuzz_${target}.cpp ${GBO_CORE_SOURCES})
+        target_compile_options(fuzz_${target} PRIVATE
+            -g -O1 -fno-omit-frame-pointer -fsanitize=fuzzer,${GBO_FUZZ_SANITIZERS} -fno-sanitize-recover=all)
+        target_link_options(fuzz_${target} PRIVATE -fsanitize=fuzzer,${GBO_FUZZ_SANITIZERS})
+        gbo_link_libs(fuzz_${target})
+    endforeach()
+    message(STATUS "Target: fuzz_* (libFuzzer)")
 endif()
 
 # ---- Install ----------------------------------------------------------------

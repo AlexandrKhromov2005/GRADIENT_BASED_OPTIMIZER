@@ -62,17 +62,22 @@ GBO_API void clearSeed();
 /// Internally runs the GBO optimizer (POP_SIZE x ITERATIONS generations)
 /// on every 8x8 block, blocks being processed in parallel (see setThreads).
 /// A single call performs one full embedding pass.
-/// @param image       Grayscale cover image (CV_8U).
-/// @param watermark   Binary watermark image (black/white, 32x32 recommended).
-/// @return Watermarked grayscale image (CV_8U), same size as input.
-/// @throws std::invalid_argument if the watermark holds fewer than 1024 pixels (32x32).
+/// @param image       Cover image, 8 bits per channel, 1, 3 or 4 channels (colour is converted
+///                    to grayscale). Pixels of a border narrower than 8 are left unchanged.
+/// @param watermark   Binary watermark image (CV_8UC1, black/white, 32x32 recommended).
+/// @return Watermarked grayscale image (CV_8UC1), same size as input.
+/// @throws std::invalid_argument if the image is empty or of another type, or if the
+///         watermark is not CV_8UC1 or holds fewer than 1024 pixels (32x32).
 /// @note Do not call setScheme() while an embedding or extraction is in progress.
 GBO_API cv::Mat embedWatermark(const cv::Mat& image,
                                const cv::Mat& watermark);
 
 /// Extract a binary watermark from a (possibly attacked) watermarked image.
-/// @param image  Watermarked image, 8 bits per channel (CV_8UC1 or CV_8UC3).
-/// @return Extracted binary watermark image.
+/// Each bit is a majority vote over its copies (4 in a 512x512 image); a tie is resolved
+/// at random.
+/// @param image  Watermarked image, 8 bits per channel, 1, 3 or 4 channels.
+/// @return Extracted binary watermark image (32x32, CV_8UC1).
+/// @throws std::invalid_argument if the image is empty or of another type.
 GBO_API cv::Mat extractWatermark(const cv::Mat& image);
 
 // ---- Image quality metrics -------------------------------------------------

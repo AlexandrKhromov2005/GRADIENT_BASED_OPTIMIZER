@@ -130,7 +130,7 @@ static int selfTest(const cv::Mat& gray, int rounds) {
     return (jpeg_bad || contrast_bad || round_bad) ? 1 : 0;
 }
 
-int main(int argc, char** argv) {
+static int run(int argc, char** argv) {
     std::string mode = "base", image = "images/lenna.png", wm = "images/watermark_32x32.png";
     std::string scheme = "scheme1", out;
     unsigned seed = 1;
@@ -228,4 +228,13 @@ int main(int argc, char** argv) {
     for (size_t a = 0; a < attacks.size(); ++a)
         std::printf("  MEAN %-24s ber=%.6f\n", attacks[a].name.c_str(), sum_ber[a] / repeat);
     return 0;
+}
+
+int main(int argc, char** argv) {
+    try {
+        return run(argc, argv);
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "error: %s\n", e.what());
+        return 1;
+    }
 }

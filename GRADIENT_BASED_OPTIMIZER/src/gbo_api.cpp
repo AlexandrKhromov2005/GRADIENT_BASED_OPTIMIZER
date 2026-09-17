@@ -15,6 +15,19 @@ namespace gbo {
 
 static bool s_initialized = false;
 
+// Grayscale view/copy of a caller-supplied image; rejects everything the algorithm cannot take.
+static cv::Mat toGray(const cv::Mat& image) {
+    const int channels = image.channels();
+    if (image.empty() || image.dims != 2 || image.depth() != CV_8U ||
+        (channels != 1 && channels != 3 && channels != 4)) {
+        throw std::invalid_argument("image must be a non-empty 8-bit image with 1, 3 or 4 channels");
+    }
+    if (channels == 1) return image;
+    cv::Mat gray;
+    cv::cvtColor(image, gray, channels == 3 ? cv::COLOR_BGR2GRAY : cv::COLOR_BGRA2GRAY);
+    return gray;
+}
+
 // ---- Initialization --------------------------------------------------------
 
 bool init(const std::string& schemes_json_path) {
@@ -54,42 +67,33 @@ cv::Mat embedWatermark(const cv::Mat& image,
     if (!s_initialized) {
         throw std::runtime_error("gbo::init() must be called before embedWatermark()");
     }
-    cv::Mat gray;
-    if (image.channels() > 1) {
-        cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
-    } else {
-        gray = image.clone();
+    const cv::Mat gray = toGray(image);
+    if (watermark.type() != CV_8UC1) {
+        throw std::invalid_argument("watermark must be a single-channel 8-bit image");
     }
-
-    std::vector<cv::Mat> blocks = splitInto8x8Blocks(gray);
     std::vector<int> wm_bits = convertWatermarkToBinary(watermark);
 
     initialize_quantization_mats();
 
-    embedBlocks(blocks, wm_bits);
-
-    return merge8x8Blocks(blocks, gray.rows, gray.cols);
+    return embedBits(gray, wm_bits);
 }
 
 cv::Mat extractWatermark(const cv::Mat& image) {
     if (!s_initialized) {
         throw std::runtime_error("gbo::init() must be called before extractWatermark()");
     }
-    cv::Mat gray;
-    if (image.channels() > 1) {
-        cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
-    } else {
-        gray = image;
-    }
+    const cv::Mat gray = toGray(image);
 
     std::vector<int> wm_vec = extractVotes(gray);
 
+    // Majority vote over the copies of each bit. A 512x512 image holds 4 copies (0-1 votes -> 0,
+    // 3-4 -> 1, 2 -> coin flip); other sizes hold a different number, possibly uneven per bit.
+    const size_t blocks = static_cast<size_t>(gray.rows / 8) * (gray.cols / 8);
     for (size_t i = 0; i < WM_SIZE; ++i) {
-        switch (wm_vec[i]) {
-        case 0: case 1: wm_vec[i] = 0; break;
-        case 3: case 4: wm_vec[i] = 1; break;
-        default:        wm_vec[i] = rand() % 2; break;
-        }
+        const int copies = static_cast<int>(blocks / WM_SIZE + (i < blocks % WM_SIZE ? 1 : 0));
+        const int votes = wm_vec[i];
+        if (2 * votes == copies) wm_vec[i] = (copies == 0) ? 0 : rand() % 2;
+        else wm_vec[i] = (2 * votes > copies) ? 1 : 0;
     }
 
     return convertBinaryToWatermark(wm_vec);

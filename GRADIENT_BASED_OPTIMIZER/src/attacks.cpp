@@ -1,4 +1,6 @@
 #include "attacks.h"
+#include <cstring>
+#include <stdexcept>
 
 
 // Brightness Increase
@@ -11,7 +13,7 @@ cv::Mat brightnessIncrease(const cv::Mat& image, int value) {
 // Brightness Decrease
 cv::Mat brightnessDecrease(const cv::Mat& image, int value) {
     cv::Mat result;
-    image.convertTo(result, -1, 1, -value);  // Decrease brightness by a constant value
+    image.convertTo(result, -1, 1, -static_cast<double>(value));  // Decrease brightness by a constant value
     return result;
 }
 
@@ -31,18 +33,17 @@ cv::Mat contrastDecrease(const cv::Mat& image, double alpha) {
 
 // Salt-Pepper Noise
 cv::Mat saltPepperNoise(const cv::Mat& image, double noiseProb) {
+    CV_Assert(image.depth() == CV_8U);
     cv::Mat result = image.clone();
+    if (result.empty()) return result;
+    const size_t pixel_size = result.elemSize();
     int numPixels = result.rows * result.cols;
     for (int i = 0; i < numPixels; i++) {
         if (rand() % 100 < noiseProb * 100) {
             int row = rand() % result.rows;
             int col = rand() % result.cols;
-            if (rand() % 2 == 0) {
-                result.at<uchar>(row, col) = 0;  // Salt
-            }
-            else {
-                result.at<uchar>(row, col) = 255;  // Pepper
-            }
+            const int value = (rand() % 2 == 0) ? 0 : 255;  // salt or pepper, all channels
+            std::memset(result.ptr<uchar>(row) + col * pixel_size, value, pixel_size);
         }
     }
     return result;
@@ -81,7 +82,9 @@ cv::Mat sharpening(const cv::Mat& image) {
 cv::Mat jpegCompression(const cv::Mat& image, int quality) {
     std::vector<int> compression_params = { cv::IMWRITE_JPEG_QUALITY, quality };
     std::vector<uchar> encoded_image;
-    cv::imencode(".jpg", image, encoded_image, compression_params);
+    if (!cv::imencode(".jpg", image, encoded_image, compression_params)) {
+        throw std::runtime_error("JPEG encoding failed");
+    }
     return cv::imdecode(encoded_image, cv::IMREAD_GRAYSCALE);
 }
 

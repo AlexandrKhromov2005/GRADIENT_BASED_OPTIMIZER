@@ -30,7 +30,6 @@ public:
 	Population();
 	Population(AttackType attack);
 	void initOf(const cv::Mat& block, uchar bit, int quality);
-	cv::Mat apply_vec(const cv::Mat &block, const std::vector<double>& vec);
 	double calculateOf(const cv::Mat &block, const std::vector<double>& vec, uchar bit, int quality);
 	void update(const VecOf& trial, size_t vec_ind);
 

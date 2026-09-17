@@ -123,8 +123,14 @@ namespace {
 struct Regions {
     std::vector<int> reg0, reg1;
     Regions() {
-        for (const auto& c : getCurrentREG0()) reg0.push_back(c.first * 8 + c.second);
-        for (const auto& c : getCurrentREG1()) reg1.push_back(c.first * 8 + c.second);
+        fill(getCurrentREG0(), reg0);
+        fill(getCurrentREG1(), reg1);
+    }
+    static void fill(const std::vector<std::pair<int, int>>& coords, std::vector<int>& idx) {
+        for (const auto& c : coords) {
+            CV_Assert(c.first >= 0 && c.first < 8 && c.second >= 0 && c.second < 8);
+            idx.push_back(c.first * 8 + c.second);
+        }
     }
 };
 
@@ -198,10 +204,28 @@ AttackType quadrantAttackType(int row, int col) {
     return pattern[row % 2][col % 2];
 }
 
+namespace {
+
+// Writes the blocks (splitInto8x8Blocks order) back over `target`. Pixels outside the grid of
+// full blocks - the border of an image whose side is not a multiple of 8 - are left alone.
+void writeBlocks(const std::vector<cv::Mat>& blocks, cv::Mat target) {
+    size_t index = 0;
+    for (int r = 0; r + 8 <= target.rows; r += 8) {
+        for (int c = 0; c + 8 <= target.cols && index < blocks.size(); c += 8) {
+            blocks[index++].copyTo(target(cv::Rect(c, r, 8, 8)));
+        }
+    }
+}
+
+} // namespace
+
 cv::Mat embedBits(const cv::Mat& gray, const std::vector<int>& wm_bits, AttackType attack) {
+    CV_Assert(gray.type() == CV_8UC1);
     std::vector<cv::Mat> blocks = splitInto8x8Blocks(gray);
     embedBlocks(blocks, wm_bits, attack);
-    return merge8x8Blocks(blocks, gray.rows, gray.cols);
+    cv::Mat result = gray.clone();
+    writeBlocks(blocks, result);
+    return result;
 }
 
 std::vector<int> extractVotes(const cv::Mat& gray) {
@@ -215,6 +239,8 @@ cv::Mat embedBitsQuadrants(const cv::Mat& gray_1024, const std::vector<int>& wm_
     if (wm_bits.size() < WM_SIZE) {
         throw std::invalid_argument("watermark must provide at least WM_SIZE bits");
     }
+    CV_Assert(gray_1024.type() == CV_8UC1);
+    if (gray_1024.empty()) return gray_1024.clone();
     const int qh = gray_1024.rows / 4, qw = gray_1024.cols / 4;
     std::vector<std::vector<cv::Mat>> quadrant_blocks(16);
     std::vector<EmbedJob> jobs;
@@ -233,16 +259,17 @@ cv::Mat embedBitsQuadrants(const cv::Mat& gray_1024, const std::vector<int>& wm_
     cv::Mat result = gray_1024.clone();
     for (int row = 0; row < 4; ++row) {
         for (int col = 0; col < 4; ++col) {
-            merge8x8Blocks(quadrant_blocks[row * 4 + col], qh, qw)
-                .copyTo(result(cv::Rect(col * qw, row * qh, qw, qh)));
+            writeBlocks(quadrant_blocks[row * 4 + col], result(cv::Rect(col * qw, row * qh, qw, qh)));
         }
     }
     return result;
 }
 
 std::vector<int> extractVotesQuadrants(const cv::Mat& gray_1024, AttackType attack_type) {
+    CV_Assert(gray_1024.type() == CV_8UC1);
     const int qh = gray_1024.rows / 4, qw = gray_1024.cols / 4;
     std::vector<int> votes(WM_SIZE, 0);
+    if (gray_1024.empty()) return votes;
     for (int row = 0; row < 4; ++row) {
         for (int col = 0; col < 4; ++col) {
             if (quadrantAttackType(row, col) != attack_type) continue;

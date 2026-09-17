@@ -13,6 +13,6 @@ All files are raw `gbo_perf` output (see `tools/perf_bench.cpp`), Intel Core i5-
 Comparing `validation/orig_*` with `validation/new_*` (80 + 40 embeddings per variant):
 every metric differs by far less than its run-to-run standard deviation (largest Welch
 |t| = 0.77 over 28 metrics), i.e. the per-block random streams change nothing but the
-particular random numbers.
+particular random numbers. `python3 perf_results/compare.py` prints the per-metric table.
 
 Reproduce: `gbo_perf --mode base|quad --image <png> --seed <s> --repeat <n> [--threads 1]`.

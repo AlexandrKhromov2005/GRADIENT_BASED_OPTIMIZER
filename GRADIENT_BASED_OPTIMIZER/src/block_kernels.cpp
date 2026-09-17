@@ -386,8 +386,9 @@ void jpegRoundTripEmulated(const uint8_t* in, uint8_t* out, int quality) {
     // Decoder: inverse DCT, level shift, range limit.
     for (int c = 0; c < 8; ++c) idctPass(d + c, ws + c, 8, CONST_BITS - PASS1_BITS);
     for (int r = 0; r < 8; ++r) idctPass(ws + 8 * r, px + 8 * r, 1, CONST_BITS + PASS1_BITS + 3);
-    // Plain clamping equals libjpeg's range_limit table for px in [-512, 511], which always
-    // holds for coefficients produced by the encoder above.
+    // Plain clamping equals libjpeg's range_limit table for px in [-512, 511]. Equality with the
+    // codec on arbitrary blocks and qualities is what the start-up probe, --selftest and
+    // fuzz_kernels check.
     for (int i = 0; i < 64; ++i) {
         const int32_t v = px[i] + 128;
         out[i] = static_cast<uint8_t>(v < 0 ? 0 : (v > 255 ? 255 : v));

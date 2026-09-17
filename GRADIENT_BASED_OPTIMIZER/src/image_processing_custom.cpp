@@ -55,10 +55,11 @@ cv::Mat merge8x8Blocks(const std::vector<cv::Mat>& blocks, int rows, int cols) {
         return cv::Mat();
     }
     const int blockSize = 8;
-    cv::Mat mergedImage(rows, cols, blocks[0].type());
-    int blockIndex = 0;
-    for (int i = 0; i < rows; i += blockSize) {
-        for (int j = 0; j < cols; j += blockSize) {
+    // Same grid as splitInto8x8Blocks: full blocks only. A border narrower than a block stays zero.
+    cv::Mat mergedImage = cv::Mat::zeros(rows, cols, blocks[0].type());
+    size_t blockIndex = 0;
+    for (int i = 0; i + blockSize <= rows; i += blockSize) {
+        for (int j = 0; j + blockSize <= cols; j += blockSize) {
             if (blockIndex < blocks.size()) {
                 cv::Rect roi(j, i, blockSize, blockSize);
                 blocks[blockIndex].copyTo(mergedImage(roi));

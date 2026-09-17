@@ -33,27 +33,6 @@ Population::Population(AttackType attack) : attack_type(attack) {
     worst_vec.second = -DBL_MAX;
 }
 
-cv::Mat Population::apply_vec(const cv::Mat& block, const std::vector<double>& vec) {
-    const auto& ZONE0 = getCurrentZONE0();
-
-    cv::Mat new_block = block.clone();
-
-    // Use full scheme size
-    size_t max_elements = std::min(vec.size(), ZONE0.size());
-    for (size_t i = 0; i < max_elements; ++i) {
-        int row = ZONE0[i].first;
-        int col = ZONE0[i].second;
-
-        double original_val = block.at<double>(row, col);
-        double computed_val = SIGN(original_val) * std::fabs(std::fabs(original_val) + vec[i]);
-        new_block.at<double>(row, col) = computed_val;
-    }
-
-    return new_block;
-}
-
-
-
 void Population::prepare(const cv::Mat& block) {
     CV_Assert(block.type() == CV_8UC1 && block.rows == 8 && block.cols == 8);
     kernels::loadBlock(block, orig_pixels);
@@ -67,7 +46,10 @@ void Population::prepare(const cv::Mat& block) {
 
     auto flatten = [](const std::vector<std::pair<int, int>>& coords, std::vector<int>& idx) {
         idx.clear();
-        for (const auto& c : coords) idx.push_back(c.first * 8 + c.second);
+        for (const auto& c : coords) {
+            CV_Assert(c.first >= 0 && c.first < 8 && c.second >= 0 && c.second < 8);
+            idx.push_back(c.first * 8 + c.second);
+        }
     };
     flatten(getCurrentZONE0(), zone_idx);
     flatten(getCurrentREG0(), reg0_idx);

@@ -84,6 +84,7 @@ to produce.  All options default to `OFF` except `GBO_BUILD_APP`.
 | `GBO_BUILD_SHARED`  | OFF     | `libgbo.so` / `.dylib` — shared library     |
 | `GBO_BUILD_STATIC`  | OFF     | `libgbo.a` — static library                 |
 | `GBO_BUILD_PERF`    | OFF     | `gbo_perf` — speed / quality benchmark      |
+| `GBO_BUILD_FUZZ`    | OFF     | `fuzz_*` — libFuzzer targets (needs clang)  |
 
 ### 3.1 Standalone app only (default)
 
@@ -382,31 +383,32 @@ objects, DCT plans or a JPEG codec:
   forward DCT, quantization, dequantization, `islow` inverse DCT). It is bit-exact with
   `cv::imencode` + `cv::imdecode`; this is probed at start-up and the codec is used as a
   fallback if the probe ever fails.
-- **Contrast attack** - a 256-entry table produced by the very same `convertTo` call.
+- **Contrast attack** - a 256-entry table produced by the same `convertTo` call.
 - **Blocks are independent**, so they are embedded on all hardware threads. Every block
   draws from its own random stream derived from `(seed, block index)`: the result depends
   on the seed only, never on the number of threads.
 - **Extraction** reads blocks in place and only falls back to `cv::dct` when `S0` and `S1`
   are equal in exact arithmetic, so every extracted bit is the same as before.
 
-Nothing in the algorithm was simplified: population size, number of iterations, the
-objective function and every random draw are unchanged. With a fixed seed and a single
+Population size, number of iterations, the objective function and every random draw are
+unchanged. With a fixed seed and a single
 random stream the optimized code produces **bit-identical** watermarked images
 (verified by image hash on full-size images, base and quadrant mode). With per-block
-streams the results are statistically indistinguishable (8 images x 10 seeds, all quality
+streams the results are statistically indistinguishable (8 images x 10 seeds for the base
+algorithm and x 5 for the quadrant one, all quality
 and robustness metrics within run-to-run noise, see `perf_results/`).
 
 Measured on Intel Core i5-11300H (4 cores / 8 threads), `lenna`, `scheme1`:
 
 | Operation                                   | Before   | After, 1 thread | After, 8 threads |
 |---------------------------------------------|----------|-----------------|------------------|
-| Base algorithm, embed 512x512 (4096 blocks) | 24.7 s   | 4.7 s           | **1.3 s** (x18)  |
-| Quadrant algorithm, embed 1024x1024 (16384) | 158.8 s  | 22.3 s          | **6.2 s** (x26)  |
-| Extraction of one watermark (4096 blocks)   | 5.2 ms   | **0.5 ms** (x11)| -                |
+| Base algorithm, embed 512x512 (4096 blocks) | 24.7 s   | 4.7 s           | **1.4 s** (x17)  |
+| Quadrant algorithm, embed 1024x1024 (16384) | 158.8 s  | 22.3 s          | **6.2 s** (x25)  |
+| Extraction of one watermark (4096 blocks)   | 5.2 ms   | **0.6 ms** (x8) | -                |
 
 In the quadrant pipeline the extraction time is dominated by the attack-type classifier
 (ResNet-50 at 1024x1024 with flip TTA, about 2 s per image on this CPU); the bit
-extraction itself is the 0.5 ms above.
+extraction itself is the 0.6 ms above.
 
 ### 9.1 Threads and reproducibility
 
@@ -432,3 +434,14 @@ It prints embedding/extraction time, a hash of the watermarked image, PSNR/SSIM 
 BER after a set of attacks. Same seed + same hash = same computation, which is how every
 optimization step was checked. `--selftest` compares the fast kernels with the OpenCV
 reference (JPEG round trip, contrast, rounding, extracted bits must match exactly).
+
+### 9.3 Fuzzing
+
+Five libFuzzer targets (ASan + UBSan) cover extraction, embedding, the optimizer on a single
+block, the 8x8 kernels (differentially, against OpenCV) and the metrics/attacks API. See
+`fuzz/README.md` for what each one checks and how to run it.
+
+```bash
+cmake -B build_fuzz -DCMAKE_CXX_COMPILER=clang++ -DGBO_BUILD_FUZZ=ON -DGBO_BUILD_APP=OFF
+cmake --build build_fuzz -j
+```
