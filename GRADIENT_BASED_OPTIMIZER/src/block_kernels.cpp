@@ -227,30 +227,30 @@ const QuantTables& quantTables() {
 // jfdctint.c / jidctint.c ("islow") constants, CONST_BITS = 13, PASS1_BITS = 2
 constexpr int CONST_BITS = 13;
 constexpr int PASS1_BITS = 2;
-constexpr int64_t FIX_0_298631336 = 2446;
-constexpr int64_t FIX_0_390180644 = 3196;
-constexpr int64_t FIX_0_541196100 = 4433;
-constexpr int64_t FIX_0_765366865 = 6270;
-constexpr int64_t FIX_0_899976223 = 7373;
-constexpr int64_t FIX_1_175875602 = 9633;
-constexpr int64_t FIX_1_501321110 = 12299;
-constexpr int64_t FIX_1_847759065 = 15137;
-constexpr int64_t FIX_1_961570560 = 16069;
-constexpr int64_t FIX_2_053119869 = 16819;
-constexpr int64_t FIX_2_562915447 = 20995;
-constexpr int64_t FIX_3_072711026 = 25172;
+constexpr int32_t FIX_0_298631336 = 2446;
+constexpr int32_t FIX_0_390180644 = 3196;
+constexpr int32_t FIX_0_541196100 = 4433;
+constexpr int32_t FIX_0_765366865 = 6270;
+constexpr int32_t FIX_0_899976223 = 7373;
+constexpr int32_t FIX_1_175875602 = 9633;
+constexpr int32_t FIX_1_501321110 = 12299;
+constexpr int32_t FIX_1_847759065 = 15137;
+constexpr int32_t FIX_1_961570560 = 16069;
+constexpr int32_t FIX_2_053119869 = 16819;
+constexpr int32_t FIX_2_562915447 = 20995;
+constexpr int32_t FIX_3_072711026 = 25172;
 
-inline int64_t descale(int64_t x, int n) { return (x + (int64_t(1) << (n - 1))) >> n; }
+inline int32_t descale(int32_t x, int n) { return (x + (int32_t(1) << (n - 1))) >> n; }
 
 // One 1-D pass of jpeg_fdct_islow over 8 values spaced by `stride`.
-inline void fdctPass(int64_t* d, int stride, bool first) {
-    const int64_t tmp0 = d[0] + d[7 * stride], tmp7 = d[0] - d[7 * stride];
-    const int64_t tmp1 = d[stride] + d[6 * stride], tmp6 = d[stride] - d[6 * stride];
-    const int64_t tmp2 = d[2 * stride] + d[5 * stride], tmp5 = d[2 * stride] - d[5 * stride];
-    const int64_t tmp3 = d[3 * stride] + d[4 * stride], tmp4 = d[3 * stride] - d[4 * stride];
+inline void fdctPass(int32_t* d, int stride, bool first) {
+    const int32_t tmp0 = d[0] + d[7 * stride], tmp7 = d[0] - d[7 * stride];
+    const int32_t tmp1 = d[stride] + d[6 * stride], tmp6 = d[stride] - d[6 * stride];
+    const int32_t tmp2 = d[2 * stride] + d[5 * stride], tmp5 = d[2 * stride] - d[5 * stride];
+    const int32_t tmp3 = d[3 * stride] + d[4 * stride], tmp4 = d[3 * stride] - d[4 * stride];
 
-    const int64_t tmp10 = tmp0 + tmp3, tmp13 = tmp0 - tmp3;
-    const int64_t tmp11 = tmp1 + tmp2, tmp12 = tmp1 - tmp2;
+    const int32_t tmp10 = tmp0 + tmp3, tmp13 = tmp0 - tmp3;
+    const int32_t tmp11 = tmp1 + tmp2, tmp12 = tmp1 - tmp2;
 
     const int shift = first ? CONST_BITS - PASS1_BITS : CONST_BITS + PASS1_BITS;
     if (first) {
@@ -261,20 +261,20 @@ inline void fdctPass(int64_t* d, int stride, bool first) {
         d[4 * stride] = descale(tmp10 - tmp11, PASS1_BITS);
     }
 
-    int64_t z1 = (tmp12 + tmp13) * FIX_0_541196100;
+    int32_t z1 = (tmp12 + tmp13) * FIX_0_541196100;
     d[2 * stride] = descale(z1 + tmp13 * FIX_0_765366865, shift);
     d[6 * stride] = descale(z1 + tmp12 * (-FIX_1_847759065), shift);
 
     z1 = tmp4 + tmp7;
-    int64_t z2 = tmp5 + tmp6;
-    int64_t z3 = tmp4 + tmp6;
-    int64_t z4 = tmp5 + tmp7;
-    const int64_t z5 = (z3 + z4) * FIX_1_175875602;
+    int32_t z2 = tmp5 + tmp6;
+    int32_t z3 = tmp4 + tmp6;
+    int32_t z4 = tmp5 + tmp7;
+    const int32_t z5 = (z3 + z4) * FIX_1_175875602;
 
-    const int64_t t4 = tmp4 * FIX_0_298631336;
-    const int64_t t5 = tmp5 * FIX_2_053119869;
-    const int64_t t6 = tmp6 * FIX_3_072711026;
-    const int64_t t7 = tmp7 * FIX_1_501321110;
+    const int32_t t4 = tmp4 * FIX_0_298631336;
+    const int32_t t5 = tmp5 * FIX_2_053119869;
+    const int32_t t6 = tmp6 * FIX_3_072711026;
+    const int32_t t7 = tmp7 * FIX_1_501321110;
     z1 *= -FIX_0_899976223;
     z2 *= -FIX_2_562915447;
     z3 *= -FIX_1_961570560;
@@ -289,19 +289,19 @@ inline void fdctPass(int64_t* d, int stride, bool first) {
 }
 
 // One 1-D pass of jpeg_idct_islow; reads in[k * stride], writes out[k * stride].
-inline void idctPass(const int64_t* in, int64_t* out, int stride, int shift) {
-    int64_t z2 = in[2 * stride], z3 = in[6 * stride];
-    int64_t z1 = (z2 + z3) * FIX_0_541196100;
-    int64_t tmp2 = z1 + z3 * (-FIX_1_847759065);
-    int64_t tmp3 = z1 + z2 * FIX_0_765366865;
+inline void idctPass(const int32_t* in, int32_t* out, int stride, int shift) {
+    int32_t z2 = in[2 * stride], z3 = in[6 * stride];
+    int32_t z1 = (z2 + z3) * FIX_0_541196100;
+    int32_t tmp2 = z1 + z3 * (-FIX_1_847759065);
+    int32_t tmp3 = z1 + z2 * FIX_0_765366865;
 
     z2 = in[0];
     z3 = in[4 * stride];
-    int64_t tmp0 = (z2 + z3) * (int64_t(1) << CONST_BITS);
-    int64_t tmp1 = (z2 - z3) * (int64_t(1) << CONST_BITS);
+    int32_t tmp0 = (z2 + z3) * (int32_t(1) << CONST_BITS);
+    int32_t tmp1 = (z2 - z3) * (int32_t(1) << CONST_BITS);
 
-    const int64_t tmp10 = tmp0 + tmp3, tmp13 = tmp0 - tmp3;
-    const int64_t tmp11 = tmp1 + tmp2, tmp12 = tmp1 - tmp2;
+    const int32_t tmp10 = tmp0 + tmp3, tmp13 = tmp0 - tmp3;
+    const int32_t tmp11 = tmp1 + tmp2, tmp12 = tmp1 - tmp2;
 
     tmp0 = in[7 * stride];
     tmp1 = in[5 * stride];
@@ -311,8 +311,8 @@ inline void idctPass(const int64_t* in, int64_t* out, int stride, int shift) {
     z1 = tmp0 + tmp3;
     z2 = tmp1 + tmp2;
     z3 = tmp0 + tmp2;
-    int64_t z4 = tmp1 + tmp3;
-    const int64_t z5 = (z3 + z4) * FIX_1_175875602;
+    int32_t z4 = tmp1 + tmp3;
+    const int32_t z5 = (z3 + z4) * FIX_1_175875602;
 
     tmp0 *= FIX_0_298631336;
     tmp1 *= FIX_2_053119869;
@@ -351,15 +351,15 @@ void jpegRoundTripCodec(const uint8_t* in, uint8_t* out, int quality) {
 
 void jpegRoundTripEmulated(const uint8_t* in, uint8_t* out, int quality) {
     const int* q = quantTables().q[quality];
-    int64_t d[64], ws[64], px[64];
+    int32_t d[64], ws[64], px[64];
 
     // Encoder: level shift, forward DCT (output scaled by 8), quantization.
-    for (int i = 0; i < 64; ++i) d[i] = static_cast<int64_t>(in[i]) - 128;
+    for (int i = 0; i < 64; ++i) d[i] = static_cast<int32_t>(in[i]) - 128;
     for (int r = 0; r < 8; ++r) fdctPass(d + 8 * r, 1, true);
     for (int c = 0; c < 8; ++c) fdctPass(d + c, 8, false);
     for (int i = 0; i < 64; ++i) {
-        const int64_t qval = static_cast<int64_t>(q[i]) << 3;
-        int64_t t = d[i];
+        const int32_t qval = static_cast<int32_t>(q[i]) << 3;
+        int32_t t = d[i];
         if (t < 0) {
             t = -t;
             t += qval >> 1;
@@ -376,7 +376,7 @@ void jpegRoundTripEmulated(const uint8_t* in, uint8_t* out, int quality) {
     for (int c = 0; c < 8; ++c) idctPass(d + c, ws + c, 8, CONST_BITS - PASS1_BITS);
     for (int r = 0; r < 8; ++r) idctPass(ws + 8 * r, px + 8 * r, 1, CONST_BITS + PASS1_BITS + 3);
     for (int i = 0; i < 64; ++i) {
-        const int64_t v = px[i] + 128;
+        const int32_t v = px[i] + 128;
         out[i] = static_cast<uint8_t>(v < 0 ? 0 : (v > 255 ? 255 : v));
     }
 }
