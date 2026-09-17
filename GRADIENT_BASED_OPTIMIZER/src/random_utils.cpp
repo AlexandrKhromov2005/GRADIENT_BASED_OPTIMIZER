@@ -27,6 +27,24 @@ void seed_random(unsigned int seed) {
     rng.initialized = true;
 }
 
+static inline uint64_t splitmix64(uint64_t& x) {
+    uint64_t z = (x += 0x9E3779B97F4A7C15ull);
+    z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ull;
+    z = (z ^ (z >> 27)) * 0x94D049BB133111EBull;
+    return z ^ (z >> 31);
+}
+
+void seed_random_stream(uint64_t base_seed, uint64_t index) {
+    uint64_t x = base_seed ^ (index * 0xD1342543DE82EF95ull);
+    const uint64_t a = splitmix64(x), b = splitmix64(x);
+    std::seed_seq seq_uniform{static_cast<uint32_t>(a), static_cast<uint32_t>(a >> 32)};
+    std::seed_seq seq_normal{static_cast<uint32_t>(b), static_cast<uint32_t>(b >> 32)};
+    rng.generator.seed(seq_uniform);
+    rng.gen.seed(seq_normal);
+    rng.normal_saved_available = false;
+    rng.initialized = true;
+}
+
 // 53-bit uniform number in [0, 1) from two 32-bit draws. Same value, draw for draw, as
 // std::uniform_real_distribution<double>(0, 1) over std::mt19937 in libstdc++, but without
 // the long double arithmetic and the run-time log() of std::generate_canonical.

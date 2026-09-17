@@ -8,12 +8,17 @@
 #include <cstring>
 #include "config.h"
 #include <array>
+#include <cstdint>
 
 // Initializes the random number generator
 void init_random();
 
 // Seeds every generator with a fixed value (reproducible runs)
 void seed_random(unsigned int seed);
+
+// Seeds the calling thread for one unit of work (an 8x8 block): the stream depends only on
+// (base_seed, index), not on which thread runs it or in what order.
+void seed_random_stream(uint64_t base_seed, uint64_t index);
 
 // Generates a random number in the range [0.0, 1.0]
 double rand_num();

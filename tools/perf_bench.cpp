@@ -20,6 +20,7 @@
 #include "random_utils.h"
 #include "config.h"
 #include "block_kernels.h"
+#include "block_metrics.h"
 #include "jpeg/quantization_tables.h"
 
 using Clock = std::chrono::steady_clock;
@@ -95,6 +96,23 @@ static int selfTest(const cv::Mat& gray, int rounds) {
             if (std::memcmp(out, ref_u8.data, 64) != 0) ++round_bad;
         }
     }
+    // Extraction: fast path against the cv::dct reference, on clean and attacked images.
+    long bits_checked = 0, bits_bad = 0;
+    for (const cv::Mat& img : {gray, jpegCompression(gray, 70), jpegCompression(gray, 30), contrastIncrease(gray, 1.1),
+                               medianFiltering(gray, 5), gaussianFiltering(gray, 5), sharpening(gray),
+                               histogramEqualization(gray), brightnessIncrease(gray, 50)}) {
+        for (const cv::Mat& block : splitInto8x8Blocks(img)) {
+            cv::Mat dbl, dct;
+            block.convertTo(dbl, CV_64F);
+            cv::dct(dbl, dct);
+            const int ref = (calc_s_zero(dct) < calc_s_one(dct)) ? 1 : 0;
+            ++bits_checked;
+            if (ref != extractBitFromBlock(block)) { ++bits_bad; std::printf("  mismatch: s0=%.17g s1=%.17g\n", calc_s_zero(dct), calc_s_one(dct)); }
+        }
+    }
+    std::printf("extraction: %ld blocks, %ld bit mismatches\n", bits_checked, bits_bad);
+    if (bits_bad) return 1;
+
     std::printf("jpeg: %ld round trips, %ld mismatches\ncontrast mismatches: %ld\nrounding mismatches: %ld\n"
                 "max |dct - cv::dct| = %.3e, max |idct - cv::idct| = %.3e\n",
                 jpeg_checked, jpeg_bad, contrast_bad, round_bad, max_dct_err, max_idct_err);
@@ -118,6 +136,7 @@ int main(int argc, char** argv) {
         else if (a == "--crop") crop = std::stoi(next());
         else if (a == "--out") out = next();
         else if (a == "--selftest") selftest = std::stoi(next());
+        else if (a == "--threads") setEmbeddingThreads(std::stoul(next()));
         else { std::cerr << "unknown option " << a << "\n"; return 2; }
     }
 
@@ -152,14 +171,14 @@ int main(int argc, char** argv) {
         {"Median Filtering", [](const cv::Mat& m) { return medianFiltering(m, 5); }},
     };
 
-    std::printf("mode=%s image=%s size=%dx%d scheme=%s blocks=%d\n", mode.c_str(), image.c_str(),
-                gray.cols, gray.rows, scheme.c_str(), (gray.rows / 8) * (gray.cols / 8));
+    std::printf("mode=%s image=%s size=%dx%d scheme=%s blocks=%d threads=%u\n", mode.c_str(), image.c_str(),
+                gray.cols, gray.rows, scheme.c_str(), (gray.rows / 8) * (gray.cols / 8), embeddingThreads());
 
     double sum_embed = 0, sum_extract = 0, sum_psnr = 0, sum_ssim = 0;
     std::vector<double> sum_ber(attacks.size(), 0.0);
 
     for (int r = 0; r < repeat; ++r) {
-        seed_random(seed + r);
+        setEmbeddingSeed(seed + r);
         auto t0 = Clock::now();
         cv::Mat marked = quad ? embedBitsQuadrants(gray, bits) : embedBits(gray, bits);
         const double t_embed = secondsSince(t0);

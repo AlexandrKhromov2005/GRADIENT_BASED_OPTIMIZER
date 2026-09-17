@@ -14,6 +14,7 @@ option(GBO_BUILD_PERF      "Build the speed/quality benchmark (gbo_perf)" OFF)
 
 # ---- Dependencies -----------------------------------------------------------
 find_package(OpenCV REQUIRED)
+find_package(Threads REQUIRED)
 
 # PyTorch (optional) — auto-detected in standard paths + /tmp/libtorch
 if(EXISTS "/tmp/libtorch")
@@ -80,9 +81,9 @@ include_directories(${SRC_DIR})
 # ---- Helper: link the right libs to a target --------------------------------
 function(gbo_link_libs target)
     if(TORCH_AVAILABLE)
-        target_link_libraries(${target} ${OpenCV_LIBS} ${TORCH_LIBRARIES})
+        target_link_libraries(${target} ${OpenCV_LIBS} ${TORCH_LIBRARIES} Threads::Threads)
     else()
-        target_link_libraries(${target} ${OpenCV_LIBS})
+        target_link_libraries(${target} ${OpenCV_LIBS} Threads::Threads)
     endif()
 endfunction()
 
