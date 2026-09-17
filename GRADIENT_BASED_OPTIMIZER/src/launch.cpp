@@ -1,4 +1,5 @@
 #include "launch.h"
+#include "embedding_core.h"
 #include <chrono>
 
 #ifdef TORCH_AVAILABLE
@@ -19,11 +20,7 @@ void embend_wm(const std::string& image, const std::string& new_image, const std
 
 	initialize_quantization_mats();
 
-	size_t image_size = image_vec.size();
-	for (size_t i = 0; i < image_size; ++i) {
-		GBO gbo(wm_vec[i % WM_SIZE], image_vec[i]);
-		gbo.main_loop();
-	}
+	embedBlocks(image_vec, wm_vec);
 
 	const cv::Mat cv_new_image = merge8x8Blocks(image_vec, cv_image.rows, cv_image.cols);
 	writeImage(new_image, cv_new_image);
@@ -31,20 +28,7 @@ void embend_wm(const std::string& image, const std::string& new_image, const std
 
 void get_wm(const std::string& image, const std::string& new_image) {
 	const cv::Mat cv_image = readImage(image);
-	std::vector<cv::Mat> image_vec = splitInto8x8Blocks(cv_image);
-	std::vector<int> wm_vec(WM_SIZE, 0);
-
-	for (size_t i = 0; i < image_vec.size(); ++i) {
-		cv::Mat dbl_block;
-		image_vec[i].convertTo(dbl_block, CV_64F);
-		cv::Mat dct_block;
-		cv::dct(dbl_block, dct_block);
-		double s0 = calc_s_zero(dct_block);
-		double s1 = calc_s_one(dct_block);
-		if (s0 < s1) {
-			++wm_vec[i % WM_SIZE];
-		}
-	}
+	std::vector<int> wm_vec = extractVotes(cv_image);
 
 	for (size_t i = 0; i < WM_SIZE; ++i) {
 		switch (wm_vec[i])
@@ -73,20 +57,7 @@ void get_wm(const std::string& image, const std::string& new_image) {
 }
 
 cv::Mat get_wm(const cv::Mat& cv_image) {
-	std::vector<cv::Mat> image_vec = splitInto8x8Blocks(cv_image);
-	std::vector<int> wm_vec(WM_SIZE, 0);
-
-	for (size_t i = 0; i < image_vec.size(); ++i) {
-		cv::Mat dbl_block;
-		image_vec[i].convertTo(dbl_block, CV_64F);
-		cv::Mat dct_block;
-		cv::dct(dbl_block, dct_block);
-		double s0 = calc_s_zero(dct_block);
-		double s1 = calc_s_one(dct_block);
-		if (s0 < s1) {
-			++wm_vec[i % WM_SIZE];
-		}
-	}
+	std::vector<int> wm_vec = extractVotes(cv_image);
 
 	for (size_t i = 0; i < WM_SIZE; ++i) {
 		switch (wm_vec[i]) {
@@ -644,11 +615,7 @@ std::vector<int> generateRandomWatermark() {
 cv::Mat embedIntoQuadrant(const cv::Mat& quadrant, const std::vector<int>& wm, AttackType attack_type) {
 	std::vector<cv::Mat> blocks = splitInto8x8Blocks(quadrant);
 
-	size_t num_blocks = blocks.size();
-	for (size_t i = 0; i < num_blocks; ++i) {
-		GBO gbo(wm[i % WM_SIZE], blocks[i], attack_type);
-		gbo.main_loop();
-	}
+	embedBlocks(blocks, wm, attack_type);
 
 	return merge8x8Blocks(blocks, quadrant.rows, quadrant.cols);
 }
@@ -926,10 +893,7 @@ void generate_attack_dataset_1024(const std::string& input_dir, const std::strin
 				std::vector<cv::Mat> blocks = splitInto8x8Blocks(quadrant);
 
 				// Embed all 1024 bits of watermark into this quadrant
-				for (size_t i = 0; i < blocks.size() && i < WM_SIZE; ++i) {
-					GBO gbo(random_wm[i], blocks[i], AttackType::NONE);
-					gbo.main_loop();
-				}
+				embedBlocks(blocks, random_wm, AttackType::NONE, WM_SIZE);
 
 				cv::Mat embedded_quadrant = merge8x8Blocks(blocks, 256, 256);
 
@@ -1322,12 +1286,7 @@ void embend_wm_with_none(const std::string& image, const std::string& new_image,
 
 	initialize_quantization_mats();
 
-	size_t image_size = image_vec.size();
-	for (size_t i = 0; i < image_size; ++i) {
-		// Always use NONE attack type for embedding
-		GBO gbo(wm_vec[i % WM_SIZE], image_vec[i], AttackType::NONE);
-		gbo.main_loop();
-	}
+	embedBlocks(image_vec, wm_vec);
 
 	const cv::Mat cv_new_image = merge8x8Blocks(image_vec, cv_image.rows, cv_image.cols);
 	writeImage(new_image, cv_new_image);
@@ -1335,25 +1294,7 @@ void embend_wm_with_none(const std::string& image, const std::string& new_image,
 
 // Extraction with known attack type (uses attack-optimized fitness if available)
 cv::Mat get_wm_with_attack_type(const cv::Mat& cv_image, AttackType attack_type) {
-	std::vector<cv::Mat> image_vec = splitInto8x8Blocks(cv_image);
-	std::vector<int> wm_vec(WM_SIZE, 0);
-
-	// Initialize population with attack type for optimized extraction
-	for (size_t i = 0; i < image_vec.size(); ++i) {
-		cv::Mat dbl_block;
-		image_vec[i].convertTo(dbl_block, CV_64F);
-		cv::Mat dct_block;
-		cv::dct(dbl_block, dct_block);
-
-		// Use attack-aware extraction if attack type is supported
-		// Otherwise fall back to standard s0/s1 calculation
-		double s0 = calc_s_zero(dct_block);
-		double s1 = calc_s_one(dct_block);
-
-		if (s0 < s1) {
-			++wm_vec[i % WM_SIZE];
-		}
-	}
+	std::vector<int> wm_vec = extractVotes(cv_image);
 
 	// Voting logic
 	for (size_t i = 0; i < WM_SIZE; ++i) {
@@ -1594,10 +1535,7 @@ void embed_wm_1024_with_none(const std::string& image, const std::string& new_im
 
 			// Each quadrant has 1024 blocks (32x32 blocks of 8x8)
 			// We embed all 1024 bits of watermark into this quadrant
-			for (size_t i = 0; i < blocks.size() && i < WM_SIZE; ++i) {
-				GBO gbo(wm_vec[i], blocks[i], quadrant_attack_type);
-				gbo.main_loop();
-			}
+			embedBlocks(blocks, wm_vec, quadrant_attack_type, WM_SIZE);
 
 			cv::Mat embedded_quadrant = merge8x8Blocks(blocks, 256, 256);
 
@@ -1650,22 +1588,7 @@ cv::Mat extract_wm_1024_with_voting(const cv::Mat& cv_image, AttackType attack_t
 				cv::Mat quadrant = gray_image(cv::Rect(x, y, 256, 256)).clone();
 
 				// Extract watermark from this quadrant
-				std::vector<cv::Mat> blocks = splitInto8x8Blocks(quadrant);
-				std::vector<int> wm_bits;
-				wm_bits.reserve(WM_SIZE);
-
-				for (size_t i = 0; i < WM_SIZE && i < blocks.size(); ++i) {
-					// Convert block to DCT domain
-					cv::Mat blockDouble;
-					blocks[i].convertTo(blockDouble, CV_64F);
-					cv::Mat DCTblock;
-					cv::dct(blockDouble, DCTblock);
-
-					// Extract bit from DCT coefficients
-					double s0 = calc_s_zero(DCTblock);
-					double s1 = calc_s_one(DCTblock);
-					wm_bits.push_back((s0 > s1) ? 0 : 1);
-				}
+				std::vector<int> wm_bits = extractBlockBits(quadrant, WM_SIZE, true);
 
 				watermarks.push_back(wm_bits);
 			}
@@ -1679,19 +1602,8 @@ cv::Mat extract_wm_1024_with_voting(const cv::Mat& cv_image, AttackType attack_t
 		std::cerr << "⚠️ Warning: No quadrants match attack type, using first quadrant" << std::endl;
 		// Fallback to first quadrant
 		cv::Mat quadrant = gray_image(cv::Rect(0, 0, 256, 256)).clone();
-		std::vector<cv::Mat> blocks = splitInto8x8Blocks(quadrant);
-		for (size_t i = 0; i < WM_SIZE && i < blocks.size(); ++i) {
-			// Convert block to DCT domain
-			cv::Mat blockDouble;
-			blocks[i].convertTo(blockDouble, CV_64F);
-			cv::Mat DCTblock;
-			cv::dct(blockDouble, DCTblock);
-
-			// Extract bit from DCT coefficients
-			double s0 = calc_s_zero(DCTblock);
-			double s1 = calc_s_one(DCTblock);
-			final_wm[i] = (s0 > s1) ? 0 : 1;
-		}
+		const std::vector<int> bits = extractBlockBits(quadrant, WM_SIZE, true);
+		std::copy(bits.begin(), bits.end(), final_wm.begin());
 	} else {
 		// Majority voting
 		for (size_t bit_idx = 0; bit_idx < WM_SIZE; ++bit_idx) {

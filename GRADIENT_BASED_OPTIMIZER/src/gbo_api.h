@@ -2,6 +2,7 @@
 #define GBO_API_H
 
 #include <opencv2/opencv.hpp>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -39,11 +40,26 @@ GBO_API bool setScheme(const std::string& scheme_id);
 /// Return a list of all available scheme identifiers.
 GBO_API std::vector<std::string> availableSchemes();
 
+// ---- Execution control -----------------------------------------------------
+
+/// Number of worker threads for embedding. 0 (default) = all hardware threads;
+/// the GBO_THREADS environment variable is honoured when this is left at 0.
+/// The embedded result never depends on the thread count.
+GBO_API void setThreads(unsigned threads);
+
+/// Make embedding reproducible: the same seed, image and watermark always give
+/// the same watermarked image. By default every call uses a fresh random seed.
+GBO_API void setSeed(uint64_t seed);
+
+/// Return to non-deterministic seeding (the default).
+GBO_API void clearSeed();
+
 // ---- Watermark embedding / extraction --------------------------------------
 
 /// Embed a binary watermark into a grayscale cover image.
 /// Internally runs the GBO optimizer (POP_SIZE x ITERATIONS generations)
-/// on every 8x8 block.  A single call performs one full embedding pass.
+/// on every 8x8 block, blocks being processed in parallel (see setThreads).
+/// A single call performs one full embedding pass.
 /// @param image       Grayscale cover image (CV_8U).
 /// @param watermark   Binary watermark image (black/white, 32x32 recommended).
 /// @return Watermarked grayscale image (CV_8U), same size as input.

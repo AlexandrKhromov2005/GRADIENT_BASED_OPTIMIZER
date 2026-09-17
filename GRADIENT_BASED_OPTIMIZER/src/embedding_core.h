@@ -32,8 +32,17 @@ struct EmbedJob {
 // (seed, job index), so the outcome does not depend on scheduling.
 void runEmbedJobs(std::vector<EmbedJob>& jobs);
 
+// Embeds wm_bits[i % WM_SIZE] into blocks[i] (in place) for the first `max_blocks` blocks.
+void embedBlocks(std::vector<cv::Mat>& blocks, const std::vector<int>& wm_bits,
+                 AttackType attack = AttackType::NONE, size_t max_blocks = static_cast<size_t>(-1));
+
 // Bit carried by one 8x8 block (CV_8U) under the current scheme: 1 if S0 < S1, else 0.
-int extractBitFromBlock(const cv::Mat& block);
+// `equal_is_one` selects the bit reported when S0 == S1 exactly.
+int extractBitFromBlock(const cv::Mat& block, bool equal_is_one = false);
+
+// Bits of the 8x8 blocks of a grayscale (CV_8U) image region, row-major block order.
+std::vector<int> extractBlockBits(const cv::Mat& region, size_t max_blocks = static_cast<size_t>(-1),
+                                  bool equal_is_one = false);
 
 // ---- Whole-image operations --------------------------------------------------
 

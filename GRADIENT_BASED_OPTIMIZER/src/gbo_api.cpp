@@ -5,6 +5,7 @@
 #include "block_metrics.h"
 #include "attacks.h"
 #include "gbo.h"
+#include "embedding_core.h"
 #include "config.h"
 #include "jpeg/quantization_tables.h"
 
@@ -38,6 +39,14 @@ std::vector<std::string> availableSchemes() {
     return EmbeddingSchemeManager::getInstance().getAvailableSchemes();
 }
 
+// ---- Execution control -----------------------------------------------------
+
+void setThreads(unsigned threads) { setEmbeddingThreads(threads); }
+
+void setSeed(uint64_t seed) { setEmbeddingSeed(seed); }
+
+void clearSeed() { clearEmbeddingSeed(); }
+
 // ---- Watermark embedding / extraction --------------------------------------
 
 cv::Mat embedWatermark(const cv::Mat& image,
@@ -57,10 +66,7 @@ cv::Mat embedWatermark(const cv::Mat& image,
 
     initialize_quantization_mats();
 
-    for (size_t i = 0; i < blocks.size(); ++i) {
-        GBO optimizer(static_cast<uchar>(wm_bits[i % WM_SIZE]), blocks[i]);
-        optimizer.main_loop();
-    }
+    embedBlocks(blocks, wm_bits);
 
     return merge8x8Blocks(blocks, gray.rows, gray.cols);
 }
@@ -76,20 +82,7 @@ cv::Mat extractWatermark(const cv::Mat& image) {
         gray = image;
     }
 
-    std::vector<cv::Mat> blocks = splitInto8x8Blocks(gray);
-    std::vector<int> wm_vec(WM_SIZE, 0);
-
-    for (size_t i = 0; i < blocks.size(); ++i) {
-        cv::Mat dbl_block;
-        blocks[i].convertTo(dbl_block, CV_64F);
-        cv::Mat dct_block;
-        cv::dct(dbl_block, dct_block);
-        double s0 = calc_s_zero(dct_block);
-        double s1 = calc_s_one(dct_block);
-        if (s0 < s1) {
-            ++wm_vec[i % WM_SIZE];
-        }
-    }
+    std::vector<int> wm_vec = extractVotes(gray);
 
     for (size_t i = 0; i < WM_SIZE; ++i) {
         switch (wm_vec[i]) {

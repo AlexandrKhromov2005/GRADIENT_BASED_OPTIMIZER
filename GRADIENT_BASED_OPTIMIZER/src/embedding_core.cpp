@@ -102,7 +102,7 @@ struct Regions {
     }
 };
 
-inline int extractBitAt(const uchar* top_left, size_t step, const Regions& regions) {
+inline int extractBitAt(const uchar* top_left, size_t step, const Regions& regions, bool equal_is_one) {
     double pixels[64], dct[64];
     for (int r = 0; r < 8; ++r) {
         const uchar* row = top_left + r * step;
@@ -123,28 +123,40 @@ inline int extractBitAt(const uchar* top_left, size_t step, const Regions& regio
         for (int idx : regions.reg0) s0 += std::fabs(ref[idx]);
         for (int idx : regions.reg1) s1 += std::fabs(ref[idx]);
     }
+    if (s0 == s1) return equal_is_one ? 1 : 0;
     return (s0 < s1) ? 1 : 0;
-}
-
-// Adds the bit of every 8x8 block of `region` (row-major block order) to votes[i % WM_SIZE].
-void addVotes(const cv::Mat& region, size_t max_blocks, std::vector<int>& votes) {
-    CV_Assert(region.type() == CV_8UC1);
-    const Regions regions;
-    const int block_rows = region.rows / 8, block_cols = region.cols / 8;
-    size_t index = 0;
-    for (int br = 0; br < block_rows && index < max_blocks; ++br) {
-        const uchar* row = region.ptr<uchar>(br * 8);
-        for (int bc = 0; bc < block_cols && index < max_blocks; ++bc, ++index) {
-            votes[index % WM_SIZE] += extractBitAt(row + bc * 8, region.step, regions);
-        }
-    }
 }
 
 } // namespace
 
-int extractBitFromBlock(const cv::Mat& block) {
+int extractBitFromBlock(const cv::Mat& block, bool equal_is_one) {
     CV_Assert(block.type() == CV_8UC1 && block.rows == 8 && block.cols == 8);
-    return extractBitAt(block.ptr<uchar>(0), block.step, Regions());
+    return extractBitAt(block.ptr<uchar>(0), block.step, Regions(), equal_is_one);
+}
+
+std::vector<int> extractBlockBits(const cv::Mat& region, size_t max_blocks, bool equal_is_one) {
+    CV_Assert(region.type() == CV_8UC1);
+    const Regions regions;
+    const int block_rows = region.rows / 8, block_cols = region.cols / 8;
+    std::vector<int> bits;
+    bits.reserve(std::min(max_blocks, static_cast<size_t>(block_rows) * block_cols));
+    for (int br = 0; br < block_rows && bits.size() < max_blocks; ++br) {
+        const uchar* row = region.ptr<uchar>(br * 8);
+        for (int bc = 0; bc < block_cols && bits.size() < max_blocks; ++bc) {
+            bits.push_back(extractBitAt(row + bc * 8, region.step, regions, equal_is_one));
+        }
+    }
+    return bits;
+}
+
+void embedBlocks(std::vector<cv::Mat>& blocks, const std::vector<int>& wm_bits, AttackType attack, size_t max_blocks) {
+    std::vector<EmbedJob> jobs;
+    const size_t count = std::min(blocks.size(), max_blocks);
+    jobs.reserve(count);
+    for (size_t i = 0; i < count; ++i) {
+        jobs.push_back({&blocks[i], static_cast<uchar>(wm_bits[i % WM_SIZE]), attack});
+    }
+    runEmbedJobs(jobs);
 }
 
 // ---- Whole-image operations --------------------------------------------------
@@ -159,18 +171,14 @@ AttackType quadrantAttackType(int row, int col) {
 
 cv::Mat embedBits(const cv::Mat& gray, const std::vector<int>& wm_bits, AttackType attack) {
     std::vector<cv::Mat> blocks = splitInto8x8Blocks(gray);
-    std::vector<EmbedJob> jobs;
-    jobs.reserve(blocks.size());
-    for (size_t i = 0; i < blocks.size(); ++i) {
-        jobs.push_back({&blocks[i], static_cast<uchar>(wm_bits[i % WM_SIZE]), attack});
-    }
-    runEmbedJobs(jobs);
+    embedBlocks(blocks, wm_bits, attack);
     return merge8x8Blocks(blocks, gray.rows, gray.cols);
 }
 
 std::vector<int> extractVotes(const cv::Mat& gray) {
     std::vector<int> votes(WM_SIZE, 0);
-    addVotes(gray, static_cast<size_t>(-1), votes);
+    const std::vector<int> bits = extractBlockBits(gray);
+    for (size_t i = 0; i < bits.size(); ++i) votes[i % WM_SIZE] += bits[i];
     return votes;
 }
 
@@ -206,7 +214,8 @@ std::vector<int> extractVotesQuadrants(const cv::Mat& gray_1024, AttackType atta
     for (int row = 0; row < 4; ++row) {
         for (int col = 0; col < 4; ++col) {
             if (quadrantAttackType(row, col) != attack_type) continue;
-            addVotes(gray_1024(cv::Rect(col * qw, row * qh, qw, qh)), WM_SIZE, votes);
+            const std::vector<int> bits = extractBlockBits(gray_1024(cv::Rect(col * qw, row * qh, qw, qh)), WM_SIZE);
+            for (size_t i = 0; i < bits.size(); ++i) votes[i] += bits[i];
         }
     }
     return votes;

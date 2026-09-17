@@ -1,6 +1,7 @@
 #include "quadrant_embedding.h"
 #include "image_processing_custom.h"
 #include "gbo.h"
+#include "embedding_core.h"
 #include "population.h"
 #include "config.h"
 #include "jpeg/quantization_tables.h"
@@ -87,10 +88,7 @@ cv::Mat QuadrantEmbedding::embedWatermarkQuadrants(const cv::Mat& image_1024x102
 
             // Embed watermark
             std::vector<cv::Mat> blocks = splitInto8x8Blocks(quadrant);
-            for (size_t i = 0; i < blocks.size(); ++i) {
-                GBO gbo(wm_vec[i % WM_SIZE], blocks[i], attack);
-                gbo.main_loop();
-            }
+            embedBlocks(blocks, wm_vec, attack);
             cv::Mat embedded_quadrant = merge8x8Blocks(blocks, 256, 256);
 
             // Copy back to result
@@ -158,10 +156,7 @@ cv::Mat QuadrantEmbedding::embedWatermarkQuadrants(const cv::Mat& image_1024x102
 
             // Embed watermark using the bit vector
             std::vector<cv::Mat> blocks = splitInto8x8Blocks(quadrant);
-            for (size_t i = 0; i < blocks.size(); ++i) {
-                GBO gbo(wm_bits[i % WM_SIZE], blocks[i], attack);
-                gbo.main_loop();
-            }
+            embedBlocks(blocks, wm_bits, attack);
             cv::Mat embedded_quadrant = merge8x8Blocks(blocks, 256, 256);
 
             // Copy back to result
@@ -249,24 +244,8 @@ cv::Mat QuadrantEmbedding::extractWatermarkWithClassifier(const cv::Mat& image_1
 
         // Extract this quadrant
         cv::Mat quadrant = gray_image(cv::Rect(x, y, 256, 256)).clone();
-        std::vector<cv::Mat> blocks = splitInto8x8Blocks(quadrant);
-        std::vector<int> wm_vec(WM_SIZE);
-
-        for (size_t i = 0; i < WM_SIZE && i < blocks.size(); ++i) {
-            cv::Mat block = blocks[i];
-
-            // Convert to double and apply DCT
-            cv::Mat blockDouble;
-            block.convertTo(blockDouble, CV_64F);
-            cv::Mat dct_block;
-            cv::dct(blockDouble, dct_block);
-
-            // Extract bit using S0 and S1 comparison
-            double s0 = calc_s_zero(dct_block);
-            double s1 = calc_s_one(dct_block);
-
-            wm_vec[i] = (s0 < s1) ? 1 : 0;
-        }
+        std::vector<int> wm_vec = extractBlockBits(quadrant, WM_SIZE);
+        wm_vec.resize(WM_SIZE, 0);
 
         all_extractions.push_back(wm_vec);
     }

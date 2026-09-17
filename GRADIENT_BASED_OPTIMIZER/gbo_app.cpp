@@ -5,7 +5,7 @@
 
 static void printUsage(const char* prog) {
     std::cout << "Usage:\n"
-              << "  " << prog << " embed  <cover> <watermark> <output> [--scheme ID]\n"
+              << "  " << prog << " embed  <cover> <watermark> <output> [--scheme ID] [--threads N] [--seed S]\n"
               << "  " << prog << " extract <watermarked> <output_wm>\n"
               << "  " << prog << " metrics <original> <watermarked> [--wm-orig WM1 --wm-extr WM2]\n"
               << "  " << prog << " attack  <image> <output> --type TYPE [--param VALUE]\n"
@@ -46,6 +46,10 @@ int main(int argc, char* argv[]) {
         for (int i = 5; i < argc; ++i) {
             if ((std::string(argv[i]) == "--scheme" || std::string(argv[i]) == "-s") && i+1 < argc)
                 gbo::setScheme(argv[++i]);
+            else if (std::string(argv[i]) == "--threads" && i+1 < argc)
+                gbo::setThreads(static_cast<unsigned>(std::stoul(argv[++i])));
+            else if (std::string(argv[i]) == "--seed" && i+1 < argc)
+                gbo::setSeed(std::stoull(argv[++i]));
         }
         cv::Mat cover = cv::imread(cover_path, cv::IMREAD_GRAYSCALE);
         cv::Mat wm    = cv::imread(wm_path, cv::IMREAD_GRAYSCALE);
