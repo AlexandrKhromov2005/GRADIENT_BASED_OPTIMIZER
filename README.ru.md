@@ -1,65 +1,65 @@
-# Gradient-Based Optimizer для встраивания ЦВЗ в DCT-домене
+# Gradient-Based Optimizer для встраивания ЦВЗ в область ДКП
 
 *[English version](README.md)*
 
-Репозиторий содержит референсную реализацию на C++ градиентного метаэвристического
-оптимизатора (GBO) для встраивания цифровых водяных знаков (ЦВЗ) в DCT-домен
-полутоновых изображений с настраиваемой устойчивостью к JPEG-сжатию и другим
-атакам. Оптимизатор работает над 8×8 DCT-блоками, поддерживает несколько
-стратегий выбора коэффициентов («схем встраивания») и опциональную
-интеграцию с PyTorch-классификаторами, которые автоматически подбирают
-оптимальную схему для блока или квадранта изображения.
+Реализация на C++ алгоритма встраивания цифровых водяных знаков Мельман и Евсютина
+(Computers and Electrical Engineering 117 (2024) 109271). Один бит ЦВЗ хранится в каждом
+блоке 8×8 как соотношение двух сумм модулей среднечастотных коэффициентов ДКП; изменение
+коэффициентов подбирает градиентный оптимизатор GBO (Ahmadianfar и др., Information
+Sciences 540 (2020)).
 
-Код — это артефакт, сопровождающий статью; он задуман как
-**воспроизводимый** и **пригодный для повторного использования** в сторонних
-проектах.
-
----
+В репозитории есть и модификация алгоритма: целевая функция оптимизатора моделирует атаку
+(JPEG или изменение контраста), разные части изображения оптимизируются под разные атаки,
+а при извлечении используются копии, подготовленные под распознанную атаку (раздел 8).
 
 ## 1. Состав репозитория
 
 ```text
 .
-├── CMakeLists.txt                     # сборка с настраиваемыми целями
-├── build.sh                           # обёртка cmake + make
-├── embedding_schemes.json             # JSON-описания наборов DCT-коэффициентов
-├── images/                            # эталонные изображения и ЦВЗ
+├── CMakeLists.txt                     # сборка, см. раздел 3
+├── build.sh                           # сборка по умолчанию; подставляет путь к libtorch, если он найден
+├── embedding_schemes.json             # схемы встраивания, читаются при запуске (раздел 6)
+├── images/                            # 8 тестовых изображений 1024×1024, ЦВЗ 32×32
+├── tools/perf_bench.cpp               # gbo_perf: время, хэш изображения, самопроверка
+├── perf_results/                      # исходные данные для чисел из раздела 10
+├── fuzz/                              # цели libFuzzer
+├── tests/                             # модульные тесты (ctest)
 └── GRADIENT_BASED_OPTIMIZER/
-    ├── gbo_app.cpp                    # точка входа CLI-приложения
+    ├── gbo_app.cpp                    # точка входа CLI
     ├── GRADIENT_BASED_OPTIMIZER.cpp   # точка входа тестового стенда
     └── src/
-        ├── gbo_api.{h,cpp}            # ПУБЛИЧНЫЙ API БИБЛИОТЕКИ (namespace gbo)
-        ├── gbo.{h,cpp}                # ядро градиентного оптимизатора
-        ├── population.{h,cpp}         # популяция, целевая функция (с учётом атак)
-        ├── launch.{h,cpp}             # оркестрация экспериментов (только bench)
-        ├── embedding_schemes.{h,cpp}  # менеджер схем / загрузка JSON
-        ├── attacks.{h,cpp}            # JPEG, контраст, шум, кроп и т.д.
-        ├── image_metrics.*            # PSNR / SSIM / NCC / BER
-        ├── image_processing_custom.*  # разбиение на 8×8 / DCT / сборка
-        ├── jpeg/                      # поблочное JPEG-сжатие, таблицы квантования
-        └── ...                        # классификаторы (опционально, PyTorch)
+        ├── gbo_api.{h,cpp}            # публичный API библиотеки (namespace gbo)
+        ├── gbo.{h,cpp}                # оптимизатор
+        ├── population.{h,cpp}         # популяция и целевая функция
+        ├── embedding_core.{h,cpp}     # встраивание / извлечение по изображению, потоки, seed
+        ├── block_kernels.{h,cpp}      # ДКП 8×8, JPEG для блока, контраст, округление
+        ├── random_utils.{h,cpp}       # потоки случайных чисел
+        ├── embedding_schemes.{h,cpp}  # менеджер схем
+        ├── scheme_json.{h,cpp}        # разбор embedding_schemes.json
+        ├── attacks.{h,cpp}            # атаки на изображение
+        ├── image_metrics.*            # MSE / PSNR / SSIM / NCC / BER
+        ├── image_processing_custom.*  # разбиение на блоки и сборка, ЦВЗ <-> биты
+        ├── launch.{h,cpp}             # эксперименты тестового стенда
+        └── ...                        # интеграция классификаторов (нужен libtorch)
 ```
-
----
 
 ## 2. Зависимости
 
-Обязательные:
-
-- **C++17** (g++ ≥ 9, clang ≥ 10)
-- **CMake** ≥ 3.16
-- **OpenCV** ≥ 4.0 (core, imgproc, imgcodecs)
-
-Опциональные (только для режимов с классификатором):
-
-- **PyTorch C++ (libtorch)** — CPU или CUDA, протестировано с libtorch 2.x
-- веса моделей в формате TorchScript (`.pt`)
+- компилятор C++17 (g++ ≥ 9 или clang ≥ 10)
+- CMake ≥ 3.16
+- OpenCV ≥ 4.0 (core, imgproc, imgcodecs)
 
 ```bash
 sudo apt-get install build-essential cmake libopencv-dev
 ```
 
-### 2.1 Установка libtorch (опционально)
+Необязательные:
+
+- libtorch 2.x и модели в формате TorchScript (`.pt`) для режимов стенда с классификатором.
+  Файлов моделей в репозитории нет.
+- clang с libFuzzer для фаззинг-целей.
+
+libtorch ищется в `CMAKE_PREFIX_PATH` и в `/tmp/libtorch`:
 
 ```bash
 cd /tmp
@@ -67,267 +67,215 @@ wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-de
 unzip libtorch-cxx11-abi-shared-with-deps-2.1.0+cpu.zip
 ```
 
----
-
 ## 3. Сборка
 
-Система сборки предоставляет пять CMake-опций для выбора целей.
-Все по умолчанию `OFF`, кроме `GBO_BUILD_APP`.
-
-| CMake-опция         | По умолч. | Результат                                    |
-|---------------------|-----------|----------------------------------------------|
-| `GBO_BUILD_APP`     | **ON**    | `gbo_app` — CLI-инструмент                   |
-| `GBO_BUILD_BENCH`   | OFF       | `gbo_bench` — тестовый стенд                 |
-| `GBO_BUILD_SHARED`  | OFF       | `libgbo.so` / `.dylib` — динамическая библ.  |
-| `GBO_BUILD_STATIC`  | OFF       | `libgbo.a` — статическая библиотека          |
-| `GBO_BUILD_PERF`    | OFF       | `gbo_perf` — бенчмарк скорости и качества    |
-| `GBO_BUILD_FUZZ`    | OFF       | `fuzz_*` — цели libFuzzer (нужен clang)      |
-
-### 3.1 Только приложение (по умолчанию)
+| Опция CMake         | По умолчанию | Результат                                   |
+|---------------------|--------------|---------------------------------------------|
+| `GBO_BUILD_APP`     | ON           | `gbo_app` — утилита командной строки        |
+| `GBO_BUILD_BENCH`   | OFF          | `gbo_bench` — тестовый стенд                |
+| `GBO_BUILD_SHARED`  | OFF          | `libgbo.so` — динамическая библиотека       |
+| `GBO_BUILD_STATIC`  | OFF          | `libgbo.a` — статическая библиотека         |
+| `GBO_BUILD_PERF`    | OFF          | `gbo_perf` — замер скорости и качества      |
+| `GBO_BUILD_FUZZ`    | OFF          | `fuzz_*` — цели libFuzzer (нужен clang)     |
+| `GBO_BUILD_TESTS`   | OFF          | `scheme_json_test`, запуск через `ctest`    |
 
 ```bash
-mkdir -p build && cd build
-cmake ..
-make -j$(nproc)
+cmake -B build                       # только gbo_app
+cmake --build build -j
+
+cmake -B build -DGBO_BUILD_BENCH=ON -DGBO_BUILD_SHARED=ON \
+      -DGBO_BUILD_STATIC=ON -DGBO_BUILD_PERF=ON
+cmake --build build -j
 ```
 
-### 3.2 Все цели сразу
+Для сборки с libtorch добавьте `-DCMAKE_PREFIX_PATH=/path/to/libtorch`. Если библиотека
+найдена, определяется `TORCH_AVAILABLE`, в сборку попадают исходники классификаторов, а
+вместе со стендом собираются `classifier_example` и `single_classifier_example`.
+
+`cmake --install build --prefix /usr/local` устанавливает `include/gbo/gbo_api.h`, собранные
+библиотеки и исполняемые файлы и `share/gbo/embedding_schemes.json`.
+
+## 4. Утилита командной строки (`gbo_app`)
+
+Запускать из корня репозитория: утилита открывает `embedding_schemes.json` в текущем
+каталоге.
 
 ```bash
-mkdir -p build && cd build
-cmake -DGBO_BUILD_APP=ON    \
-      -DGBO_BUILD_BENCH=ON  \
-      -DGBO_BUILD_SHARED=ON \
-      -DGBO_BUILD_STATIC=ON ..
-make -j$(nproc)
-```
-
-### 3.3 С поддержкой классификатора (PyTorch)
-
-```bash
-cmake -DCMAKE_PREFIX_PATH=$HOME/libtorch \
-      -DGBO_BUILD_BENCH=ON ..
-```
-
-### 3.4 Установка
-
-```bash
-cmake --install build --prefix /usr/local
-```
-
-Устанавливает:
-
-- `include/gbo/gbo_api.h` — публичный заголовок
-- `lib/libgbo.{so,a}` — библиотеки (если собраны)
-- `bin/gbo_app`, `bin/gbo_bench` — исполняемые файлы (если собраны)
-- `share/gbo/embedding_schemes.json` — описания схем
-
----
-
-## 4. CLI-приложение (`gbo_app`)
-
-**Важно:** запускайте из корня репозитория.
-
-```bash
-# Встроить ЦВЗ
-./build/gbo_app embed images/lenna.png images/watermark.png output.png --scheme scheme1
-
-# Извлечь ЦВЗ
-./build/gbo_app extract output.png extracted_wm.png
-
-# Вычислить метрики
-./build/gbo_app metrics images/lenna.png output.png
-
-# Симулировать атаку
-./build/gbo_app attack output.png attacked.png --type jpeg --param 70
-
-# Список схем
+./build/gbo_app embed images/lenna.png images/watermark_32x32.png marked.png --scheme scheme1
+./build/gbo_app attack marked.png attacked.png --type jpeg --param 70
+./build/gbo_app extract attacked.png extracted_wm.png --scheme scheme1
+./build/gbo_app metrics images/lenna.png marked.png \
+    --wm-orig images/watermark_32x32.png --wm-extr extracted_wm.png
 ./build/gbo_app schemes
 ```
 
----
+По умолчанию `--scheme` равен `scheme1`; неизвестный идентификатор считается ошибкой. У
+`embed` есть также `--threads N` и `--seed S`. Типы атак: `jpeg`, `brightness+`,
+`brightness-`, `contrast+`, `contrast-`, `salt-pepper`, `median`, `gaussian`.
 
-## 4a. Тестовый стенд (`gbo_bench`)
+ЦВЗ — чёрно-белое изображение 32×32 пикселя (чёрный = 1). Из изображения большего размера
+берутся только первые 1024 пикселя по строкам.
 
-Полный pipeline из статьи: встраивание и извлечение ЦВЗ на 8 эталонных
-изображениях, симуляция атак, отчёт min/avg/max метрик.
+## 5. Тестовый стенд (`gbo_bench`)
 
-Собирается с `-DGBO_BUILD_BENCH=ON`:
+Встраивает и извлекает ЦВЗ на 8 тестовых изображениях, применяет атаки и записывает
+min/avg/max для MSE, PSNR, SSIM, NCC и BER.
 
 ```bash
-./build/gbo_bench              # 10 итераций на изображение
-./build/gbo_bench --test       # 1 итерация (smoke-тест)
+./build/gbo_bench                          # 10 прогонов на изображение
+./build/gbo_bench --test                   # 1 прогон на изображение
 ./build/gbo_bench --scheme scheme2 --test
+./build/gbo_bench --known-attack-1024 --test
 ```
 
-Также поддерживает генерацию датасетов (`--dataset`), режимы с
-классификаторами и known-attack. `./build/gbo_bench --help` — полный список.
+`--known-attack-1024` — модифицированный алгоритм, в котором тип атаки задан, а не
+предсказан; изображения читаются из каталога `test_images_1024/`, которого в репозитории
+нет (файлы из `images/` подходят по размеру). Остальные режимы генерируют датасеты для
+классификаторов (`--dataset`, `--attack-dataset`) или работают с классификатором; последним
+и режиму `--quadrant-dataset` нужен libtorch. Список режимов выводит
+`./build/gbo_bench --help`.
 
----
+## 6. Схемы встраивания
 
-## 5. Схемы встраивания
+Схема — набор позиций коэффициентов ДКП в блоке 8×8: `REG0` и `REG1` задают две суммы,
+соотношение которых кодирует бит, `ZONE0` перечисляет коэффициенты, которые может менять
+оптимизатор.
 
-*Схема* — детерминированный набор DCT-коэффициентов внутри 8×8 блока,
-разбитый на `REG0`, `REG1` и `ZONE0`. Описываются в
-[`embedding_schemes.json`](embedding_schemes.json) — **пересборка не нужна**.
+| Схема             | `REG0` + `REG1` | `ZONE0` |
+|-------------------|-----------------|---------|
+| `scheme1`         | 11 + 11         | 22      |
+| `scheme2`         | 11 + 11         | 22      |
+| `scheme3`         | 12 + 13         | 25      |
+| `extended_scheme` | 12 + 13         | 25      |
+| `standard_scheme` | 11 + 11         | 22      |
 
-| ID схемы          | Размер ZONE0 | Описание                                   |
-|-------------------|--------------|---------------------------------------------|
-| `scheme1`         | 22           | исходная, симметричная антидиагональ        |
-| `scheme2`         | 22           | альтернативная, смещённые средние частоты   |
-| `scheme3`         | 25           | 12+13, добавлены `[2,2]`, `[1,3]`, `[3,1]` |
-| `extended_scheme` | 25           | 12+13, добавлены `[2,3]`, `[1,4]`, `[3,2]` |
-| `standard_scheme` | 22           | непрерывная полоса 11+11                    |
-
-### 5.1 Добавление своей схемы
-
-Допишите объект в `embedding_schemes.json`:
+Схемы читаются из [`embedding_schemes.json`](embedding_schemes.json) при запуске, поэтому
+новая схема добавляется правкой этого файла:
 
 ```json
 "my_scheme": {
-  "name": "My Scheme",
-  "description": "...",
-  "REG0":  [[7,0],[6,0], "..."],
-  "REG1":  [[5,2],[4,2], "..."],
-  "ZONE0": [[7,0],[6,0], "..."]
+  "name": "My scheme",
+  "description": "optional",
+  "REG0":  [[6, 1], [5, 2], [4, 3]],
+  "REG1":  [[6, 0], [5, 1], [4, 2]],
+  "ZONE0": [[6, 1], [5, 2], [4, 3], [6, 0], [5, 1], [4, 2]]
 }
 ```
 
-Запуск: `--scheme my_scheme`. Пересборка не требуется.
+Позиции записываются как `[строка, столбец]`, целые от 0 до 7. `REG0`, `REG1` и `ZONE0`
+обязательны, не пусты и не содержат повторов; `REG0` и `REG1` не должны пересекаться, а
+каждая позиция из `ZONE0` должна входить в `REG0` или `REG1`. Идентификаторы, имена и
+описания записываются в UTF-8 без управляющих символов. Порядок `ZONE0` важен для воспроизводимости: элемент `i` вектора оптимизатора меняет
+коэффициент `i` из списка. Остальные поля игнорируются. Файл, который нарушает эти правила
+или не является корректным JSON, отклоняется с указанием строки и столбца ошибки, а ранее
+загруженные схемы остаются на месте. Встраивание и извлечение должны использовать одну и ту
+же схему.
 
----
+## 7. Алгоритм
 
-## 6. Алгоритм
+Встраивание:
 
-1. Загрузка изображения и перевод в grayscale.
-2. Разбиение на 8×8 блоки, прямое DCT.
-3. Для каждого бита 1024-битного ЦВЗ:
-   1. Блок с индексом `i mod WM_SIZE`.
-   2. (Опц.) классификатор выбирает схему.
-   3. Популяция `POP_SIZE = 30` векторов в `[-TH, +TH]`.
-   4. GBO за `ITERATIONS = 40` поколений оптимизирует целевую функцию.
-   5. Лучшее возмущение → DCT → обратное DCT.
-4. Сборка результирующего изображения.
-5. Опционально: атаки + метрики (PSNR / SSIM / NCC / BER).
+1. Изображение переводится в оттенки серого и разбивается на блоки 8×8; блок `i` несёт бит
+   ЦВЗ с номером `i mod 1024`, так что в изображении 512×512 помещаются 4 копии ЦВЗ.
+2. Для каждого блока GBO ищет вектор изменений модулей коэффициентов из `ZONE0`, каждое в
+   пределах `[-TH, TH]`. Популяция из `POP_SIZE` векторов развивается `ITERATIONS` итераций.
+3. Минимизируется целевая функция `S1/S0 - 0.01·PSNR` для бита 0 и `S0/S1 - 0.01·PSNR` для
+   бита 1. `S0` и `S1` — суммы модулей коэффициентов ДКП по `REG0` и `REG1` изменённого
+   блока после округления до 8 бит и, если задан тип атаки, после этой атаки; PSNR считается
+   относительно исходного блока.
+4. Лучший вектор применяется, блок записывается обратно. Кайма уже 8 пикселей не меняется.
 
-Константы в [`config.h`](GRADIENT_BASED_OPTIMIZER/src/config.h):
+Извлечение: блок даёт 1, если `S0 < S1`, иначе 0; каждый бит ЦВЗ определяется большинством
+голосов его копий.
+
+Константы заданы в [`config.h`](GRADIENT_BASED_OPTIMIZER/src/config.h):
 
 ```cpp
 #define POP_SIZE   30      // размер популяции
-#define ITERATIONS 40      // итерации оптимизатора
-#define TH         10.0    // граница возмущений
+#define ITERATIONS 40      // число итераций оптимизатора
+#define TH         10.0    // граница изменения коэффициента
 #define WM_SIZE    1024    // длина ЦВЗ в битах
 ```
 
----
+## 8. Модифицированный алгоритм (квадранты)
 
-## 7. Квадрантное встраивание (опц.)
+Изображение 1024×1024 делится сеткой 4×4 на квадранты 256×256. В квадранте 1024 блока, и он
+несёт одну полную копию ЦВЗ. Квадрант в строке `r` и столбце `c` сетки оптимизируется с
+атакой из ячейки `(r mod 2, c mod 2)` этой таблицы, смоделированной в целевой функции, так
+что на каждый тип атаки приходится 4 копии:
 
-Изображение 1024×1024 делится на 4 квадранта, в каждый встраивается копия
-ЦВЗ, оптимизированная под свой тип атаки:
+|                   | чётный столбец | нечётный столбец |
+|-------------------|----------------|------------------|
+| **чётная строка**   | без атаки      | JPEG 70          |
+| **нечётная строка** | контраст ×1.1  | JPEG 80          |
 
-| Квадрант           | Атака                      |
-|--------------------|----------------------------|
-| N1 (верх-лево)     | `AttackType::NONE`         |
-| N2 (верх-право)    | `AttackType::JPEG70`       |
-| N3 (низ-лево)      | `AttackType::CONTRAST`     |
-| N4 (низ-право)     | `AttackType::SALT_PEPPER`  |
+При извлечении тип атаки либо известен (`--known-attack-1024`), либо предсказывается
+классификатором (`--attack-classifier`, нужны libtorch и `model_torchscript.pt`). ЦВЗ
+получается голосованием по 4 квадрантам, подготовленным под этот тип.
 
-При извлечении классификатор выбирает лучший квадрант.
-Требует libtorch + `best_model_ultrahighres.pt`.
+Режим доступен в `gbo_bench` и в `gbo_perf --mode quad`. API библиотеки и `gbo_app`
+реализуют только базовый алгоритм.
 
----
+## 9. API библиотеки (`libgbo`)
 
-## 8. API библиотеки (`libgbo`)
-
-Соберите shared- или static-библиотеку и линкуйтесь.
-Публичный заголовок: [`gbo_api.h`](GRADIENT_BASED_OPTIMIZER/src/gbo_api.h).
-
-### 8.1 Пример
+Сборка с `-DGBO_BUILD_SHARED=ON` или `-DGBO_BUILD_STATIC=ON`. Заголовок -
+[`gbo_api.h`](GRADIENT_BASED_OPTIMIZER/src/gbo_api.h), устанавливается как `gbo/gbo_api.h`.
 
 ```cpp
 #include <gbo/gbo_api.h>
 #include <opencv2/opencv.hpp>
+#include <iostream>
 
 int main() {
-    gbo::init("embedding_schemes.json");
+    if (!gbo::init("embedding_schemes.json")) return 1;
     gbo::setScheme("scheme1");
 
     cv::Mat cover = cv::imread("cover.png", cv::IMREAD_GRAYSCALE);
-    cv::Mat wm    = cv::imread("watermark.png", cv::IMREAD_GRAYSCALE);
-    cv::Mat watermarked = gbo::embedWatermark(cover, wm);
-    cv::imwrite("watermarked.png", watermarked);
+    cv::Mat wm    = cv::imread("watermark_32x32.png", cv::IMREAD_GRAYSCALE);
+    cv::Mat marked = gbo::embedWatermark(cover, wm);
 
-    cv::Mat attacked  = gbo::attackJPEG(watermarked, 70);
+    cv::Mat attacked  = gbo::attackJPEG(marked, 70);
     cv::Mat extracted = gbo::extractWatermark(attacked);
 
-    std::cout << "PSNR: " << gbo::computePSNR(cover, watermarked) << " dB\n";
-    std::cout << "BER:  " << gbo::computeBER(wm, extracted) << "\n";
+    std::cout << "PSNR " << gbo::computePSNR(cover, marked) << " dB, "
+              << "BER " << gbo::computeBER(wm, extracted) << "\n";
 }
 ```
 
-Компиляция и линковка:
-
 ```bash
-g++ -std=c++17 my_app.cpp -lgbo -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -o my_app
+g++ -std=c++17 my_app.cpp -lgbo $(pkg-config --cflags --libs opencv4) -o my_app
 ```
-
-### 8.2 Справочник API
-
-Все функции в пространстве имён `gbo`.
-
-**Инициализация:**
-
-| Функция | Описание |
-|---------|----------|
-| `bool init(path)` | Загрузить схемы и таблицы квантования. Вызвать один раз. |
-| `bool setScheme(id)` | Выбрать активную схему. |
-| `vector<string> availableSchemes()` | Список доступных схем. |
-| `void setThreads(n)` | Число потоков встраивания (0 = все аппаратные потоки). |
-| `void setSeed(seed)` / `void clearSeed()` | Воспроизводимое встраивание / возврат к случайному seed. |
-
-**Встраивание/извлечение:**
-
-| Функция | Описание |
-|---------|----------|
-| `cv::Mat embedWatermark(image, watermark)` | Встроить ЦВЗ. Возвращает изображение. |
-| `cv::Mat extractWatermark(image)` | Извлечь ЦВЗ. |
-
-**Метрики:**
-
-| Функция | Описание |
-|---------|----------|
-| `double computeMSE(a, b)` | Среднеквадратичная ошибка. |
-| `double computePSNR(a, b)` | PSNR (дБ). |
-| `double computeSSIM(a, b)` | Структурное сходство. |
-| `double computeNCC(a, b)` | Нормированная корреляция. |
-| `double computeBER(wm1, wm2)` | Вероятность битовой ошибки. |
-
-**Симуляция атак:**
-
-| Функция | Описание |
-|---------|----------|
-| `attackJPEG(image, quality)` | JPEG-сжатие. |
-| `attackBrightnessIncrease(image, value)` | Увеличение яркости. |
-| `attackBrightnessDecrease(image, value)` | Уменьшение яркости. |
-| `attackContrastIncrease(image, alpha)` | Увеличение контраста. |
-| `attackContrastDecrease(image, alpha)` | Уменьшение контраста. |
-| `attackSaltPepper(image, prob)` | Шум «соль-перец». |
-| `attackMedianFilter(image, ksize)` | Медианная фильтрация. |
-| `attackGaussianFilter(image, ksize)` | Гауссова фильтрация. |
-
-### 8.3 Линковка из CMake-проекта
 
 ```cmake
 find_package(OpenCV REQUIRED)
 add_executable(my_app main.cpp)
-target_link_libraries(my_app /usr/local/lib/libgbo.so ${OpenCV_LIBS})
 target_include_directories(my_app PRIVATE /usr/local/include)
+target_link_libraries(my_app /usr/local/lib/libgbo.so ${OpenCV_LIBS})
 ```
 
----
+| Функция | Описание |
+|---------|----------|
+| `bool init(path)` | Загружает схемы из JSON-файла и готовит таблицы; `false`, если файла нет или он некорректен. Вызывается первой. |
+| `bool setScheme(id)` | Выбирает схему; `false`, если такой нет. Нельзя вызывать во время встраивания или извлечения. |
+| `vector<string> availableSchemes()` | Идентификаторы схем. |
+| `void setThreads(n)` | Число потоков встраивания; 0 (по умолчанию) = все аппаратные потоки или `GBO_THREADS`. |
+| `void setSeed(seed)`, `void clearSeed()` | Воспроизводимое встраивание / возврат к новому случайному seed на каждый вызов. |
+| `cv::Mat embedWatermark(image, watermark)` | Возвращает изображение с ЦВЗ, `CV_8UC1`, того же размера. |
+| `cv::Mat extractWatermark(image)` | Возвращает ЦВЗ 32×32, `CV_8UC1`. Равенство голосов разрешается случайно. |
+| `computeMSE`, `computePSNR`, `computeSSIM`, `computeNCC` `(a, b)` | Метрики качества изображения. |
+| `double computeBER(wm1, wm2)` | Доля ошибочных битов между двумя ЦВЗ. |
+| `attackJPEG(image, quality)` | JPEG-сжатие. |
+| `attackBrightnessIncrease`, `attackBrightnessDecrease` `(image, value)` | Сдвиг яркости. |
+| `attackContrastIncrease`, `attackContrastDecrease` `(image, alpha)` | Изменение контраста. |
+| `attackSaltPepper(image, prob)` | Шум «соль и перец». |
+| `attackMedianFilter`, `attackGaussianFilter` `(image, ksize)` | Фильтрация. |
 
-## 9. Производительность
+`embedWatermark` и `extractWatermark` принимают изображения с 8 битами на канал и 1, 3 или 4
+каналами (цветное переводится в оттенки серого) и бросают `std::invalid_argument` для
+пустого изображения и любого другого типа. `embedWatermark` бросает его и тогда, когда ЦВЗ
+не `CV_8UC1` или содержит меньше 1024 пикселей.
+
+## 10. Производительность
 
 При встраивании оптимизатор вызывает целевую функцию `POP_SIZE x (ITERATIONS + 1) = 1230`
 раз на каждый блок 8x8, поэтому именно она — горячий путь. Она реализована без
@@ -367,7 +315,7 @@ target_include_directories(my_app PRIVATE /usr/local/include)
 (ResNet-50 на 1024x1024 с TTA-отражением, около 2 с на изображение на этом CPU); само
 извлечение битов — те же 0.6 мс.
 
-### 9.1 Потоки и воспроизводимость
+### 10.1 Потоки и воспроизводимость
 
 ```cpp
 gbo::setThreads(4);   // по умолчанию 0 = все аппаратные потоки (или переменная GBO_THREADS)
@@ -378,7 +326,7 @@ gbo::setSeed(42);     // воспроизводимое встраивание; 
 ./build/gbo_app embed cover.png wm.png out.png --threads 4 --seed 42
 ```
 
-### 9.2 Бенчмарк и самопроверка (`gbo_perf`)
+### 10.2 Бенчмарк и самопроверка (`gbo_perf`)
 
 ```bash
 cmake -DGBO_BUILD_PERF=ON .. && make gbo_perf
@@ -392,10 +340,11 @@ cmake -DGBO_BUILD_PERF=ON .. && make gbo_perf
 каждый шаг оптимизации. `--selftest` сравнивает быстрые ядра с эталоном OpenCV
 (JPEG, контраст, округление и извлечённые биты должны совпадать точно).
 
-### 9.3 Фаззинг
+### 10.3 Фаззинг
 
-Пять целей libFuzzer (ASan + UBSan): извлечение, встраивание, оптимизатор на одном блоке,
-ядра 8x8 (дифференциально, против OpenCV) и API метрик и атак. Что проверяет каждая цель и
+Шесть целей libFuzzer (ASan + UBSan): извлечение, встраивание, оптимизатор на одном блоке,
+ядра 8x8 (дифференциально, против OpenCV), API метрик и атак и разбор
+`embedding_schemes.json`. Что проверяет каждая цель и
 как запускать — в `fuzz/README.md`.
 
 ```bash

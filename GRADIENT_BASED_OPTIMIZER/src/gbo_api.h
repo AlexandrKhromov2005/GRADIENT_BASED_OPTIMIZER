@@ -27,9 +27,10 @@ namespace gbo {
 // ---- Initialization --------------------------------------------------------
 
 /// Load embedding schemes from a JSON file and initialize internal tables.
-/// Must be called once before any embed/extract operation.
-/// @param schemes_json_path  Path to embedding_schemes.json
-/// @return true on success.
+/// Must be called before any embed/extract operation; calling it again replaces the schemes.
+/// @param schemes_json_path  Path to embedding_schemes.json (format: see README, section 6)
+/// @return true on success; false if the file cannot be read or is rejected by the parser
+///         (the reason is printed to std::cerr), in which case nothing changes.
 GBO_API bool init(const std::string& schemes_json_path = "embedding_schemes.json");
 
 /// Select the active embedding scheme by its identifier

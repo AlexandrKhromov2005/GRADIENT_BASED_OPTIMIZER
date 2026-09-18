@@ -6,7 +6,7 @@
 static void printUsage(const char* prog) {
     std::cout << "Usage:\n"
               << "  " << prog << " embed  <cover> <watermark> <output> [--scheme ID] [--threads N] [--seed S]\n"
-              << "  " << prog << " extract <watermarked> <output_wm>\n"
+              << "  " << prog << " extract <watermarked> <output_wm> [--scheme ID]\n"
               << "  " << prog << " metrics <original> <watermarked> [--wm-orig WM1 --wm-extr WM2]\n"
               << "  " << prog << " attack  <image> <output> --type TYPE [--param VALUE]\n"
               << "  " << prog << " schemes\n"
@@ -55,12 +55,14 @@ static int run(int argc, char* argv[]) {
         std::string wm_path    = argv[3];
         std::string out_path   = argv[4];
         for (int i = 5; i < argc; ++i) {
-            if ((std::string(argv[i]) == "--scheme" || std::string(argv[i]) == "-s") && i+1 < argc)
-                gbo::setScheme(argv[++i]);
+            if ((std::string(argv[i]) == "--scheme" || std::string(argv[i]) == "-s") && i+1 < argc) {
+                if (!gbo::setScheme(argv[++i])) { std::cerr << "Unknown scheme: " << argv[i] << "\n"; return 1; }
+            }
             else if (std::string(argv[i]) == "--threads" && i+1 < argc)
                 gbo::setThreads(static_cast<unsigned>(std::stoul(argv[++i])));
             else if (std::string(argv[i]) == "--seed" && i+1 < argc)
                 gbo::setSeed(std::stoull(argv[++i]));
+            else { std::cerr << "Unknown or incomplete option: " << argv[i] << "\n"; return 1; }
         }
         cv::Mat cover = cv::imread(cover_path, cv::IMREAD_GRAYSCALE);
         cv::Mat wm    = cv::imread(wm_path, cv::IMREAD_GRAYSCALE);
@@ -75,6 +77,12 @@ static int run(int argc, char* argv[]) {
 
     if (cmd == "extract") {
         if (argc < 4) { std::cerr << "extract requires: <watermarked> <output_wm>\n"; return 1; }
+        for (int i = 4; i < argc; ++i) {
+            if ((std::string(argv[i]) == "--scheme" || std::string(argv[i]) == "-s") && i+1 < argc) {
+                if (!gbo::setScheme(argv[++i])) { std::cerr << "Unknown scheme: " << argv[i] << "\n"; return 1; }
+            }
+            else { std::cerr << "Unknown or incomplete option: " << argv[i] << "\n"; return 1; }
+        }
         cv::Mat img = cv::imread(argv[2], cv::IMREAD_GRAYSCALE);
         if (img.empty()) { std::cerr << "Cannot read image: " << argv[2] << "\n"; return 1; }
 

@@ -156,7 +156,8 @@ static int run(int argc, char** argv) {
 
     std::cout.setstate(std::ios::failbit);  // silence library chatter
     auto& mgr = EmbeddingSchemeManager::getInstance();
-    mgr.loadSchemes("embedding_schemes.json");
+    if (!mgr.loadSchemes("embedding_schemes.json")) return 1;
+    if (!mgr.getScheme(scheme)) { std::cerr << "unknown scheme " << scheme << "\n"; return 2; }
     mgr.setCurrentScheme(scheme);
     initialize_quantization_mats();
     std::cout.clear();

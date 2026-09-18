@@ -9,6 +9,7 @@ libFuzzer targets, built with AddressSanitizer and UndefinedBehaviorSanitizer.
 | `fuzz_block` | one 8x8 block, bit, attack type, scheme, seed | GBO result is a valid block and reproducible from the seed |
 | `fuzz_kernels` | 8x8 block, JPEG quality, contrast gain, 64 doubles | JPEG emulation == `imencode`+`imdecode`; contrast table == `convertTo`; fast DCT == definition; rounding == `convertTo(CV_8U)`, including NaN and infinities |
 | `fuzz_metrics_attacks` | two images of any type, integer and real parameter | calls on 8-bit gray images with valid parameters never fail; attacks keep size and type |
+| `fuzz_schemes_json` | contents of `embedding_schemes.json` | rejected text leaves the loaded schemes alone; accepted schemes obey the documented rules, survive a write/parse round trip and run in the extractor and (one input in eight) the optimizer |
 
 A "supported" image is what `gbo_api.h` documents: not empty, 8 bits per channel, 1, 3 or 4
 channels. Image files are not fuzzed: decoding is done by OpenCV, the library only ever
@@ -23,6 +24,8 @@ python3 fuzz/make_seeds.py fuzz/seeds          # valid starting inputs
 mkdir -p corpus_embed
 ./build_fuzz/fuzz_embed corpus_embed fuzz/seeds/embed -max_total_time=3600 -timeout=120 -fork=3
 ```
+
+`fuzz_schemes_json` starts faster with the dictionary: `-dict=fuzz/schemes_json.dict`.
 
 Run from the repository root (the targets load `embedding_schemes.json`) or set
 `GBO_SCHEMES=/path/to/embedding_schemes.json`. `fuzz_embed` and `fuzz_block` run the full
@@ -45,6 +48,26 @@ timeouts or failed checks.
 
 `fuzz_embed` under ThreadSanitizer, 10 minutes, 641 runs: no data races.
 
+2026-09-18, after `embedding_schemes.json` became parsed input, same machine and sanitizers:
+no crashes, sanitizer reports, timeouts or failed checks.
+
+| Target | Time | Runs |
+|--------|------|------|
+| `fuzz_schemes_json` (`-fork=3`, dictionary, `-max_len=16384`) | 1 h | 18 858 918 |
+| `fuzz_embed` (`-fork=2`) | 15 min | 2 884 |
+| `fuzz_block` | 15 min | 7 536 |
+| `fuzz_extract` | 15 min | 136 811 |
+| `fuzz_kernels` | 5 min | 4 351 098 |
+| `fuzz_metrics_attacks` | 5 min | 9 912 556 |
+
+The resulting `fuzz_schemes_json` corpus (711 inputs) covers 314 of 317 lines and 251 of 256
+branches of `scheme_json.cpp`. Not reached: the limits of 1 MiB and 256 schemes, which
+`tests/scheme_json_test.cpp` checks.
+
 Found while writing the targets and fixed: `-value` overflow in `brightnessDecrease` for
 `INT_MIN`; `embedWatermark` threw on images whose sides are not multiples of 8; images of
 unsupported types were accepted without an error when smaller than one block.
+
+Found by review of the JSON target and fixed before the run above: the round-trip check would
+have failed on a valid file close to the size limit; schemes whose `ZONE0` lies outside
+`REG0` and `REG1` and ids or names with terminal control characters were accepted.

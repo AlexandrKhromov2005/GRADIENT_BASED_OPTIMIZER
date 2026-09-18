@@ -29,7 +29,12 @@ struct EmbeddingScheme {
 class EmbeddingSchemeManager {
 public:
     static EmbeddingSchemeManager& getInstance();
+    // Replaces the scheme set with the one described in the JSON file / text (format: see
+    // scheme_json.h). On failure returns false and keeps the current set. The active scheme
+    // stays active if the new set has it, otherwise the first id of the new set in sorted
+    // order is selected.
     bool loadSchemes(const std::string& filename = "embedding_schemes.json");
+    bool loadSchemesFromString(const std::string& json, std::string* error = nullptr);
     const EmbeddingScheme* getScheme(const std::string& schemeId) const;
     std::vector<std::string> getAvailableSchemes() const;
     void setCurrentScheme(const std::string& schemeId);

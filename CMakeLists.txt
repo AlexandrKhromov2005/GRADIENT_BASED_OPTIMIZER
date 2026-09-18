@@ -12,6 +12,7 @@ option(GBO_BUILD_SHARED    "Build a shared library (libgbo.so/.dylib)" OFF)
 option(GBO_BUILD_STATIC    "Build a static library (libgbo.a)"         OFF)
 option(GBO_BUILD_PERF      "Build the speed/quality benchmark (gbo_perf)" OFF)
 option(GBO_BUILD_FUZZ      "Build the libFuzzer targets (needs clang)"  OFF)
+option(GBO_BUILD_TESTS     "Build the unit tests (run with ctest)"      OFF)
 
 # ---- Dependencies -----------------------------------------------------------
 find_package(OpenCV REQUIRED)
@@ -46,6 +47,7 @@ set(GBO_CORE_SOURCES
     ${SRC_DIR}/jpeg/compression.cpp
     ${SRC_DIR}/random_utils.cpp
     ${SRC_DIR}/embedding_schemes.cpp
+    ${SRC_DIR}/scheme_json.cpp
     ${SRC_DIR}/embedding_core.cpp
     ${SRC_DIR}/gbo_api.cpp
 )
@@ -157,13 +159,22 @@ if(GBO_BUILD_PERF)
     message(STATUS "Target: gbo_perf (speed/quality benchmark)")
 endif()
 
+# ---- Unit tests -------------------------------------------------------------
+if(GBO_BUILD_TESTS)
+    enable_testing()
+    add_executable(scheme_json_test tests/scheme_json_test.cpp ${GBO_CORE_SOURCES})
+    gbo_link_libs(scheme_json_test)
+    add_test(NAME scheme_json COMMAND scheme_json_test ${CMAKE_SOURCE_DIR}/embedding_schemes.json)
+    message(STATUS "Target: scheme_json_test (ctest)")
+endif()
+
 # ---- Fuzzing ----------------------------------------------------------------
 if(GBO_BUILD_FUZZ)
     if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         message(FATAL_ERROR "GBO_BUILD_FUZZ needs clang: cmake -DCMAKE_CXX_COMPILER=clang++ ...")
     endif()
     set(GBO_FUZZ_SANITIZERS "address,undefined" CACHE STRING "Sanitizers for the fuzz targets")
-    foreach(target extract embed block kernels metrics_attacks)
+    foreach(target extract embed block kernels metrics_attacks schemes_json)
         add_executable(fuzz_${target} fuzz/fuzz_${target}.cpp ${GBO_CORE_SOURCES})
         target_compile_options(fuzz_${target} PRIVATE
             -g -O1 -fno-omit-frame-pointer -fsanitize=fuzzer,${GBO_FUZZ_SANITIZERS} -fno-sanitize-recover=all)

@@ -1,66 +1,66 @@
 # Gradient-Based Optimizer for DCT-Domain Digital Watermarking
 
-*[Русская версия этого документа](README.ru.md)*
+*[Русская версия](README.ru.md)*
 
-This repository contains the reference C++ implementation of a gradient-based
-meta-heuristic optimizer (GBO) used to embed digital watermarks into the DCT
-domain of grayscale images with configurable robustness against JPEG
-compression and other attacks. The optimizer works on 8×8 DCT blocks and
-supports multiple coefficient-selection strategies ("embedding schemes"), as
-well as optional integration with PyTorch classifiers that automatically
-choose the best embedding scheme per block or per image quadrant.
+C++ implementation of the image watermarking scheme of Melman and Evsutin
+(Computers and Electrical Engineering 117 (2024) 109271). One watermark bit is stored in
+every 8×8 block as the relation between two sums of absolute mid-frequency DCT
+coefficients; the change applied to the coefficients is found by the gradient-based
+optimizer (GBO) of Ahmadianfar et al. (Information Sciences 540 (2020)).
 
-The code is the research artifact behind the associated paper; it is intended
-to be **reproducible** and **reusable** in downstream watermarking projects.
-
----
+The repository also contains a modification of the scheme: the optimizer's objective
+function simulates an attack (JPEG or contrast change), different parts of the image are
+optimized for different attacks, and at extraction the copies prepared for the detected
+attack are used (section 8).
 
 ## 1. Contents
 
 ```text
 .
-├── CMakeLists.txt                     # top-level build with configurable targets
-├── build.sh                           # convenience wrapper for cmake+make
-├── embedding_schemes.json             # JSON definitions of the DCT coefficient sets
-├── images/                            # canonical test images + watermarks
+├── CMakeLists.txt                     # build, see section 3
+├── build.sh                           # default build; adds libtorch to the path if found
+├── embedding_schemes.json             # embedding schemes, read at start-up (section 6)
+├── images/                            # 8 test images 1024×1024, watermark 32×32
+├── tools/perf_bench.cpp               # gbo_perf: timing, image hash, self-test
+├── perf_results/                      # raw output behind the numbers in section 10
+├── fuzz/                              # libFuzzer targets
+├── tests/                             # unit tests (ctest)
 └── GRADIENT_BASED_OPTIMIZER/
-    ├── gbo_app.cpp                    # standalone CLI entry point
+    ├── gbo_app.cpp                    # CLI entry point
     ├── GRADIENT_BASED_OPTIMIZER.cpp   # test bench entry point
     └── src/
-        ├── gbo_api.{h,cpp}            # PUBLIC LIBRARY API (namespace gbo)
-        ├── gbo.{h,cpp}                # gradient-based optimizer core
-        ├── population.{h,cpp}         # population, fitness, attack-aware OF
-        ├── launch.{h,cpp}             # experiment orchestration (bench only)
-        ├── embedding_schemes.{h,cpp}  # scheme manager / JSON loader
-        ├── attacks.{h,cpp}            # JPEG, contrast, salt-pepper, crop, etc.
-        ├── image_metrics.*            # PSNR / SSIM / NCC / BER
-        ├── image_processing_custom.*  # 8×8 block split / DCT / reconstruction
-        ├── jpeg/                      # block-level JPEG compression + quant. tables
-        └── ...                        # classifier integrations (optional, PyTorch)
+        ├── gbo_api.{h,cpp}            # public library API (namespace gbo)
+        ├── gbo.{h,cpp}                # the optimizer
+        ├── population.{h,cpp}         # population and objective function
+        ├── embedding_core.{h,cpp}     # whole-image embedding / extraction, threads, seeds
+        ├── block_kernels.{h,cpp}      # 8×8 DCT, JPEG round trip, contrast, rounding
+        ├── random_utils.{h,cpp}       # random number streams
+        ├── embedding_schemes.{h,cpp}  # scheme manager
+        ├── scheme_json.{h,cpp}        # parser of embedding_schemes.json
+        ├── attacks.{h,cpp}            # attacks on whole images
+        ├── image_metrics.*            # MSE / PSNR / SSIM / NCC / BER
+        ├── image_processing_custom.*  # block split / merge, watermark <-> bits
+        ├── launch.{h,cpp}             # experiments of the test bench
+        └── ...                        # classifier integration (needs libtorch)
 ```
-
----
 
 ## 2. Requirements
 
-Mandatory:
-
-- **C++17** compiler (g++ ≥ 9, clang ≥ 10)
-- **CMake** ≥ 3.16
-- **OpenCV** ≥ 4.0 (core, imgproc, imgcodecs)
-
-Optional (only needed for classifier-based run modes):
-
-- **PyTorch C++ (libtorch)** — CPU or CUDA build, tested with libtorch 2.x
-- trained model weights in TorchScript format (`.pt`)
-
-On Ubuntu 22.04 the mandatory dependencies are installed with:
+- C++17 compiler (g++ ≥ 9 or clang ≥ 10)
+- CMake ≥ 3.16
+- OpenCV ≥ 4.0 (core, imgproc, imgcodecs)
 
 ```bash
 sudo apt-get install build-essential cmake libopencv-dev
 ```
 
-### 2.1 Installing libtorch (optional)
+Optional:
+
+- libtorch 2.x and TorchScript model files (`.pt`) for the classifier modes of the test
+  bench. The model files are not part of the repository.
+- clang with libFuzzer for the fuzz targets.
+
+libtorch is looked up in `CMAKE_PREFIX_PATH` and in `/tmp/libtorch`:
 
 ```bash
 cd /tmp
@@ -68,309 +68,215 @@ wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-de
 unzip libtorch-cxx11-abi-shared-with-deps-2.1.0+cpu.zip
 ```
 
-Use either `/tmp/libtorch` or `$HOME/libtorch` — `build.sh` auto-detects both.
-
----
-
 ## 3. Building
-
-The build system exposes five CMake options that let you choose exactly what
-to produce.  All options default to `OFF` except `GBO_BUILD_APP`.
 
 | CMake option        | Default | Product                                     |
 |---------------------|---------|---------------------------------------------|
-| `GBO_BUILD_APP`     | **ON**  | `gbo_app` — standalone CLI tool             |
-| `GBO_BUILD_BENCH`   | OFF     | `gbo_bench` — test bench (full experiments) |
-| `GBO_BUILD_SHARED`  | OFF     | `libgbo.so` / `.dylib` — shared library     |
-| `GBO_BUILD_STATIC`  | OFF     | `libgbo.a` — static library                 |
-| `GBO_BUILD_PERF`    | OFF     | `gbo_perf` — speed / quality benchmark      |
-| `GBO_BUILD_FUZZ`    | OFF     | `fuzz_*` — libFuzzer targets (needs clang)  |
-
-### 3.1 Standalone app only (default)
+| `GBO_BUILD_APP`     | ON      | `gbo_app` - command-line tool               |
+| `GBO_BUILD_BENCH`   | OFF     | `gbo_bench` - test bench                    |
+| `GBO_BUILD_SHARED`  | OFF     | `libgbo.so` - shared library                |
+| `GBO_BUILD_STATIC`  | OFF     | `libgbo.a` - static library                 |
+| `GBO_BUILD_PERF`    | OFF     | `gbo_perf` - speed / quality benchmark      |
+| `GBO_BUILD_FUZZ`    | OFF     | `fuzz_*` - libFuzzer targets (needs clang)  |
+| `GBO_BUILD_TESTS`   | OFF     | `scheme_json_test`, run with `ctest`        |
 
 ```bash
-mkdir -p build && cd build
-cmake ..
-make -j$(nproc)
+cmake -B build                       # gbo_app only
+cmake --build build -j
+
+cmake -B build -DGBO_BUILD_BENCH=ON -DGBO_BUILD_SHARED=ON \
+      -DGBO_BUILD_STATIC=ON -DGBO_BUILD_PERF=ON
+cmake --build build -j
 ```
 
-### 3.2 All targets at once
+With libtorch add `-DCMAKE_PREFIX_PATH=/path/to/libtorch`. When it is found,
+`TORCH_AVAILABLE` is defined, the classifier sources are compiled in and the bench
+additionally builds `classifier_example` and `single_classifier_example`.
+
+`cmake --install build --prefix /usr/local` installs `include/gbo/gbo_api.h`, the libraries
+and executables that were built, and `share/gbo/embedding_schemes.json`.
+
+## 4. Command-line tool (`gbo_app`)
+
+Run it from the repository root: it opens `embedding_schemes.json` in the current
+directory.
 
 ```bash
-mkdir -p build && cd build
-cmake -DGBO_BUILD_APP=ON    \
-      -DGBO_BUILD_BENCH=ON  \
-      -DGBO_BUILD_SHARED=ON \
-      -DGBO_BUILD_STATIC=ON ..
-make -j$(nproc)
-```
-
-### 3.3 With PyTorch classifier support
-
-Add `-DCMAKE_PREFIX_PATH=$HOME/libtorch` (or wherever libtorch is installed).
-CMake auto-detects `/tmp/libtorch` as well.
-
-```bash
-cmake -DCMAKE_PREFIX_PATH=$HOME/libtorch \
-      -DGBO_BUILD_BENCH=ON ..
-```
-
-When libtorch is found, `TORCH_AVAILABLE` is defined and classifier sources
-are compiled in.  The bench target additionally builds
-`classifier_example` and `single_classifier_example`.
-
-### 3.4 Installing
-
-```bash
-cmake --install build --prefix /usr/local
-```
-
-Installs:
-
-- `include/gbo/gbo_api.h` — public header
-- `lib/libgbo.{so,a}` — libraries (if built)
-- `bin/gbo_app`, `bin/gbo_bench` — executables (if built)
-- `share/gbo/embedding_schemes.json` — scheme definitions
-
----
-
-## 4. Standalone CLI (`gbo_app`)
-
-**Important:** run from the repository root so that `embedding_schemes.json`
-and `images/` are found.
-
-```bash
-# Embed a watermark
-./build/gbo_app embed images/lenna.png images/watermark.png output.png --scheme scheme1
-
-# Extract a watermark
-./build/gbo_app extract output.png extracted_wm.png
-
-# Compute image quality metrics
-./build/gbo_app metrics images/lenna.png output.png
-
-# Simulate an attack
-./build/gbo_app attack output.png attacked.png --type jpeg --param 70
-
-# List available schemes
+./build/gbo_app embed images/lenna.png images/watermark_32x32.png marked.png --scheme scheme1
+./build/gbo_app attack marked.png attacked.png --type jpeg --param 70
+./build/gbo_app extract attacked.png extracted_wm.png --scheme scheme1
+./build/gbo_app metrics images/lenna.png marked.png \
+    --wm-orig images/watermark_32x32.png --wm-extr extracted_wm.png
 ./build/gbo_app schemes
 ```
 
-Run `./build/gbo_app --help` for the full usage reference.
+`--scheme` defaults to `scheme1`; an unknown id is an error. `embed` also takes
+`--threads N` and `--seed S`. Attack types: `jpeg`, `brightness+`,
+`brightness-`, `contrast+`, `contrast-`, `salt-pepper`, `median`, `gaussian`.
 
----
+The watermark is a black-and-white image of 32×32 pixels (black = 1). From a larger image
+only the first 1024 pixels in row order are used.
 
-## 4a. Test bench (`gbo_bench`)
+## 5. Test bench (`gbo_bench`)
 
-The test bench runs the full experiment pipeline from the paper: embeds and
-extracts the watermark on 8 canonical images, simulates multiple attacks,
-and reports min/avg/max metrics (MSE, PSNR, SSIM, NCC, BER).
-
-Build with `-DGBO_BUILD_BENCH=ON`, then:
+Embeds and extracts the watermark on the 8 test images, applies the attacks and writes
+min/avg/max of MSE, PSNR, SSIM, NCC and BER.
 
 ```bash
-# 10 iterations per image (default)
-./build/gbo_bench
-
-# Smoke test (1 iteration)
-./build/gbo_bench --test
-
-# Use a specific scheme
+./build/gbo_bench                          # 10 runs per image
+./build/gbo_bench --test                   # 1 run per image
 ./build/gbo_bench --scheme scheme2 --test
+./build/gbo_bench --known-attack-1024 --test
 ```
 
-The bench also supports dataset generation (`--dataset`), classifier
-integration (`--classifier`, `--quadrant-classifier`, `--attack-classifier`),
-and known-attack ablation modes. Run `./build/gbo_bench --help` for the
-full list.
+`--known-attack-1024` is the modified algorithm with the attack type given instead of
+predicted; it reads the images from `test_images_1024/`, which is not part of the
+repository (the files in `images/` have the right size). The other modes generate
+classifier datasets (`--dataset`, `--attack-dataset`) or run with a classifier; the latter
+and `--quadrant-dataset` need libtorch. `./build/gbo_bench --help` lists them.
 
----
+## 6. Embedding schemes
 
-## 5. Embedding schemes
+A scheme is a set of DCT coefficient positions in the 8×8 block: `REG0` and `REG1` give the
+two sums that encode the bit, `ZONE0` lists the coefficients the optimizer may change.
 
-A *scheme* is a deterministic selection of DCT coefficients inside an 8×8
-block, split into two regions `REG0` and `REG1` (plus a combined `ZONE0`
-used by the optimizer as the search space). Schemes are defined in
-[`embedding_schemes.json`](embedding_schemes.json) and loaded at startup —
-**no recompilation is needed to add a new scheme**.
+| Scheme id         | `REG0` + `REG1` | `ZONE0` |
+|-------------------|-----------------|---------|
+| `scheme1`         | 11 + 11         | 22      |
+| `scheme2`         | 11 + 11         | 22      |
+| `scheme3`         | 12 + 13         | 25      |
+| `extended_scheme` | 12 + 13         | 25      |
+| `standard_scheme` | 11 + 11         | 22      |
 
-| Scheme id         | Vector size (ZONE0) | Notes                                        |
-|-------------------|---------------------|----------------------------------------------|
-| `scheme1`         | 22                  | original scheme, symmetric anti-diagonal     |
-| `scheme2`         | 22                  | alternative with shifted mid-frequencies     |
-| `scheme3`         | 25                  | 12+13 split, adds `[2,2]`, `[1,3]`, `[3,1]`  |
-| `extended_scheme` | 25                  | 12+13 split, adds `[2,3]`, `[1,4]`, `[3,2]`  |
-| `standard_scheme` | 22                  | contiguous 11+11 anti-diagonal stripe        |
-
-The global constant `CURRENT_VEC_SIZE` tracks the ZONE0 size of the active
-scheme and is used by the GBO to size all candidate vectors.
-
-### 5.1 Adding a scheme
-
-Append an object to `embedding_schemes.json`:
+The schemes are read from [`embedding_schemes.json`](embedding_schemes.json) at start-up,
+so a scheme is added by editing that file:
 
 ```json
 "my_scheme": {
-  "name": "My Scheme",
-  "description": "...",
-  "REG0":  [[7,0],[6,0], "..."],
-  "REG1":  [[5,2],[4,2], "..."],
-  "ZONE0": [[7,0],[6,0], "..."]
+  "name": "My scheme",
+  "description": "optional",
+  "REG0":  [[6, 1], [5, 2], [4, 3]],
+  "REG1":  [[6, 0], [5, 1], [4, 2]],
+  "ZONE0": [[6, 1], [5, 2], [4, 3], [6, 0], [5, 1], [4, 2]]
 }
 ```
 
-Then run with `--scheme my_scheme`. No code changes required.
+Positions are `[row, col]` with integers 0..7. `REG0`, `REG1` and `ZONE0` are required, not
+empty and without repeated positions; `REG0` and `REG1` must not overlap, and every `ZONE0`
+position has to be in `REG0` or `REG1`. Ids, names and descriptions are UTF-8 without
+control characters. The order of
+`ZONE0` matters for reproducibility: element `i` of the optimizer's vector changes
+coefficient `i` of the list. Other members are ignored. A file that breaks these rules or
+is not valid JSON is rejected with the line and column of the problem, and the schemes
+loaded before stay in place. Embedding and extraction have to use the same scheme.
 
----
+## 7. Algorithm
 
-## 6. Algorithm overview
+Embedding:
 
-1. Load the cover image and convert to grayscale.
-2. Split into 8×8 blocks and forward-DCT each block.
-3. For every bit of the 1024-bit binary watermark:
-   1. Select the target block (index `i mod WM_SIZE`).
-   2. (Optional) Use the classifier to pick the embedding scheme for this block.
-   3. Initialize a population of `POP_SIZE = 30` perturbation vectors of size
-      `CURRENT_VEC_SIZE` inside `[-TH, +TH]`.
-   4. Run the gradient-based optimizer for `ITERATIONS = 40` generations
-      against an attack-aware objective function (configurable via
-      `AttackType`).
-   5. Apply the best perturbation to the block's DCT coefficients and
-      inverse-DCT.
-4. Reconstruct the watermarked image.
-5. Optionally simulate attacks (JPEG 10–90, contrast ±, salt-pepper, crop, …)
-   and compute PSNR / SSIM / NCC / BER against the original watermark.
+1. The image is converted to grayscale and split into 8×8 blocks; block `i` carries
+   watermark bit `i mod 1024`, so a 512×512 image holds 4 copies of the watermark.
+2. For every block GBO searches for a vector of changes to the absolute values of the
+   `ZONE0` coefficients, each within `[-TH, TH]`. The population has `POP_SIZE` vectors and
+   is evolved for `ITERATIONS` iterations.
+3. The objective function, which is minimized, is `S1/S0 - 0.01·PSNR` for bit 0 and
+   `S0/S1 - 0.01·PSNR` for bit 1. `S0` and `S1` are the sums of absolute DCT coefficients
+   over `REG0` and `REG1` of the modified block after rounding to 8 bits and, if an attack
+   type is set, after that attack; PSNR is taken against the original block.
+4. The best vector is applied and the block is written back. A border narrower than 8
+   pixels is left unchanged.
 
-All tunable constants live in
-[`GRADIENT_BASED_OPTIMIZER/src/config.h`](GRADIENT_BASED_OPTIMIZER/src/config.h):
+Extraction: a block gives 1 if `S0 < S1`, otherwise 0; every watermark bit is the majority
+vote over its copies.
+
+Constants are in [`config.h`](GRADIENT_BASED_OPTIMIZER/src/config.h):
 
 ```cpp
 #define POP_SIZE   30      // population size
 #define ITERATIONS 40      // optimizer iterations
-#define TH         10.0    // perturbation bound for DCT coefficients
+#define TH         10.0    // bound of a coefficient change
 #define WM_SIZE    1024    // watermark length in bits
 ```
 
----
+## 8. Modified algorithm (quadrants)
 
-## 7. Quadrant-based watermarking (optional pipeline)
+A 1024×1024 image is divided into a 4×4 grid of 256×256 quadrants. Each quadrant has 1024
+blocks and carries one full copy of the watermark. The quadrant in grid row `r`, column
+`c` is optimized with the attack at position `(r mod 2, c mod 2)` of this table simulated
+in the objective function, so every attack type has 4 copies:
 
-Instead of embedding a single watermark copy into the whole image, the
-quadrant pipeline splits a 1024×1024 image into 4 quadrants and embeds a
-copy into each, **each quadrant optimized against a different attack**:
+|              | even column   | odd column |
+|--------------|---------------|------------|
+| **even row** | no attack     | JPEG 70    |
+| **odd row**  | contrast ×1.1 | JPEG 80    |
 
-| Quadrant          | Objective                  |
-|-------------------|----------------------------|
-| N1 (top-left)     | `AttackType::NONE`         |
-| N2 (top-right)    | `AttackType::JPEG70`       |
-| N3 (bottom-left)  | `AttackType::CONTRAST`     |
-| N4 (bottom-right) | `AttackType::SALT_PEPPER`  |
+At extraction the attack type is either known (`--known-attack-1024`) or predicted by a
+classifier (`--attack-classifier`, needs libtorch and `model_torchscript.pt`). The
+watermark is then the majority vote over the 4 quadrants prepared for that type.
 
-At extraction time a classifier (`best_model_ultrahighres.pt`) predicts
-which quadrant is the most reliable source for the current (possibly
-attacked) image and the watermark is recovered from that quadrant only.
-This mode requires libtorch and the matching model weights.
+This mode is available in `gbo_bench` and `gbo_perf --mode quad`. The library API and
+`gbo_app` implement the base algorithm only.
 
----
+## 9. Library API (`libgbo`)
 
-## 8. Library API (`libgbo`)
-
-Build the shared or static library (`-DGBO_BUILD_SHARED=ON` /
-`-DGBO_BUILD_STATIC=ON`) and link against it from your project.  The public
-header is [`gbo_api.h`](GRADIENT_BASED_OPTIMIZER/src/gbo_api.h)
-(installed to `include/gbo/gbo_api.h`).
-
-### 8.1 Quick example
+Build with `-DGBO_BUILD_SHARED=ON` or `-DGBO_BUILD_STATIC=ON`. The header is
+[`gbo_api.h`](GRADIENT_BASED_OPTIMIZER/src/gbo_api.h), installed as `gbo/gbo_api.h`.
 
 ```cpp
 #include <gbo/gbo_api.h>
 #include <opencv2/opencv.hpp>
+#include <iostream>
 
 int main() {
-    // 1. Initialize (loads embedding_schemes.json)
-    gbo::init("embedding_schemes.json");
+    if (!gbo::init("embedding_schemes.json")) return 1;
     gbo::setScheme("scheme1");
 
-    // 2. Embed
     cv::Mat cover = cv::imread("cover.png", cv::IMREAD_GRAYSCALE);
-    cv::Mat wm    = cv::imread("watermark.png", cv::IMREAD_GRAYSCALE);
-    cv::Mat watermarked = gbo::embedWatermark(cover, wm);
-    cv::imwrite("watermarked.png", watermarked);
+    cv::Mat wm    = cv::imread("watermark_32x32.png", cv::IMREAD_GRAYSCALE);
+    cv::Mat marked = gbo::embedWatermark(cover, wm);
 
-    // 3. Attack
-    cv::Mat attacked = gbo::attackJPEG(watermarked, 70);
-
-    // 4. Extract
+    cv::Mat attacked  = gbo::attackJPEG(marked, 70);
     cv::Mat extracted = gbo::extractWatermark(attacked);
 
-    // 5. Evaluate
-    std::cout << "PSNR: " << gbo::computePSNR(cover, watermarked) << " dB\n";
-    std::cout << "BER:  " << gbo::computeBER(wm, extracted) << "\n";
+    std::cout << "PSNR " << gbo::computePSNR(cover, marked) << " dB, "
+              << "BER " << gbo::computeBER(wm, extracted) << "\n";
 }
 ```
 
-Compile and link:
-
 ```bash
-g++ -std=c++17 my_app.cpp -lgbo -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -o my_app
+g++ -std=c++17 my_app.cpp -lgbo $(pkg-config --cflags --libs opencv4) -o my_app
 ```
-
-### 8.2 API reference
-
-All functions live in the `gbo` namespace.
-
-**Initialization:**
-
-| Function | Description |
-|----------|-------------|
-| `bool init(path)` | Load schemes from JSON, initialize quantization tables. Call once before any other function. |
-| `bool setScheme(id)` | Select the active embedding scheme by name. |
-| `vector<string> availableSchemes()` | Return all scheme identifiers. |
-| `void setThreads(n)` | Worker threads for embedding (0 = all hardware threads). |
-| `void setSeed(seed)` / `void clearSeed()` | Reproducible embedding / back to random seeding. |
-
-**Watermarking:**
-
-| Function | Description |
-|----------|-------------|
-| `cv::Mat embedWatermark(image, watermark)` | Embed a binary watermark into a grayscale image. Returns the watermarked image. |
-| `cv::Mat extractWatermark(image)` | Extract the embedded watermark from a (possibly attacked) image. |
-
-**Metrics:**
-
-| Function | Description |
-|----------|-------------|
-| `double computeMSE(a, b)` | Mean Squared Error. |
-| `double computePSNR(a, b)` | Peak Signal-to-Noise Ratio (dB). |
-| `double computeSSIM(a, b)` | Structural Similarity Index. |
-| `double computeNCC(a, b)` | Normalized Cross-Correlation. |
-| `double computeBER(wm1, wm2)` | Bit Error Rate between two watermarks. |
-
-**Attack simulation:**
-
-| Function | Description |
-|----------|-------------|
-| `cv::Mat attackJPEG(image, quality)` | JPEG compression. |
-| `cv::Mat attackBrightnessIncrease(image, value)` | Increase brightness. |
-| `cv::Mat attackBrightnessDecrease(image, value)` | Decrease brightness. |
-| `cv::Mat attackContrastIncrease(image, alpha)` | Increase contrast. |
-| `cv::Mat attackContrastDecrease(image, alpha)` | Decrease contrast. |
-| `cv::Mat attackSaltPepper(image, prob)` | Salt-and-pepper noise. |
-| `cv::Mat attackMedianFilter(image, ksize)` | Median filtering. |
-| `cv::Mat attackGaussianFilter(image, ksize)` | Gaussian filtering. |
-
-### 8.3 Linking in a CMake project
 
 ```cmake
 find_package(OpenCV REQUIRED)
 add_executable(my_app main.cpp)
-target_link_libraries(my_app /usr/local/lib/libgbo.so ${OpenCV_LIBS})
 target_include_directories(my_app PRIVATE /usr/local/include)
+target_link_libraries(my_app /usr/local/lib/libgbo.so ${OpenCV_LIBS})
 ```
 
----
+| Function | Description |
+|----------|-------------|
+| `bool init(path)` | Loads the schemes from the JSON file and sets up the tables; `false` if the file is missing or invalid. Call first. |
+| `bool setScheme(id)` | Selects the scheme; `false` if there is no such id. Not while an embedding or extraction is running. |
+| `vector<string> availableSchemes()` | Scheme ids. |
+| `void setThreads(n)` | Worker threads for embedding; 0 (default) = all hardware threads or `GBO_THREADS`. |
+| `void setSeed(seed)`, `void clearSeed()` | Reproducible embedding / back to a fresh random seed per call. |
+| `cv::Mat embedWatermark(image, watermark)` | Returns the watermarked `CV_8UC1` image of the same size. |
+| `cv::Mat extractWatermark(image)` | Returns the 32×32 `CV_8UC1` watermark. A tie between copies is resolved at random. |
+| `computeMSE`, `computePSNR`, `computeSSIM`, `computeNCC` `(a, b)` | Image quality metrics. |
+| `double computeBER(wm1, wm2)` | Bit error rate between two watermarks. |
+| `attackJPEG(image, quality)` | JPEG compression. |
+| `attackBrightnessIncrease`, `attackBrightnessDecrease` `(image, value)` | Brightness shift. |
+| `attackContrastIncrease`, `attackContrastDecrease` `(image, alpha)` | Contrast change. |
+| `attackSaltPepper(image, prob)` | Salt-and-pepper noise. |
+| `attackMedianFilter`, `attackGaussianFilter` `(image, ksize)` | Filtering. |
 
-## 9. Performance
+`embedWatermark` and `extractWatermark` accept images with 8 bits per channel and 1, 3 or
+4 channels (colour is converted to grayscale) and throw `std::invalid_argument` for an
+empty image or any other type. `embedWatermark` also throws if the watermark is not
+`CV_8UC1` or has fewer than 1024 pixels.
+
+## 10. Performance
 
 Embedding runs the optimizer `POP_SIZE x (ITERATIONS + 1) = 1230` times per 8x8 block, so
 the objective function is the hot path. It is implemented without per-call `cv::Mat`
@@ -410,7 +316,7 @@ In the quadrant pipeline the extraction time is dominated by the attack-type cla
 (ResNet-50 at 1024x1024 with flip TTA, about 2 s per image on this CPU); the bit
 extraction itself is the 0.6 ms above.
 
-### 9.1 Threads and reproducibility
+### 10.1 Threads and reproducibility
 
 ```cpp
 gbo::setThreads(4);   // default 0 = all hardware threads (or the GBO_THREADS env variable)
@@ -421,7 +327,7 @@ gbo::setSeed(42);     // reproducible embedding; gbo::clearSeed() restores rando
 ./build/gbo_app embed cover.png wm.png out.png --threads 4 --seed 42
 ```
 
-### 9.2 Benchmark and self-test (`gbo_perf`)
+### 10.2 Benchmark and self-test (`gbo_perf`)
 
 ```bash
 cmake -DGBO_BUILD_PERF=ON .. && make gbo_perf
@@ -435,10 +341,11 @@ BER after a set of attacks. Same seed + same hash = same computation, which is h
 optimization step was checked. `--selftest` compares the fast kernels with the OpenCV
 reference (JPEG round trip, contrast, rounding, extracted bits must match exactly).
 
-### 9.3 Fuzzing
+### 10.3 Fuzzing
 
-Five libFuzzer targets (ASan + UBSan) cover extraction, embedding, the optimizer on a single
-block, the 8x8 kernels (differentially, against OpenCV) and the metrics/attacks API. See
+Six libFuzzer targets (ASan + UBSan) cover extraction, embedding, the optimizer on a single
+block, the 8x8 kernels (differentially, against OpenCV), the metrics/attacks API and the
+parser of `embedding_schemes.json`. See
 `fuzz/README.md` for what each one checks and how to run it.
 
 ```bash

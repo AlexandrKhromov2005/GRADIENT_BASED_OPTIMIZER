@@ -1,4 +1,5 @@
 #include "embedding_schemes.h"
+#include "scheme_json.h"
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -7,201 +8,42 @@
 // Global dynamic vector size
 size_t CURRENT_VEC_SIZE = VEC_SIZE_DEFAULT;
 
-// JSON parsing - simple implementation for this specific case
-#include <sstream>
-#include <algorithm>
-
 EmbeddingSchemeManager& EmbeddingSchemeManager::getInstance() {
     static EmbeddingSchemeManager instance;
     return instance;
 }
 
-std::vector<std::pair<int, int>> parseCoordinateArray(const std::string& arrayStr) {
-    std::vector<std::pair<int, int>> coords;
-    std::istringstream stream(arrayStr);
-    std::string token;
-    
-    while (std::getline(stream, token, ']')) {
-        size_t bracketPos = token.find('[');
-        if (bracketPos != std::string::npos) {
-            std::string pairStr = token.substr(bracketPos + 1);
-            size_t commaPos = pairStr.find(',');
-            if (commaPos != std::string::npos) {
-                int x = std::stoi(pairStr.substr(0, commaPos));
-                int y = std::stoi(pairStr.substr(commaPos + 1));
-                coords.emplace_back(x, y);
-            }
-        }
-    }
-    
-    return coords;
-}
-
 bool EmbeddingSchemeManager::loadSchemes(const std::string& filename) {
-    std::ifstream file(filename);
+    std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Cannot open schemes file: " << filename << std::endl;
         return false;
     }
+    // One byte over the limit is enough for the parser to reject an oversized file.
+    std::string content(kSchemesJsonMaxBytes + 1, '\0');
+    file.read(&content[0], static_cast<std::streamsize>(content.size()));
+    content.resize(static_cast<size_t>(file.gcount()));
 
-    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    file.close();
-
-    // Simple JSON parsing for our specific structure
-    // Parse scheme1
-    EmbeddingScheme scheme1;
-    scheme1.name = "Original Scheme";
-    scheme1.description = "Original embedding scheme";
-    
-    // scheme1 REG0 (11 elements - balanced)
-    scheme1.REG0 = {
-        {7, 1}, {6, 1}, {5, 1}, {5, 3}, {4, 3}, {3, 3},
-        {3, 5}, {2, 5}, {1, 5}, {1, 7}, {0, 7}
-    };
-
-    // scheme1 REG1 (11 elements - balanced)
-    scheme1.REG1 = {
-        {7, 0}, {6, 0}, {6, 2}, {5, 2}, {4, 2},
-        {4, 4}, {3, 4}, {2, 4}, {2, 6}, {1, 6}, {0, 6}
-    };
-
-    // scheme1 ZONE0 (22 elements - balanced 11+11)
-    scheme1.ZONE0 = {
-        {6, 0}, {5, 1}, {4, 2}, {3, 3}, {2, 4}, {1, 5}, {0, 6}, {0, 7},
-        {1, 6}, {2, 5}, {3, 4}, {4, 3}, {5, 2}, {6, 1}, {7, 0}, {7, 1},
-        {6, 2}, {5, 3}, {4, 4}, {3, 5}, {2, 6}, {1, 7}
-    };
-    
-    schemes["scheme1"] = scheme1;
-
-    // Parse scheme2
-    EmbeddingScheme scheme2;
-    scheme2.name = "Alternative Scheme";
-    scheme2.description = "Second embedding scheme with new coefficients";
-    
-    // scheme2 REG0
-    scheme2.REG0 = {
-        {7, 0}, {6, 0}, {7, 1}, {6, 1}, {6, 2}, 
-        {5, 1}, {5, 3}, {4, 4}, {3, 4}, {3, 5}, {2, 5}
-    };
-    
-    // scheme2 REG1
-    scheme2.REG1 = {
-        {5, 2}, {4, 2}, {4, 3}, {3, 3}, {2, 4}, 
-        {2, 6}, {1, 5}, {1, 6}, {1, 7}, {0, 6}, {0, 7}
-    };
-    
-    // scheme2 ZONE0 (combined REG0 + REG1)
-    scheme2.ZONE0 = {
-        {7, 0}, {6, 0}, {7, 1}, {6, 1}, {6, 2}, {5, 1}, {5, 3}, {4, 4}, {3, 4}, {3, 5}, {2, 5},
-        {5, 2}, {4, 2}, {4, 3}, {3, 3}, {2, 4}, {2, 6}, {1, 5}, {1, 6}, {1, 7}, {0, 6}, {0, 7}
-    };
-    
-    schemes["scheme2"] = scheme2;
-
-    // Parse scheme3 with variable sizes (12 REG0 + 13 REG1 = 25 ZONE0)
-    EmbeddingScheme scheme3;
-    scheme3.name = "Variable Size Scheme";
-    scheme3.description = "Scheme with 12 REG0 elements and 13 REG1 elements";
-    
-    // scheme3 REG0 (12 elements)
-    scheme3.REG0 = {
-        {2, 2},
-        {7, 1}, {6, 1}, {5, 1},
-        {5, 3}, {4, 3}, {3, 3},
-        {3, 5}, {2, 5}, {1, 5},
-        {1, 7}, {0, 7}
-    };
-    
-    // scheme3 REG1 (13 elements)
-    scheme3.REG1 = {
-        {1, 3}, {3, 1},
-        {7, 0}, {6, 0},
-        {6, 2}, {5, 2}, {4, 2},
-        {4, 4}, {3, 4}, {2, 4},
-        {2, 6}, {1, 6}, {0, 6}
-    };
-    
-    // scheme3 ZONE0 (25 elements total - REG0 + REG1)
-    scheme3.ZONE0 = {
-        {2, 2}, {1, 3}, {3, 1},
-        
-        {6, 0}, {5, 1}, {4, 2}, {3, 3},
-        {2, 4}, {1, 5}, {0, 6}, {0, 7},
-        {1, 6}, {2, 5}, {3, 4}, {4, 3},
-        {5, 2}, {6, 1}, {7, 0}, {7, 1},
-        {6, 2}, {5, 3}, {4, 4}, {3, 5},
-        {2, 6}, {1, 7}
-    };
-    
-    schemes["scheme3"] = scheme3;
-
-    // Parse extended_scheme 
-    EmbeddingScheme extended_scheme;
-    extended_scheme.name = "Extended Scheme";
-    extended_scheme.description = "Extended embedding scheme with 12+13 elements";
-    
-    // extended_scheme REG0 (12 elements)
-    extended_scheme.REG0 = {
-        {2, 3},
-        {7, 1}, {6, 1}, {5, 1},
-        {5, 3}, {4, 3}, {3, 3},
-        {3, 5}, {2, 5}, {1, 5},
-        {1, 7}, {0, 7}
-    };
-    
-    // extended_scheme REG1 (13 elements)
-    extended_scheme.REG1 = {
-        {1, 4}, {3, 2},
-        {7, 0}, {6, 0},
-        {6, 2}, {5, 2}, {4, 2},
-        {4, 4}, {3, 4}, {2, 4},
-        {2, 6}, {1, 6}, {0, 6}
-    };
-    
-    // extended_scheme ZONE0 (25 elements)
-    extended_scheme.ZONE0 = {
-        {2, 3}, {1, 4}, {3, 2},
-        {6, 0}, {5, 1}, {4, 2}, {3, 3},
-        {2, 4}, {1, 5}, {0, 6}, {0, 7},
-        {1, 6}, {2, 5}, {3, 4}, {4, 3},
-        {5, 2}, {6, 1}, {7, 0}, {7, 1},
-        {6, 2}, {5, 3}, {4, 4}, {3, 5},
-        {2, 6}, {1, 7}
-    };
-    
-    schemes["extended_scheme"] = extended_scheme;
-
-    // Parse standard_scheme
-    EmbeddingScheme standard_scheme;
-    standard_scheme.name = "Standard Scheme";
-    standard_scheme.description = "Standard size embedding scheme with 11+11 elements";
-    
-    // standard_scheme REG0 (11 elements)
-    standard_scheme.REG0 = {
-        {7, 0}, {7, 1}, {6, 0},
-        {6, 1}, {6, 2}, {5, 1},
-        {5, 2}, {5, 3}, {4, 2},
-        {4, 3}, {3, 3}
-    };
-    
-    // standard_scheme REG1 (11 elements)
-    standard_scheme.REG1 = {
-        {4, 4}, {3, 4},
-        {3, 5}, {2, 4}, {2, 5},
-        {2, 6}, {1, 5}, {1, 6},
-        {1, 7}, {0, 6}, {0, 7}
-    };
-    
-    // standard_scheme ZONE0 (22 elements)
-    standard_scheme.ZONE0 = {
-        {7, 0}, {7, 1}, {6, 0}, {6, 1}, {6, 2}, {5, 1}, {5, 2}, {5, 3}, {4, 2}, {4, 3}, {3, 3},
-        {4, 4}, {3, 4}, {3, 5}, {2, 4}, {2, 5}, {2, 6}, {1, 5}, {1, 6}, {1, 7}, {0, 6}, {0, 7}
-    };
-    
-    schemes["standard_scheme"] = standard_scheme;
-
+    std::string error;
+    if (!loadSchemesFromString(content, &error)) {
+        std::cerr << filename << ": " << error << std::endl;
+        return false;
+    }
     std::cout << "Loaded " << schemes.size() << " embedding schemes" << std::endl;
+    return true;
+}
+
+bool EmbeddingSchemeManager::loadSchemesFromString(const std::string& json, std::string* error) {
+    std::map<std::string, EmbeddingScheme> parsed;
+    std::string message;
+    if (!parseSchemesJson(json, parsed, message)) {
+        if (error) *error = message;
+        return false;
+    }
+    schemes = std::move(parsed);
+    // Keep the active scheme if the new set still has it; its size may have changed.
+    if (schemes.find(currentSchemeId) == schemes.end()) currentSchemeId = schemes.begin()->first;
+    CURRENT_VEC_SIZE = schemes[currentSchemeId].getTotalVectorSize();
     return true;
 }
 
@@ -225,8 +67,7 @@ void EmbeddingSchemeManager::setCurrentScheme(const std::string& schemeId) {
         std::cout << "Using embedding scheme: " << schemes[schemeId].name 
                   << " (vector size: " << CURRENT_VEC_SIZE << ")" << std::endl;
     } else {
-        std::cerr << "Warning: Scheme '" << schemeId << "' not found, using default" << std::endl;
-        CURRENT_VEC_SIZE = VEC_SIZE_DEFAULT;
+        std::cerr << "Warning: Scheme '" << schemeId << "' not found, keeping '" << currentSchemeId << "'" << std::endl;
     }
 }
 

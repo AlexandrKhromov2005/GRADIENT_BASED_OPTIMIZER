@@ -21,7 +21,8 @@ unsigned embeddingThreads();
 //
 // Threading contract: embedding calls may not run concurrently with each other under a fixed
 // seed (which call gets which stream would be undefined), and the active scheme must not be
-// changed (setCurrentScheme / loadSchemes) while an embedding or extraction is running.
+// changed (setCurrentScheme / loadSchemes / loadSchemesFromString) while an embedding or
+// extraction is running.
 void setEmbeddingSeed(uint64_t seed);
 void clearEmbeddingSeed();
 
